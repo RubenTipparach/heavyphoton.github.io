@@ -109,7 +109,9 @@ input, select, textarea {
 		 */
 		/* Adjust the colors and angle as needed */
 		background: linear-gradient(rgb(0 0 0 / 7%) 5%, rgb(10 11 22 / 86%) 25%), url(images/space-bkg.png);
-
+		background-size: cover;
+		background-position: center;
+		background-attachment: fixed;
 
 	}
 
