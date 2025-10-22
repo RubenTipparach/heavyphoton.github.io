@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Boat Movement Range Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        .main-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Canvas takes up most of the screen */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+        
+        /* Bottom button bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, #1a1a1a 0%, rgba(26, 26, 26, 0.95) 100%);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            border-top: 1px solid #333;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .bottom-bar button {
+            flex: 1;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(74, 158, 255, 0.3);
+            touch-action: manipulation;
+        }
+        
+        .bottom-bar button:active {
+            transform: scale(0.95);
+        }
+        
+        .bottom-bar button:disabled {
+            opacity: 0.4;
+            background: linear-gradient(135deg, #3a3a3a 0%, #4a4a4a 100%);
+            box-shadow: none;
+        }
+        
+        /* Side panels */
+        .side-panel {
+            position: fixed;
+            top: 0;
+            width: 85%;
+            max-width: 320px;
+            height: 100vh;
+            background: #1a1a1a;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .side-panel-left {
+            left: 0;
+            transform: translateX(-100%);
+            border-right: 1px solid #333;
+        }
+        
+        .side-panel-right {
+            right: 0;
+            transform: translateX(100%);
+            border-left: 1px solid #333;
+        }
+        
+        .side-panel.active {
+            transform: translateX(0);
+        }
+        
+        .panel-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Controls panel content */
+        .controls-content {
+            padding: 15px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .control-group select,
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            outline: none;
+            margin: 10px 0;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #1a1a1a;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+        }
+        
+        .value-display {
+            display: block;
+            text-align: right;
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        /* Help panel content */
+        .help-content {
+            padding: 15px;
+        }
+        
+        .legend {
+            margin-bottom: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #666;
+            flex-shrink: 0;
+        }
+        
+        .help-section {
+            margin-bottom: 20px;
+        }
+        
+        .help-section h3 {
+            color: #4a9eff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .help-section li {
+            color: #9ca3af;
+            font-size: 13px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .help-section li:before {
+            content: "•";
+            color: #4a9eff;
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Menu toggle buttons */
+        .menu-toggle {
+            position: fixed;
+            top: 10px;
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid #333;
+            color: #9ca3af;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .menu-toggle-left {
+            left: 10px;
+        }
+        
+        .menu-toggle-right {
+            right: 10px;
+        }
+        
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 190;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Status bar */
+        .status-bar {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #fff;
+            z-index: 100;
+            border: 1px solid #333;
+            max-width: 80%;
+            text-align: center;
+        }
+        
+        /* Touch indicator */
+        .touch-indicator {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            background: rgba(74, 158, 255, 0.9);
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .touch-indicator.active {
+            opacity: 1;
+        }
+        
+        /* Make select elements look better on mobile */
+        select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .bottom-bar {
+                padding: 15px 20px;
+            }
+            
+            .bottom-bar button {
+                font-size: 14px;
+                padding: 14px 20px;
+            }
+            
+            .side-panel {
+                width: 400px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Canvas -->
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <!-- Status bar -->
+        <div class="status-bar" id="status">Initializing...</div>
+        
+        <!-- Touch indicator -->
+        <div class="touch-indicator" id="touchIndicator">Pan Mode</div>
+        
+        <!-- Menu toggle buttons -->
+        <div class="menu-toggle menu-toggle-left" onclick="toggleControlsPanel()">⚙️</div>
+        <div class="menu-toggle menu-toggle-right" onclick="toggleHelpPanel()">❓</div>
+        
+        <!-- Bottom button bar -->
+        <div class="bottom-bar">
+            <button onclick="coastTurn()">Coast</button>
+            <button id="endTurnBtn" onclick="endTurn()" disabled>End Turn</button>
+            <button id="replayBtn" onclick="replayHistory()" disabled>Replay</button>
+        </div>
+        
+        <!-- Controls Panel (Left) -->
+        <div class="side-panel side-panel-left" id="controlsPanel">
+            <div class="panel-header">
+                <span class="panel-title">Controls</span>
+                <button class="close-btn" onclick="toggleControlsPanel()">✕</button>
+            </div>
+            <div class="controls-content">
+                <div class="control-group">
+                    <label for="flightMode">Flight Mode</label>
+                    <select id="flightMode" onchange="toggleFlightMode()">
+                        <option value="coupled">Coupled (Main Thruster)</option>
+                        <option value="decoupled">Decoupled (Maneuvering)</option>
+                    </select>
+                </div>
+
+                <!-- Coupled Mode Controls -->
+                <div class="control-group coupled-control">
+                    <label for="maxAccel">Max Acceleration (m/s²)</label>
+                    <input type="number" id="maxAccel" value="2" step="0.5" min="0.5" max="10" inputmode="decimal">
+                </div>
+
+                <div class="control-group coupled-control">
+                    <label for="maxDecel">Max Deceleration (m/s²)</label>
+                    <input type="number" id="maxDecel" value="3" step="0.5" min="0.5" max="10" inputmode="decimal">
+                </div>
+
+                <!-- Decoupled Mode Controls -->
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="forwardThrust">Forward Thrust (m/s²)</label>
+                    <input type="number" id="forwardThrust" value="2" step="0.1" min="0" max="5" inputmode="decimal">
+                </div>
+
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="backwardThrust">Backward Thrust (m/s²)</label>
+                    <input type="number" id="backwardThrust" value="2" step="0.1" min="0" max="5" inputmode="decimal">
+                </div>
+
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="leftThrust">Left Thrust (m/s²)</label>
+                    <input type="number" id="leftThrust" value="2" step="0.1" min="0" max="5" inputmode="decimal">
+                </div>
+
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="rightThrust">Right Thrust (m/s²)</label>
+                    <input type="number" id="rightThrust" value="2" step="0.1" min="0" max="5" inputmode="decimal">
+                </div>
+
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="targetRotation">Target Rotation (relative °)</label>
+                    <input type="range" id="targetRotation" min="-100" max="100" value="0" step="1">
+                    <span class="value-display" id="targetRotationDisplay">0° (current)</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="maxSpeed">Max Speed (m/s)</label>
+                    <input type="number" id="maxSpeed" value="30" step="5" min="5" max="100" inputmode="decimal">
+                </div>
+
+                <div class="control-group">
+                    <label for="turningRange">Turning Speed (°/s)</label>
+                    <input type="range" id="turningRange" min="10" max="180" value="45" step="5">
+                    <span class="value-display" id="turningDisplay">45°/s</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="gridDensity">Grid Density</label>
+                    <input type="range" id="gridDensity" min="10" max="50" value="20" step="5">
+                    <span class="value-display" id="densityDisplay">20</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="timeInterval">Time Limit (seconds)</label>
+                    <input type="number" id="timeInterval" value="5" step="0.5" min="1" max="20" inputmode="decimal">
+                </div>
+
+                <div class="control-group">
+                    <label for="pathTimeStep">Path Time Step (s)</label>
+                    <input type="number" id="pathTimeStep" value="1" step="0.1" min="0.1" max="5" inputmode="decimal">
+                </div>
+
+                <div class="control-group">
+                    <label for="initialAngle">Initial Heading (°)</label>
+                    <input type="range" id="initialAngle" min="0" max="360" value="0" step="15">
+                    <span class="value-display" id="angleDisplay">0°</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="initialVx">Initial Velocity X (m/s)</label>
+                    <input type="number" id="initialVx" value="0" step="1" min="-50" max="50" inputmode="decimal">
+                </div>
+
+                <div class="control-group">
+                    <label for="initialVy">Initial Velocity Y (m/s)</label>
+                    <input type="number" id="initialVy" value="0" step="1" min="-50" max="50" inputmode="decimal">
+                </div>
+
+                <div class="control-group">
+                    <label for="speedMagnitude">Current Speed</label>
+                    <span class="value-display" id="speedMagnitude">0.0 m/s</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Panel (Right) -->
+        <div class="side-panel side-panel-right" id="helpPanel">
+            <div class="panel-header">
+                <span class="panel-title">Help</span>
+                <button class="close-btn" onclick="toggleHelpPanel()">✕</button>
+            </div>
+            <div class="help-content">
+                <div class="legend">
+                    <h3 style="color: #4a9eff; font-size: 14px; margin-bottom: 15px;">LEGEND</h3>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(0, 255, 100, 0.8);"></div>
+                        <span>Reachable Position</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(255, 50, 50, 0.5);"></div>
+                        <span>Unreachable Position</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4a9eff;"></div>
+                        <span>Current Position</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffa500;"></div>
+                        <span>Destination</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00d4ff;"></div>
+                        <span>Path</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FF6B35;"></div>
+                        <span>Gravity Well</span>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Controls</h3>
+                    <ul>
+                        <li>Tap any point to plot course</li>
+                        <li>Tap and hold to pan view</li>
+                        <li>Pinch to zoom in/out</li>
+                        <li>Range auto-calculates</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Actions</h3>
+                    <ul>
+                        <li>Coast: Drift with no thrust</li>
+                        <li>End Turn: Move to destination</li>
+                        <li>Replay: Watch previous moves</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overlay -->
+        <div class="overlay" id="overlay" onclick="closePanels()"></div>
+    </div>
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State variables
+        let gridCalculated = false;
+        let gridResults = {};
+        let currentPath = null;
+        let scale = 2;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let moveHistory = [];
+        let isAnimating = false;
+        let animationProgress = 0;
+        let isReplaying = false;
+        let replayShipState = null;
+        let shipWorldX = 0;
+        let shipWorldY = 0;
+
+        // Gravitational bodies
+        let gravityBodies = [
+            {
+                x: 100,
+                y: -50,
+                mass: 27000,
+                radius: 30,
+                influenceRadius: 200,
+                color: '#FF6B35'
+            }
+        ];
+
+        const G = 0.1;
+
+        // Touch handling variables
+        let touches = [];
+        let lastTouchDistance = 0;
+        let touchHoldTimer = null;
+        let isTouchPanning = false;
+        let touchPanStartX = 0, touchPanStartY = 0;
+        let panStartOffsetX = 0, panStartOffsetY = 0;
+
+        // Panel controls
+        function toggleControlsPanel() {
+            const panel = document.getElementById('controlsPanel');
+            const overlay = document.getElementById('overlay');
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleHelpPanel() {
+            const panel = document.getElementById('helpPanel');
+            const overlay = document.getElementById('overlay');
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closePanels() {
+            document.getElementById('controlsPanel').classList.remove('active');
+            document.getElementById('helpPanel').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawGrid();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
+        
+        // Initialize canvas size
+        setTimeout(resizeCanvas, 0);
+
+        // Calculate gravity
+        function calculateGravity(x, y) {
+            let ax = 0;
+            let ay = 0;
+
+            for (const body of gravityBodies) {
+                const dx = body.x - x;
+                const dy = body.y - y;
+                const distSq = dx * dx + dy * dy;
+                const dist = Math.sqrt(distSq);
+
+                if (dist < body.influenceRadius && dist > 0.1) {
+                    const accelMagnitude = G * body.mass / distSq;
+                    ax += (dx / dist) * accelMagnitude;
+                    ay += (dy / dist) * accelMagnitude;
+                }
+            }
+
+            return { ax, ay };
+        }
+
+        // Update display values and auto-recalculate
+        document.getElementById('turningRange').addEventListener('input', (e) => {
+            document.getElementById('turningDisplay').textContent = e.target.value + '°/s';
+            if (gridCalculated) calculate();
+        });
+
+        document.getElementById('gridDensity').addEventListener('input', (e) => {
+            document.getElementById('densityDisplay').textContent = e.target.value;
+            if (gridCalculated) calculate();
+        });
+
+        document.getElementById('initialAngle').addEventListener('input', (e) => {
+            document.getElementById('angleDisplay').textContent = e.target.value + '°';
+            if (gridCalculated) calculate();
+        });
+
+        document.getElementById('targetRotation').addEventListener('input', (e) => {
+            const currentAngle = parseFloat(document.getElementById('initialAngle').value);
+            const relativeRotation = parseFloat(e.target.value);
+            const targetAngle = currentAngle + relativeRotation;
+            document.getElementById('targetRotationDisplay').textContent = `${relativeRotation}° (target: ${Math.round(targetAngle)}°)`;
+            if (gridCalculated) calculate();
+        });
+
+        document.getElementById('initialVx').addEventListener('input', () => {
+            updateSpeedMagnitude();
+            if (gridCalculated) calculate();
+        });
+        
+        document.getElementById('initialVy').addEventListener('input', () => {
+            updateSpeedMagnitude();
+            if (gridCalculated) calculate();
+        });
+
+        // Add listeners for all numeric inputs
+        ['maxAccel', 'maxDecel', 'maxSpeed', 'forwardThrust', 'backwardThrust', 
+         'leftThrust', 'rightThrust', 'timeInterval', 'pathTimeStep'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', () => { 
+                    if (gridCalculated) calculate(); 
+                });
+            }
+        });
+
+        function updateSpeedMagnitude() {
+            const vx = parseFloat(document.getElementById('initialVx').value) || 0;
+            const vy = parseFloat(document.getElementById('initialVy').value) || 0;
+            const speed = Math.sqrt(vx * vx + vy * vy);
+            document.getElementById('speedMagnitude').textContent = `${speed.toFixed(1)} m/s`;
+        }
+
+        function toggleFlightMode() {
+            const mode = document.getElementById('flightMode').value;
+            const coupledControls = document.querySelectorAll('.coupled-control');
+            const decoupledControls = document.querySelectorAll('.decoupled-control');
+
+            if (mode === 'coupled') {
+                coupledControls.forEach(el => el.style.display = 'block');
+                decoupledControls.forEach(el => el.style.display = 'none');
+            } else {
+                coupledControls.forEach(el => el.style.display = 'none');
+                decoupledControls.forEach(el => el.style.display = 'block');
+            }
+
+            document.getElementById('targetRotation').value = 0;
+            const currentAngle = parseFloat(document.getElementById('initialAngle').value);
+            document.getElementById('targetRotationDisplay').textContent = `0° (target: ${Math.round(currentAngle)}°)`;
+
+            calculate();
+        }
+
+        // Touch event handlers
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+        canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            touches = Array.from(e.touches);
+            
+            if (touches.length === 1) {
+                const touch = touches[0];
+                touchPanStartX = touch.clientX;
+                touchPanStartY = touch.clientY;
+                panStartOffsetX = panX;
+                panStartOffsetY = panY;
+                
+                touchHoldTimer = setTimeout(() => {
+                    isTouchPanning = true;
+                    showTouchIndicator('Pan Mode');
+                }, 200);
+                
+            } else if (touches.length === 2) {
+                clearTimeout(touchHoldTimer);
+                isTouchPanning = false;
+                lastTouchDistance = getTouchDistance(touches[0], touches[1]);
+                showTouchIndicator('Zoom Mode');
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            touches = Array.from(e.touches);
+            
+            if (isTouchPanning && touches.length === 1) {
+                const touch = touches[0];
+                panX = panStartOffsetX + (touch.clientX - touchPanStartX);
+                panY = panStartOffsetY + (touch.clientY - touchPanStartY);
+                
+                drawGrid();
+                if (currentPath) {
+                    drawPath(currentPath);
+                }
+                
+            } else if (touches.length === 2) {
+                const currentDistance = getTouchDistance(touches[0], touches[1]);
+                if (lastTouchDistance > 0) {
+                    const delta = currentDistance / lastTouchDistance;
+                    const newScale = Math.max(0.5, Math.min(10, scale * delta));
+                    
+                    const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+                    const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const canvasCenterX = centerX - rect.left;
+                    const canvasCenterY = centerY - rect.top;
+                    
+                    const scaleDelta = newScale / scale;
+                    panX = canvasCenterX - (canvasCenterX - panX) * scaleDelta;
+                    panY = canvasCenterY - (canvasCenterY - panY) * scaleDelta;
+                    
+                    scale = newScale;
+                    lastTouchDistance = currentDistance;
+                    
+                    drawGrid();
+                    if (currentPath) {
+                        drawPath(currentPath);
+                    }
+                    
+                    updateStatus(`Zoom: ${Math.round((scale / 2) * 100)}%`);
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            
+            clearTimeout(touchHoldTimer);
+            
+            if (!isTouchPanning && touches.length === 1 && e.changedTouches.length === 1) {
+                const touch = e.changedTouches[0];
+                const rect = canvas.getBoundingClientRect();
+                const clickX = touch.clientX - rect.left;
+                const clickY = touch.clientY - rect.top;
+                handleCanvasClick(clickX, clickY);
+            }
+            
+            isTouchPanning = false;
+            touches = [];
+            lastTouchDistance = 0;
+            hideTouchIndicator();
+        }
+
+        function getTouchDistance(touch1, touch2) {
+            const dx = touch2.clientX - touch1.clientX;
+            const dy = touch2.clientY - touch1.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function showTouchIndicator(text) {
+            const indicator = document.getElementById('touchIndicator');
+            indicator.textContent = text;
+            indicator.classList.add('active');
+        }
+
+        function hideTouchIndicator() {
+            const indicator = document.getElementById('touchIndicator');
+            indicator.classList.remove('active');
+        }
+
+        // Mouse events for desktop
+        canvas.addEventListener('click', (e) => {
+            if (e.button === 0 && !isPanning) {
+                const rect = canvas.getBoundingClientRect();
+                handleCanvasClick(e.clientX - rect.left, e.clientY - rect.top);
+            }
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.5, Math.min(10, scale * delta));
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const scaleDelta = newScale / scale;
+            panX = mouseX - (mouseX - panX) * scaleDelta;
+            panY = mouseY - (mouseY - panY) * scaleDelta;
+            
+            scale = newScale;
+            drawGrid();
+            if (currentPath) {
+                drawPath(currentPath);
+            }
+        });
+
+        canvas.addEventListener('mousedown', handlePanStart);
+        canvas.addEventListener('mousemove', handlePanMove);
+        canvas.addEventListener('mouseup', handlePanEnd);
+        canvas.addEventListener('mouseleave', handlePanEnd);
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        function handlePanStart(e) {
+            if (e.button === 2) {
+                isPanning = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                e.preventDefault();
+            }
+        }
+
+        function handlePanMove(e) {
+            if (isPanning) {
+                const dx = e.clientX - lastMouseX;
+                const dy = e.clientY - lastMouseY;
+                panX += dx;
+                panY += dy;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                
+                drawGrid();
+                if (currentPath) {
+                    drawPath(currentPath);
+                }
+            }
+        }
+
+        function handlePanEnd(e) {
+            if (e.button === 2) {
+                isPanning = false;
+            }
+        }
+
+        function handleCanvasClick(clickX, clickY) {
+            if (!gridCalculated) return;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Calculate world position relative to ship's current position
+            // This matches the original logic exactly
+            const worldX = (clickX - centerX - panX) / scale - shipWorldX;
+            const worldY = (clickY - centerY - panY) / scale - shipWorldY;
+            
+            const flightMode = document.getElementById('flightMode').value;
+            const timeLimit = parseFloat(document.getElementById('timeInterval').value);
+            const initialHeading = parseFloat(document.getElementById('initialAngle').value);
+            const initialVx = parseFloat(document.getElementById('initialVx').value);
+            const initialVy = parseFloat(document.getElementById('initialVy').value);
+            
+            let params;
+            if (flightMode === 'decoupled') {
+                const relativeRotation = parseFloat(document.getElementById('targetRotation').value);
+                const targetHeading = initialHeading + relativeRotation;
+                
+                params = {
+                    forwardThrust: parseFloat(document.getElementById('forwardThrust').value),
+                    backwardThrust: parseFloat(document.getElementById('backwardThrust').value),
+                    leftThrust: parseFloat(document.getElementById('leftThrust').value),
+                    rightThrust: parseFloat(document.getElementById('rightThrust').value),
+                    maxSpeed: parseFloat(document.getElementById('maxSpeed').value),
+                    rotationRate: parseFloat(document.getElementById('turningRange').value),
+                    timeLimit,
+                    initialHeading,
+                    targetHeading,
+                    initialVx,
+                    initialVy
+                };
+                currentPath = simulatePathToTargetDecoupled(worldX, worldY, params);
+            } else {
+                params = {
+                    maxAccel: parseFloat(document.getElementById('maxAccel').value),
+                    maxDecel: parseFloat(document.getElementById('maxDecel').value),
+                    maxSpeed: parseFloat(document.getElementById('maxSpeed').value),
+                    maxTurnRate: parseFloat(document.getElementById('turningRange').value),
+                    timeLimit,
+                    initialHeading,
+                    initialVx,
+                    initialVy,
+                    pathTimeStep: parseFloat(document.getElementById('pathTimeStep').value)
+                };
+                currentPath = simulatePathToTarget(worldX, worldY, params);
+            }
+            
+            drawGrid();
+            drawPath(currentPath);
+            
+            const endTurnBtn = document.getElementById('endTurnBtn');
+            if (currentPath.reached) {
+                endTurnBtn.disabled = false;
+                updateStatus(`Target reached! Distance: ${currentPath.finalDistance.toFixed(1)}m`);
+            } else {
+                endTurnBtn.disabled = true;
+                updateStatus(`Unreachable. Closest: ${currentPath.finalDistance.toFixed(1)}m`);
+            }
+        }
+
+        function simulatePathToTarget(targetX, targetY, params) {
+            const {
+                maxAccel,
+                maxDecel,
+                maxSpeed,
+                maxTurnRate,
+                timeLimit,
+                initialHeading,
+                initialVx,
+                initialVy,
+                pathTimeStep
+            } = params;
+
+            // This function generates a segmented path that tries to reach the target
+            // while respecting the 10-segment constraint
+
+            // Convert to radians
+            const maxTurnRad = maxTurnRate * Math.PI / 180;
+            const initialHeadingRad = initialHeading * Math.PI / 180;
+
+            // Number of segments (10 segments over the time interval)
+            const numSegments = 10;
+            const segmentTime = timeLimit / numSegments;
+
+            // Initialize position and velocity
+            let x = 0, y = 0;
+            let vx = initialVx, vy = initialVy;
+            let heading = initialHeadingRad;
+
+            // Create path array
+            const path = [{x, y, vx, vy, heading, t: 0}];
+
+            // For each segment, calculate optimal turn and speed to reach target
+            for (let seg = 1; seg <= numSegments; seg++) {
+                // Calculate remaining time and current distance to target
+                const remainingTime = (numSegments - seg + 1) * segmentTime;
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const distToTarget = Math.sqrt(dx * dx + dy * dy);
+
+                // Calculate desired heading to target
+                const desiredHeading = Math.atan2(dy, dx);
+
+                // Calculate heading error
+                let headingError = desiredHeading - heading;
+                while (headingError > Math.PI) headingError -= 2 * Math.PI;
+                while (headingError < -Math.PI) headingError += 2 * Math.PI;
+
+                // Calculate turn for this segment (limited by max turn rate)
+                const maxTurnThisSegment = maxTurnRad * segmentTime;
+                let turnThisSegment = headingError / (numSegments - seg + 1); // Distribute remaining turn
+                turnThisSegment = Math.max(-maxTurnThisSegment, Math.min(maxTurnThisSegment, turnThisSegment));
+
+                // Update heading (rotate gradually toward target)
+                heading += turnThisSegment;
+
+                // Calculate desired velocity in heading direction
+                const desiredSpeed = Math.min(distToTarget / remainingTime, maxSpeed);
+                const desiredVx = desiredSpeed * Math.cos(heading);
+                const desiredVy = desiredSpeed * Math.sin(heading);
+
+                // Calculate velocity change needed
+                const dvx = desiredVx - vx;
+                const dvy = desiredVy - vy;
+                const dvMagnitude = Math.sqrt(dvx * dvx + dvy * dvy);
+
+                // Apply acceleration constraints to velocity change
+                let maxDv;
+                if (dvMagnitude > 0.001) {
+                    // Check if we're accelerating or decelerating
+                    const currentSpeed = Math.sqrt(vx * vx + vy * vy);
+                    const newSpeed = Math.sqrt(desiredVx * desiredVx + desiredVy * desiredVy);
+
+                    if (newSpeed > currentSpeed) {
+                        maxDv = maxAccel * segmentTime;
+                    } else {
+                        maxDv = maxDecel * segmentTime;
+                    }
+
+                    // Limit velocity change by acceleration constraint
+                    if (dvMagnitude > maxDv) {
+                        vx += (dvx / dvMagnitude) * maxDv;
+                        vy += (dvy / dvMagnitude) * maxDv;
+                    } else {
+                        vx = desiredVx;
+                        vy = desiredVy;
+                    }
+                }
+
+                // Apply gravitational acceleration
+                const shipAbsX = shipWorldX + x;
+                const shipAbsY = shipWorldY + y;
+                const gravity = calculateGravity(shipAbsX, shipAbsY);
+                vx += gravity.ax * segmentTime;
+                vy += gravity.ay * segmentTime;
+
+                // Move using current velocity
+                x += vx * segmentTime;
+                y += vy * segmentTime;
+
+                // Add to path
+                path.push({
+                    x, y,
+                    vx, vy,
+                    heading,
+                    t: seg * segmentTime
+                });
+            }
+
+            // Check final distance to target
+            const finalDist = Math.sqrt((targetX - x) * (targetX - x) + (targetY - y) * (targetY - y));
+
+            // Determine if target is reachable based on final distance
+            // Use a tolerance threshold - if we get within 5 meters, consider it reachable
+            const reachThreshold = 5.0;
+            const actuallyReachable = finalDist <= reachThreshold;
+
+            return {
+                reached: actuallyReachable,
+                path: path,
+                finalHeading: heading,
+                finalX: x,
+                finalY: y,
+                targetX: targetX,
+                targetY: targetY,
+                finalDistance: finalDist
+            };
+        }
+
+        function simulatePathToTargetDecoupled(targetX, targetY, params) {
+            const {
+                forwardThrust,
+                backwardThrust,
+                leftThrust,
+                rightThrust,
+                maxSpeed,
+                rotationRate,
+                timeLimit,
+                initialHeading,
+                targetHeading,
+                initialVx,
+                initialVy
+            } = params;
+
+            const rotationRateRad = rotationRate * Math.PI / 180;
+            const initialHeadingRad = initialHeading * Math.PI / 180;
+            const targetHeadingRad = targetHeading * Math.PI / 180;
+
+            const numSegments = 10;
+            const segmentTime = timeLimit / numSegments;
+
+            // Initialize state
+            let x = 0, y = 0;
+            let vx = initialVx, vy = initialVy;
+            let heading = initialHeadingRad;
+
+            const path = [{x, y, vx, vy, heading, t: 0}];
+
+            // Calculate total rotation needed
+            let totalRotationNeeded = targetHeadingRad - initialHeadingRad;
+            while (totalRotationNeeded > Math.PI) totalRotationNeeded -= 2 * Math.PI;
+            while (totalRotationNeeded < -Math.PI) totalRotationNeeded += 2 * Math.PI;
+
+            // Distribute rotation evenly across segments
+            const rotationPerSegment = totalRotationNeeded / numSegments;
+            const maxRotationPerSegment = rotationRateRad * segmentTime;
+
+            for (let seg = 1; seg <= numSegments; seg++) {
+                // Update heading (independent of velocity)
+                let actualRotation = rotationPerSegment;
+                actualRotation = Math.max(-maxRotationPerSegment, Math.min(maxRotationPerSegment, actualRotation));
+                heading += actualRotation;
+
+                // Calculate remaining distance and time
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const distToTarget = Math.sqrt(dx * dx + dy * dy);
+                const remainingTime = (numSegments - seg + 1) * segmentTime;
+
+                // Calculate desired velocity change in world frame
+                const desiredVx = dx / remainingTime;
+                const desiredVy = dy / remainingTime;
+                const neededDvx = desiredVx - vx;
+                const neededDvy = desiredVy - vy;
+
+                // Convert needed acceleration to ship's local frame
+                const cosH = Math.cos(heading);
+                const sinH = Math.sin(heading);
+                const localForward = neededDvx * cosH + neededDvy * sinH;
+                const localRight = -neededDvx * sinH + neededDvy * cosH;
+
+                // Determine thrust based on needed acceleration
+                let thrustForward = 0;
+                let thrustRight = 0;
+
+                if (localForward > 0) {
+                    thrustForward = Math.min(localForward / segmentTime, forwardThrust);
+                } else {
+                    thrustForward = Math.max(localForward / segmentTime, -backwardThrust);
+                }
+
+                if (localRight > 0) {
+                    thrustRight = Math.min(localRight / segmentTime, rightThrust);
+                } else {
+                    thrustRight = Math.max(localRight / segmentTime, -leftThrust);
+                }
+
+                // Convert thrust back to world frame
+                const worldAccelX = thrustForward * cosH - thrustRight * sinH;
+                const worldAccelY = thrustForward * sinH + thrustRight * cosH;
+
+                // Update velocity with thrust
+                vx += worldAccelX * segmentTime;
+                vy += worldAccelY * segmentTime;
+
+                // Apply gravitational acceleration
+                const shipAbsX = shipWorldX + x;
+                const shipAbsY = shipWorldY + y;
+                const gravity = calculateGravity(shipAbsX, shipAbsY);
+                vx += gravity.ax * segmentTime;
+                vy += gravity.ay * segmentTime;
+
+                // Apply speed limit
+                const currentSpeed = Math.sqrt(vx * vx + vy * vy);
+                if (currentSpeed > maxSpeed) {
+                    vx = vx * maxSpeed / currentSpeed;
+                    vy = vy * maxSpeed / currentSpeed;
+                }
+
+                // Update position
+                x += vx * segmentTime;
+                y += vy * segmentTime;
+
+                path.push({
+                    x, y,
+                    vx, vy,
+                    heading,
+                    t: seg * segmentTime,
+                    thrustForward,
+                    thrustRight
+                });
+            }
+
+            const finalDist = Math.sqrt((targetX - x) * (targetX - x) + (targetY - y) * (targetY - y));
+            const reachThreshold = 5.0;
+
+            return {
+                reached: finalDist <= reachThreshold,
+                path: path,
+                finalHeading: heading,
+                finalX: x,
+                finalY: y,
+                targetX: targetX,
+                targetY: targetY,
+                finalDistance: finalDist
+            };
+        }
+
+        function calculate() {
+            const flightMode = document.getElementById('flightMode').value;
+            const gridDensity = parseInt(document.getElementById('gridDensity').value);
+            const timeLimit = parseFloat(document.getElementById('timeInterval').value);
+            const initialHeading = parseFloat(document.getElementById('initialAngle').value);
+            const initialVx = parseFloat(document.getElementById('initialVx').value);
+            const initialVy = parseFloat(document.getElementById('initialVy').value);
+            
+            let params;
+            
+            if (flightMode === 'decoupled') {
+                const relativeRotation = parseFloat(document.getElementById('targetRotation').value);
+                const targetHeading = initialHeading + relativeRotation;
+                
+                params = {
+                    forwardThrust: parseFloat(document.getElementById('forwardThrust').value),
+                    backwardThrust: parseFloat(document.getElementById('backwardThrust').value),
+                    leftThrust: parseFloat(document.getElementById('leftThrust').value),
+                    rightThrust: parseFloat(document.getElementById('rightThrust').value),
+                    maxSpeed: parseFloat(document.getElementById('maxSpeed').value),
+                    rotationRate: parseFloat(document.getElementById('turningRange').value),
+                    timeLimit,
+                    initialHeading,
+                    targetHeading,
+                    initialVx,
+                    initialVy
+                };
+            } else {
+                params = {
+                    maxAccel: parseFloat(document.getElementById('maxAccel').value),
+                    maxDecel: parseFloat(document.getElementById('maxDecel').value),
+                    maxSpeed: parseFloat(document.getElementById('maxSpeed').value),
+                    maxTurnRate: parseFloat(document.getElementById('turningRange').value),
+                    timeLimit,
+                    initialHeading,
+                    initialVx,
+                    initialVy,
+                    pathTimeStep: parseFloat(document.getElementById('pathTimeStep').value)
+                };
+            }
+            
+            const worldGridSize = 400;
+            const gridStep = worldGridSize / gridDensity;
+            
+            gridResults = {};
+            for (let i = 0; i <= gridDensity; i++) {
+                for (let j = 0; j <= gridDensity; j++) {
+                    const relativeX = (i - gridDensity / 2) * gridStep;
+                    const relativeY = (j - gridDensity / 2) * gridStep;
+                    
+                    let result;
+                    if (flightMode === 'decoupled') {
+                        result = simulatePathToTargetDecoupled(relativeX, relativeY, params);
+                    } else {
+                        result = simulatePathToTarget(relativeX, relativeY, params);
+                    }
+                    gridResults[`${i},${j}`] = result.reached;
+                }
+            }
+            
+            gridCalculated = true;
+            currentPath = null;
+            drawGrid();
+            
+            updateStatus('Ready. Tap any point to plot course.');
+        }
+
+        function drawGrid() {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const gridDensity = parseInt(document.getElementById('gridDensity').value);
+
+            const worldGridSize = 400;
+            const gridStep = worldGridSize / gridDensity;
+
+            updateSpeedMagnitude();
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 0.5;
+
+            const startI = Math.floor((-centerX - panX) / (gridStep * scale));
+            const endI = Math.ceil((canvas.width - centerX - panX) / (gridStep * scale));
+            const startJ = Math.floor((-centerY - panY) / (gridStep * scale));
+            const endJ = Math.ceil((canvas.height - centerY - panY) / (gridStep * scale));
+
+            for (let i = startI; i <= endI; i++) {
+                const pos = centerX + i * gridStep * scale + panX;
+                if (pos >= 0 && pos <= canvas.width) {
+                    ctx.beginPath();
+                    ctx.moveTo(pos, 0);
+                    ctx.lineTo(pos, canvas.height);
+                    ctx.stroke();
+                }
+            }
+            for (let j = startJ; j <= endJ; j++) {
+                const pos = centerY + j * gridStep * scale + panY;
+                if (pos >= 0 && pos <= canvas.height) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, pos);
+                    ctx.lineTo(canvas.width, pos);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw grid points if calculated
+            if (gridCalculated) {
+                let debugCount = 0;
+                for (let i = 0; i <= gridDensity; i++) {
+                    for (let j = 0; j <= gridDensity; j++) {
+                        const relativeX = (i - gridDensity / 2) * gridStep;
+                        const relativeY = (j - gridDensity / 2) * gridStep;
+                        
+                        const screenX = centerX + relativeX * scale + panX;
+                        const screenY = centerY + relativeY * scale + panY;
+                        
+                        const key = `${i},${j}`;
+                        
+                        if (screenX >= -10 && screenX <= canvas.width + 10 &&
+                            screenY >= -10 && screenY <= canvas.height + 10) {
+                            ctx.beginPath();
+                            ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
+                            ctx.fillStyle = gridResults[key] ? 'rgba(0, 255, 100, 0.8)' : 'rgba(255, 50, 50, 0.5)';
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+            
+            // Draw boat
+            const initialHeading = parseFloat(document.getElementById('initialAngle').value);
+            const initialVx = parseFloat(document.getElementById('initialVx').value);
+            const initialVy = parseFloat(document.getElementById('initialVy').value);
+
+            ctx.save();
+            ctx.translate(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY);
+            ctx.rotate(initialHeading * Math.PI / 180);
+            
+            ctx.fillStyle = '#4a9eff';
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = 'rgba(74, 158, 255, 0.8)';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, -8);
+            ctx.lineTo(-10, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 0;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(50, 0);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.restore();
+            
+            // Draw velocity vector
+            if (initialVx !== 0 || initialVy !== 0) {
+                ctx.save();
+                ctx.translate(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY);
+
+                const vMag = Math.sqrt(initialVx * initialVx + initialVy * initialVy);
+                const vAngle = Math.atan2(initialVy, initialVx);
+
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = 'rgba(255, 107, 107, 0.6)';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(initialVx * scale * 2, initialVy * scale * 2);
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(initialVx * scale * 2, initialVy * scale * 2);
+                ctx.rotate(vAngle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-10, -5);
+                ctx.lineTo(-10, 5);
+                ctx.closePath();
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fill();
+                ctx.restore();
+
+                ctx.restore();
+
+                ctx.fillStyle = '#ff6b6b';
+                ctx.font = 'bold 12px Arial';
+                ctx.shadowBlur = 0;
+                ctx.fillText(`V₀ = ${vMag.toFixed(1)} m/s`, centerX + shipWorldX * scale + panX + 20, centerY + shipWorldY * scale + panY - 20);
+            }
+
+            ctx.fillStyle = '#4a9eff';
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.arc(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            drawGravityBodies();
+            drawMoveHistory();
+        }
+
+        function drawGravityBodies() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            for (const body of gravityBodies) {
+                const screenX = centerX + body.x * scale + panX;
+                const screenY = centerY + body.y * scale + panY;
+
+                const surfaceAccel = G * body.mass / (body.radius * body.radius);
+
+                ctx.strokeStyle = 'rgba(255, 107, 53, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, body.influenceRadius * scale, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                const fieldSteps = 5;
+                for (let i = 1; i <= fieldSteps; i++) {
+                    const distFromCenter = body.radius + (body.influenceRadius - body.radius) * (i / fieldSteps);
+                    const radius = distFromCenter * scale;
+                    const alpha = 0.15 * (1 - i / fieldSteps);
+
+                    ctx.fillStyle = `rgba(255, 107, 53, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = `rgba(255, 107, 53, ${0.4 + alpha})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    const accelAtDist = G * body.mass / (distFromCenter * distFromCenter);
+
+                    if (i === 1 || i === 3 || i === 5) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.font = 'bold 10px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`${accelAtDist.toFixed(2)} m/s²`, screenX + radius + 5, screenY);
+                    }
+                }
+
+                ctx.fillStyle = body.color;
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, body.radius * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#FFF';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('G', screenX, screenY - 5);
+
+                ctx.font = '9px Arial';
+                ctx.fillText(`${surfaceAccel.toFixed(1)} m/s²`, screenX, screenY + 8);
+            }
+        }
+
+        function drawMoveHistory() {
+            if (moveHistory.length === 0) {
+                return;
+            }
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            ctx.strokeStyle = 'rgba(0, 200, 0, 0.6)';
+            ctx.lineWidth = 4;
+
+            let cumulativeWorldX = 0;
+            let cumulativeWorldY = 0;
+
+            for (let moveIndex = 0; moveIndex < moveHistory.length; moveIndex++) {
+                const move = moveHistory[moveIndex];
+                const path = move.path;
+
+                for (let i = 0; i < path.length - 1; i++) {
+                    const x1 = centerX + (cumulativeWorldX + path[i].x) * scale + panX;
+                    const y1 = centerY + (cumulativeWorldY + path[i].y) * scale + panY;
+                    const x2 = centerX + (cumulativeWorldX + path[i + 1].x) * scale + panX;
+                    const y2 = centerY + (cumulativeWorldY + path[i + 1].y) * scale + panY;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+
+                const lastSegment = path[path.length - 1];
+                cumulativeWorldX += lastSegment.x;
+                cumulativeWorldY += lastSegment.y;
+            }
+        }
+
+        function drawPath(pathData) {
+            if (!pathData || !pathData.path || pathData.path.length < 2) return;
+
+            const path = pathData.path;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const x1 = centerX + (shipWorldX + path[i].x) * scale + panX;
+                const y1 = centerY + (shipWorldY + path[i].y) * scale + panY;
+                const x2 = centerX + (shipWorldX + path[i + 1].x) * scale + panX;
+                const y2 = centerY + (shipWorldY + path[i + 1].y) * scale + panY;
+
+                ctx.strokeStyle = `rgba(0, 212, 255, ${0.9 - i * 0.3 / path.length})`;
+                ctx.lineWidth = 3;
+                ctx.shadowColor = 'rgba(0, 212, 255, 0.6)';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+
+                const vx1 = path[i].vx;
+                const vy1 = path[i].vy;
+                const vx2 = path[i + 1].vx;
+                const vy2 = path[i + 1].vy;
+
+                const segmentTime = (path[i + 1].t - path[i].t);
+                const t = segmentTime / 3.0;
+
+                const cp1x = x1 + vx1 * scale * t;
+                const cp1y = y1 + vy1 * scale * t;
+                const cp2x = x2 - vx2 * scale * t;
+                const cp2y = y2 - vy2 * scale * t;
+
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+                ctx.stroke();
+            }
+
+            // Draw boat at destination
+            const finalSegment = path[path.length - 1];
+            const screenX = centerX + (shipWorldX + finalSegment.x) * scale + panX;
+            const screenY = centerY + (shipWorldY + finalSegment.y) * scale + panY;
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(finalSegment.heading);
+            
+            ctx.fillStyle = '#ffa500';
+            ctx.strokeStyle = '#ff8c00';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = 'rgba(255, 165, 0, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(12, 0);
+            ctx.lineTo(-8, -6);
+            ctx.lineTo(-8, 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.restore();
+
+            // Draw target marker at the actual target position
+            const targetScreenX = centerX + (shipWorldX + pathData.targetX) * scale + panX;
+            const targetScreenY = centerY + (shipWorldY + pathData.targetY) * scale + panY;
+            
+            ctx.strokeStyle = pathData.reached ? '#00ff00' : '#ff0000';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 0;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(targetScreenX, targetScreenY, 15, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function coastTurn() {
+            const timeLimit = parseFloat(document.getElementById('timeInterval').value);
+            const initialHeading = parseFloat(document.getElementById('initialAngle').value);
+            const initialVx = parseFloat(document.getElementById('initialVx').value);
+            const initialVy = parseFloat(document.getElementById('initialVy').value);
+            
+            const numSegments = 10;
+            const segmentTime = timeLimit / numSegments;
+            const initialHeadingRad = initialHeading * Math.PI / 180;
+            
+            let x = 0, y = 0;
+            let vx = initialVx, vy = initialVy;
+            let heading = initialHeadingRad;
+            
+            const path = [{x, y, vx, vy, heading, t: 0}];
+            
+            for (let seg = 1; seg <= numSegments; seg++) {
+                const shipAbsX = shipWorldX + x;
+                const shipAbsY = shipWorldY + y;
+                const gravity = calculateGravity(shipAbsX, shipAbsY);
+                vx += gravity.ax * segmentTime;
+                vy += gravity.ay * segmentTime;
+                
+                x += vx * segmentTime;
+                y += vy * segmentTime;
+                
+                path.push({
+                    x, y,
+                    vx, vy,
+                    heading,
+                    t: seg * segmentTime
+                });
+            }
+            
+            currentPath = {
+                reached: true,
+                path: path,
+                finalHeading: heading,
+                finalX: x,
+                finalY: y,
+                targetX: x,
+                targetY: y,
+                finalDistance: 0
+            };
+            
+            const endTurnBtn = document.getElementById('endTurnBtn');
+            endTurnBtn.disabled = false;
+            
+            updateStatus('Coasting - gravity only');
+            
+            drawGrid();
+            drawPath(currentPath);
+        }
+
+        function endTurn() {
+            if (!currentPath || !currentPath.reached || isAnimating) {
+                return;
+            }
+
+            const moveRecord = {
+                path: JSON.parse(JSON.stringify(currentPath.path)),
+                startPanX: panX,
+                startPanY: panY,
+                targetX: currentPath.targetX,
+                targetY: currentPath.targetY
+            };
+            moveHistory.push(moveRecord);
+
+            const replayBtn = document.getElementById('replayBtn');
+            replayBtn.disabled = false;
+
+            animateMove(currentPath.path);
+        }
+
+        function animateMove(path) {
+            isAnimating = true;
+            animationProgress = 0;
+
+            const finalSegment = path[path.length - 1];
+
+            const animationDuration = 2000;
+            const startTime = Date.now();
+
+            const endTurnBtn = document.getElementById('endTurnBtn');
+            endTurnBtn.disabled = true;
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                animationProgress = Math.min(1, elapsed / animationDuration);
+
+                const currentX = finalSegment.x * animationProgress;
+                const currentY = finalSegment.y * animationProgress;
+
+                panX -= currentX * scale - (finalSegment.x * ((elapsed - 16) / animationDuration)) * scale;
+                panY -= currentY * scale - (finalSegment.y * ((elapsed - 16) / animationDuration)) * scale;
+
+                drawGrid();
+                drawMovingBoat(path, animationProgress);
+
+                if (animationProgress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    completeMove(finalSegment);
+                }
+            }
+
+            animate();
+        }
+
+        function drawMovingBoat(path, progress) {
+            if (!path || path.length < 2) return;
+
+            const totalTime = path[path.length - 1].t;
+            const currentTime = totalTime * progress;
+
+            let segmentIndex = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                if (currentTime >= path[i].t && currentTime <= path[i + 1].t) {
+                    segmentIndex = i;
+                    break;
+                }
+            }
+
+            const segmentProgress = (currentTime - path[segmentIndex].t) / (path[segmentIndex + 1].t - path[segmentIndex].t);
+            const currentSegment = path[segmentIndex];
+            const nextSegment = path[segmentIndex + 1];
+
+            const x = currentSegment.x + (nextSegment.x - currentSegment.x) * segmentProgress;
+            const y = currentSegment.y + (nextSegment.y - currentSegment.y) * segmentProgress;
+            const heading = currentSegment.heading + (nextSegment.heading - currentSegment.heading) * segmentProgress;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const screenX = centerX + (shipWorldX + x) * scale + panX;
+            const screenY = centerY + (shipWorldY + y) * scale + panY;
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(heading);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, -8);
+            ctx.lineTo(-10, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function completeMove(finalSegment) {
+            shipWorldX += finalSegment.x;
+            shipWorldY += finalSegment.y;
+
+            document.getElementById('initialVx').value = finalSegment.vx.toFixed(2);
+            document.getElementById('initialVy').value = finalSegment.vy.toFixed(2);
+
+            let finalHeadingDegrees = (finalSegment.heading * 180 / Math.PI);
+            while (finalHeadingDegrees < 0) finalHeadingDegrees += 360;
+            while (finalHeadingDegrees >= 360) finalHeadingDegrees -= 360;
+            document.getElementById('initialAngle').value = Math.round(finalHeadingDegrees);
+            document.getElementById('angleDisplay').textContent = Math.round(finalHeadingDegrees) + '°';
+
+            currentPath = null;
+            gridCalculated = false;
+            gridResults = {};
+            isAnimating = false;
+
+            calculate();
+
+            updateStatus('Turn complete. Range recalculated.');
+        }
+
+        function replayHistory() {
+            if (moveHistory.length === 0 || isAnimating) {
+                return;
+            }
+
+            isReplaying = true;
+            updateStatus('Replaying moves...');
+
+            let moveIndex = 0;
+            let cumulativeX = 0;
+            let cumulativeY = 0;
+
+            function replayNextMove() {
+                if (moveIndex >= moveHistory.length) {
+                    isReplaying = false;
+                    replayShipState = null;
+                    drawGrid();
+                    updateStatus('Replay complete');
+                    return;
+                }
+
+                const move = moveHistory[moveIndex];
+                const path = move.path;
+                let segmentIndex = 0;
+                const segmentDuration = 50;
+
+                function animateSegment() {
+                    if (segmentIndex >= path.length) {
+                        cumulativeX += path[path.length - 1].x;
+                        cumulativeY += path[path.length - 1].y;
+                        moveIndex++;
+                        setTimeout(replayNextMove, 500);
+                        return;
+                    }
+
+                    replayShipState = {
+                        x: cumulativeX + path[segmentIndex].x,
+                        y: cumulativeY + path[segmentIndex].y,
+                        heading: path[segmentIndex].heading
+                    };
+
+                    drawGrid();
+                    drawReplayGhost();
+
+                    segmentIndex++;
+                    setTimeout(animateSegment, segmentDuration);
+                }
+
+                animateSegment();
+            }
+
+            replayNextMove();
+        }
+
+        function drawReplayGhost() {
+            if (!replayShipState) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const screenX = centerX + replayShipState.x * scale + panX;
+            const screenY = centerY + replayShipState.y * scale + panY;
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(replayShipState.heading);
+
+            ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
+            ctx.strokeStyle = 'rgba(200, 100, 0, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(15, 0);
+            ctx.lineTo(-10, -8);
+            ctx.lineTo(-10, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Initialize
+        setTimeout(() => {
+            resizeCanvas();
+            calculate();
+            updateStatus('Ready. Tap any point to plot course.');
+        }, 100);
+    </script>
+</body>
+</html>
