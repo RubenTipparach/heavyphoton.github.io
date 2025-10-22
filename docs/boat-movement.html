@@ -2,60 +2,195 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Boat Movement Range Visualizer</title>
     <style>
         * {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-        }
-        
-        body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0a0a;
-            min-height: 100vh;
             color: #e0e0e0;
             touch-action: none;
+            overflow: hidden;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+
+        /* Left Sidebar - Controls */
+        #leftSidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 60px;
+            width: 300px;
             background: #1a1a1a;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-            border: 1px solid #333;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 100;
         }
-        
-        h1 {
-            text-align: center;
+
+        #leftSidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        /* Right Sidebar - Info/Help */
+        #rightSidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 60px;
+            width: 350px;
+            background: #1a1a1a;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        #rightSidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        /* Canvas Container */
+        #canvasContainer {
+            position: fixed;
+            left: 300px;
+            right: 350px;
+            top: 0;
+            bottom: 60px;
+            transition: left 0.3s ease, right 0.3s ease;
+        }
+
+        #canvasContainer.left-expanded {
+            left: 0;
+        }
+
+        #canvasContainer.right-expanded {
+            right: 0;
+        }
+
+        #canvasContainer.both-expanded {
+            left: 0;
+            right: 0;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* Bottom Button Bar */
+        #bottomBar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 0 15px;
+            z-index: 101;
+        }
+
+        /* Toggle Buttons */
+        .toggle-btn {
+            position: fixed;
+            top: 10px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%);
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 102;
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.5);
+        }
+
+        .toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        #leftToggle {
+            left: 10px;
+            transition: left 0.3s ease;
+        }
+
+        #leftToggle.expanded {
+            left: 310px;
+        }
+
+        #rightToggle {
+            right: 10px;
+            transition: right 0.3s ease;
+        }
+
+        #rightToggle.expanded {
+            right: 360px;
+        }
+
+        .toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* Sidebar Content Styling */
+        .sidebar-content {
+            padding: 70px 20px 20px 20px;
+        }
+
+        h2 {
             color: #fff;
-            margin-bottom: 30px;
-            font-size: 2em;
+            margin-bottom: 20px;
+            font-size: 1.3em;
             text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
         }
-        
+
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr;
             gap: 20px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-            border-radius: 15px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-            border: 1px solid #333;
+            margin-bottom: 20px;
         }
-        
+
         .control-group {
             display: flex;
             flex-direction: column;
         }
-        
+
         label {
             font-weight: 600;
             margin-bottom: 5px;
@@ -64,7 +199,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         select {
             padding: 8px;
             background: #2a2a2a;
@@ -73,7 +208,7 @@
             border-radius: 8px;
             font-size: 14px;
         }
-        
+
         input[type="range"] {
             width: 100%;
             margin-bottom: 5px;
@@ -85,7 +220,7 @@
             border-radius: 3px;
             outline: none;
         }
-        
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -97,7 +232,7 @@
             border: 2px solid #1a1a1a;
             box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
         }
-        
+
         input[type="number"] {
             padding: 8px;
             background: #2a2a2a;
@@ -107,20 +242,20 @@
             font-size: 14px;
             transition: all 0.3s ease;
         }
-        
+
         input[type="number"]:focus {
             outline: none;
             border-color: #4a9eff;
             box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
         }
-        
+
         .value-display {
             font-size: 0.9em;
             color: #6b7280;
             text-align: right;
             font-weight: 500;
         }
-        
+
         button {
             padding: 12px 24px;
             background: linear-gradient(135deg, #4a9eff 0%, #00d4ff 100%);
@@ -135,57 +270,52 @@
             letter-spacing: 1px;
             box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
             touch-action: manipulation;
+            min-height: 44px;
         }
-        
+
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(74, 158, 255, 0.5);
         }
-        
+
         button:active {
             transform: translateY(0);
         }
-        
+
         button:disabled {
             opacity: 0.5;
             background: linear-gradient(135deg, #3a3a3a 0%, #4a4a4a 100%);
             cursor: not-allowed;
             box-shadow: none;
         }
-        
-        #canvas {
-            border: 3px solid #333;
-            border-radius: 15px;
-            display: block;
-            margin: 0 auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            background: #000;
-            cursor: crosshair;
-            touch-action: none;
-        }
-        
+
         .info {
-            margin-top: 20px;
             padding: 15px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border-radius: 10px;
             font-size: 14px;
             color: #9ca3af;
             border-left: 4px solid #4a9eff;
+            margin-bottom: 20px;
         }
-        
+
         .info ul {
             color: #9ca3af;
+            margin: 10px 0;
+            padding-left: 20px;
         }
-        
+
+        .info li {
+            margin: 5px 0;
+        }
+
         .legend {
             display: flex;
-            justify-content: center;
-            gap: 30px;
+            flex-direction: column;
+            gap: 15px;
             margin-top: 20px;
-            flex-wrap: wrap;
         }
-        
+
         .legend-item {
             display: flex;
             align-items: center;
@@ -193,28 +323,35 @@
             font-size: 14px;
             color: #9ca3af;
         }
-        
+
         .legend-color {
             width: 20px;
             height: 20px;
             border-radius: 50%;
             border: 2px solid #666;
+            flex-shrink: 0;
         }
-        
+
         .status {
-            margin-top: 15px;
-            padding: 10px;
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
             background: linear-gradient(135deg, #1e3a5f 0%, #2a4a7f 100%);
             border-radius: 8px;
             text-align: center;
             font-weight: 600;
             color: #fff;
             border: 1px solid #3a5a8f;
+            z-index: 103;
+            max-width: 90vw;
+            font-size: 14px;
         }
-        
+
         .touch-indicator {
             position: fixed;
-            top: 10px;
+            top: 70px;
             right: 10px;
             padding: 8px 12px;
             background: rgba(74, 158, 255, 0.9);
@@ -226,202 +363,288 @@
             pointer-events: none;
             z-index: 1000;
         }
-        
+
         .touch-indicator.active {
             opacity: 1;
         }
-        
+
+        /* Mobile Overlay Backdrop */
+        #backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+            display: none;
+        }
+
+        #backdrop.active {
+            display: block;
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
+            #leftSidebar,
+            #rightSidebar {
+                width: 85vw;
+                max-width: 320px;
             }
-            
-            .container {
-                padding: 15px;
-                border-radius: 15px;
+
+            #leftSidebar {
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
             }
-            
-            h1 {
-                font-size: 1.5em;
-                margin-bottom: 20px;
+
+            #rightSidebar {
+                box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
             }
-            
-            .controls {
-                max-height: 30vh;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                padding: 15px;
+
+            #canvasContainer {
+                left: 0;
+                right: 0;
             }
-            
-            button {
-                padding: 14px 20px;
+
+            #canvasContainer.left-expanded,
+            #canvasContainer.right-expanded,
+            #canvasContainer.both-expanded {
+                left: 0;
+                right: 0;
+            }
+
+            #leftToggle {
+                left: 10px;
+            }
+
+            #leftToggle.expanded {
+                left: calc(85vw + 10px);
+                max-left: 330px;
+            }
+
+            #rightToggle {
+                right: 10px;
+            }
+
+            #rightToggle.expanded {
+                right: calc(85vw + 10px);
+                max-right: 330px;
+            }
+
+            .status {
+                font-size: 12px;
+                padding: 8px 15px;
+                bottom: 65px;
+            }
+
+            #bottomBar {
+                gap: 10px;
+                padding: 0 10px;
+            }
+
+            #bottomBar button {
                 font-size: 14px;
+                padding: 10px 16px;
             }
-            
-            #canvas {
-                width: 100% !important;
-                height: auto !important;
-                max-width: 100vw;
+        }
+
+        /* Small Mobile */
+        @media (max-width: 480px) {
+            #bottomBar {
+                gap: 5px;
+                padding: 0 5px;
+            }
+
+            #bottomBar button {
+                font-size: 12px;
+                padding: 8px 12px;
+                letter-spacing: 0.5px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚤 Boat Movement Range Visualizer</h1>
-        
-        <div class="touch-indicator" id="touchIndicator">Pan Mode</div>
-        
-        <div class="controls">
-            <div class="control-group">
-                <label for="flightMode">Flight Mode</label>
-                <select id="flightMode" onchange="toggleFlightMode()">
-                    <option value="coupled">Coupled (Main Thruster)</option>
-                    <option value="decoupled">Decoupled (Maneuvering)</option>
-                </select>
-            </div>
+    <!-- Left Sidebar Toggle Button -->
+    <div id="leftToggle" class="toggle-btn" onclick="toggleLeftSidebar()">
+        <svg viewBox="0 0 24 24">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+    </div>
 
-            <!-- Coupled Mode Controls -->
-            <div class="control-group coupled-control">
-                <label for="maxAccel">Max Acceleration (m/s²)</label>
-                <input type="number" id="maxAccel" value="2" step="0.5" min="0.5" max="10">
-            </div>
+    <!-- Right Sidebar Toggle Button -->
+    <div id="rightToggle" class="toggle-btn" onclick="toggleRightSidebar()">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+    </div>
 
-            <div class="control-group coupled-control">
-                <label for="maxDecel">Max Deceleration (m/s²)</label>
-                <input type="number" id="maxDecel" value="3" step="0.5" min="0.5" max="10">
-            </div>
+    <!-- Backdrop for Mobile -->
+    <div id="backdrop" onclick="closeAllSidebars()"></div>
 
-            <!-- Decoupled Mode Controls -->
-            <div class="control-group decoupled-control" style="display: none;">
-                <label for="forwardThrust">Forward Thrust (m/s²)</label>
-                <input type="number" id="forwardThrust" value="2" step="0.1" min="0" max="5">
-            </div>
+    <!-- Left Sidebar - Controls -->
+    <div id="leftSidebar">
+        <div class="sidebar-content">
+            <h2>Controls</h2>
 
-            <div class="control-group decoupled-control" style="display: none;">
-                <label for="backwardThrust">Backward Thrust (m/s²)</label>
-                <input type="number" id="backwardThrust" value="2" step="0.1" min="0" max="5">
-            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="flightMode">Flight Mode</label>
+                    <select id="flightMode" onchange="toggleFlightMode()">
+                        <option value="coupled">Coupled (Main Thruster)</option>
+                        <option value="decoupled">Decoupled (Maneuvering)</option>
+                    </select>
+                </div>
 
-            <div class="control-group decoupled-control" style="display: none;">
-                <label for="leftThrust">Left Thrust (m/s²)</label>
-                <input type="number" id="leftThrust" value="2" step="0.1" min="0" max="5">
-            </div>
+                <!-- Coupled Mode Controls -->
+                <div class="control-group coupled-control">
+                    <label for="maxAccel">Max Acceleration (m/s²)</label>
+                    <input type="number" id="maxAccel" value="2" step="0.5" min="0.5" max="10">
+                </div>
 
-            <div class="control-group decoupled-control" style="display: none;">
-                <label for="rightThrust">Right Thrust (m/s²)</label>
-                <input type="number" id="rightThrust" value="2" step="0.1" min="0" max="5">
-            </div>
+                <div class="control-group coupled-control">
+                    <label for="maxDecel">Max Deceleration (m/s²)</label>
+                    <input type="number" id="maxDecel" value="3" step="0.5" min="0.5" max="10">
+                </div>
 
-            <div class="control-group decoupled-control" style="display: none;">
-                <label for="targetRotation">Target Rotation (relative °)</label>
-                <input type="range" id="targetRotation" min="-100" max="100" value="0" step="1">
-                <span class="value-display" id="targetRotationDisplay">0° (current)</span>
-            </div>
+                <!-- Decoupled Mode Controls -->
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="forwardThrust">Forward Thrust (m/s²)</label>
+                    <input type="number" id="forwardThrust" value="2" step="0.1" min="0" max="5">
+                </div>
 
-            <div class="control-group">
-                <label for="maxSpeed">Max Speed (m/s)</label>
-                <input type="number" id="maxSpeed" value="20" step="1" min="1" max="50">
-            </div>
-            
-            <div class="control-group">
-                <label for="turningRange">Max Turn Rate (°/s)</label>
-                <input type="range" id="turningRange" min="5" max="180" value="90" step="5">
-                <span class="value-display" id="turningDisplay">90°/s</span>
-            </div>
-            
-            <div class="control-group">
-                <label for="initialVx">Initial Velocity X (m/s)</label>
-                <input type="number" id="initialVx" value="0" step="1" min="-50" max="50">
-            </div>
-            
-            <div class="control-group">
-                <label for="initialVy">Initial Velocity Y (m/s)</label>
-                <input type="number" id="initialVy" value="0" step="1" min="-50" max="50">
-            </div>
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="backwardThrust">Backward Thrust (m/s²)</label>
+                    <input type="number" id="backwardThrust" value="2" step="0.1" min="0" max="5">
+                </div>
 
-            <div class="control-group">
-                <label for="speedMagnitude">Speed Magnitude (m/s)</label>
-                <span class="value-display" id="speedMagnitude" style="font-size: 1.2em; color: #667eea;">0.0 m/s</span>
-            </div>
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="leftThrust">Left Thrust (m/s²)</label>
+                    <input type="number" id="leftThrust" value="2" step="0.1" min="0" max="5">
+                </div>
 
-            <div class="control-group">
-                <label for="gridDensity">Grid Density</label>
-                <input type="range" id="gridDensity" min="10" max="100" value="30" step="5">
-                <span class="value-display" id="densityDisplay">30</span>
-            </div>
-            
-            <div class="control-group">
-                <label for="timeInterval">Time Interval (s)</label>
-                <input type="number" id="timeInterval" value="10" step="1" min="1" max="30">
-            </div>
-            
-            <div class="control-group">
-                <label for="pathTimeStep">Path Time Step (s)</label>
-                <input type="number" id="pathTimeStep" value="1" step="0.1" min="0.1" max="5">
-            </div>
-            
-            <div class="control-group">
-                <label for="initialAngle">Initial Heading (°)</label>
-                <input type="range" id="initialAngle" min="0" max="360" value="0" step="15">
-                <span class="value-display" id="angleDisplay">0°</span>
-            </div>
-            
-            <div class="control-group">
-                <button onclick="coastTurn()">Coast (No Thrust)</button>
-            </div>
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="rightThrust">Right Thrust (m/s²)</label>
+                    <input type="number" id="rightThrust" value="2" step="0.1" min="0" max="5">
+                </div>
 
-            <div class="control-group">
-                <button onclick="endTurn()" id="endTurnBtn" disabled style="opacity: 0.5;">End Turn & Move Ship</button>
-            </div>
+                <div class="control-group decoupled-control" style="display: none;">
+                    <label for="targetRotation">Target Rotation (relative °)</label>
+                    <input type="range" id="targetRotation" min="-100" max="100" value="0" step="1">
+                    <span class="value-display" id="targetRotationDisplay">0° (current)</span>
+                </div>
 
-            <div class="control-group">
-                <button onclick="replayHistory()" id="replayBtn" disabled style="opacity: 0.5;">Replay All Moves</button>
+                <div class="control-group">
+                    <label for="maxSpeed">Max Speed (m/s)</label>
+                    <input type="number" id="maxSpeed" value="20" step="1" min="1" max="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="turningRange">Max Turn Rate (°/s)</label>
+                    <input type="range" id="turningRange" min="5" max="180" value="90" step="5">
+                    <span class="value-display" id="turningDisplay">90°/s</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="initialVx">Initial Velocity X (m/s)</label>
+                    <input type="number" id="initialVx" value="0" step="1" min="-50" max="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="initialVy">Initial Velocity Y (m/s)</label>
+                    <input type="number" id="initialVy" value="0" step="1" min="-50" max="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="speedMagnitude">Speed Magnitude (m/s)</label>
+                    <span class="value-display" id="speedMagnitude" style="font-size: 1.2em; color: #667eea;">0.0 m/s</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="gridDensity">Grid Density</label>
+                    <input type="range" id="gridDensity" min="10" max="100" value="30" step="5">
+                    <span class="value-display" id="densityDisplay">30</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="timeInterval">Time Interval (s)</label>
+                    <input type="number" id="timeInterval" value="10" step="1" min="1" max="30">
+                </div>
+
+                <div class="control-group">
+                    <label for="pathTimeStep">Path Time Step (s)</label>
+                    <input type="number" id="pathTimeStep" value="1" step="0.1" min="0.1" max="5">
+                </div>
+
+                <div class="control-group">
+                    <label for="initialAngle">Initial Heading (°)</label>
+                    <input type="range" id="initialAngle" min="0" max="360" value="0" step="15">
+                    <span class="value-display" id="angleDisplay">0°</span>
+                </div>
             </div>
-        </div>
-        
-        <canvas id="canvas" width="800" height="800"></canvas>
-        
-        <div class="status" id="status">Click on any point to see if the boat can reach it and visualize the path | Zoom: 100% | Use mouse wheel to zoom, right-click+drag to pan</div>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: rgba(0, 255, 0, 0.8);"></div>
-                <span>Reachable Position</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: rgba(255, 0, 0, 0.3);"></div>
-                <span>Unreachable Position</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #FFD700;"></div>
-                <span>Boat Starting Position</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffa500;"></div>
-                <span>Boat at Destination</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #00d4ff;"></div>
-                <span>Path Taken</span>
-            </div>
-        </div>
-        
-        <div class="info">
-            <strong>How to use:</strong>
-            <ul style="margin: 5px 0; padding-left: 20px;">
-                <li>Range is automatically calculated on load and when parameters change</li>
-                <li>Click/tap on any point to see if the boat can reach it</li>
-                <li>If reachable, the path shows how the boat gets there</li>
-                <li>The boat orientation at the destination is shown</li>
-                <li>Set initial velocities to simulate a moving start</li>
-                <li><strong>Desktop: Use mouse wheel to zoom in/out</strong></li>
-                <li><strong>Desktop: Right-click+drag to pan the view</strong></li>
-                <li><strong>Mobile: Tap and hold to pan the view</strong></li>
-                <li><strong>Mobile: Pinch with two fingers to zoom</strong></li>
-            </ul>
         </div>
     </div>
+
+    <!-- Right Sidebar - Help & Legend -->
+    <div id="rightSidebar">
+        <div class="sidebar-content">
+            <h2>Help & Legend</h2>
+
+            <div class="info">
+                <strong>How to use:</strong>
+                <ul>
+                    <li>Range is automatically calculated on load and when parameters change</li>
+                    <li>Click/tap on any point to see if the boat can reach it</li>
+                    <li>If reachable, the path shows how the boat gets there</li>
+                    <li>The boat orientation at the destination is shown</li>
+                    <li>Set initial velocities to simulate a moving start</li>
+                    <li><strong>Desktop: Use mouse wheel to zoom in/out</strong></li>
+                    <li><strong>Desktop: Right-click+drag to pan the view</strong></li>
+                    <li><strong>Mobile: Tap and hold to pan the view</strong></li>
+                    <li><strong>Mobile: Pinch with two fingers to zoom</strong></li>
+                </ul>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(0, 255, 0, 0.8);"></div>
+                    <span>Reachable Position</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 0, 0, 0.3);"></div>
+                    <span>Unreachable Position</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FFD700;"></div>
+                    <span>Boat Starting Position</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffa500;"></div>
+                    <span>Boat at Destination</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00d4ff;"></div>
+                    <span>Path Taken</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div id="canvasContainer" class="both-expanded">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- Bottom Button Bar -->
+    <div id="bottomBar">
+        <button onclick="coastTurn()">Coast</button>
+        <button onclick="endTurn()" id="endTurnBtn" disabled>End Turn</button>
+        <button onclick="replayHistory()" id="replayBtn" disabled>Replay</button>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status" id="status">Click on any point to see if the boat can reach it | Zoom: 100%</div>
+
+    <!-- Touch Indicator -->
+    <div class="touch-indicator" id="touchIndicator">Pan Mode</div>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -429,36 +652,152 @@
         let gridCalculated = false;
         let gridResults = {};
         let currentPath = null;
-        let scale = 2; // pixels per meter - can be changed for zoom
+        let scale = 2;
         let panX = 0;
         let panY = 0;
         let isPanning = false;
         let lastMouseX = 0;
         let lastMouseY = 0;
-        let moveHistory = []; // Store all previous moves
+        let moveHistory = [];
         let isAnimating = false;
         let animationProgress = 0;
-        let isReplaying = false; // Track if we're in replay mode
-        let replayShipState = null; // State of the replay ghost ship
-        let shipWorldX = 0; // Ship's actual world position X
-        let shipWorldY = 0; // Ship's actual world position Y
+        let isReplaying = false;
+        let replayShipState = null;
+        let shipWorldX = 0;
+        let shipWorldY = 0;
+
+        // Sidebar state
+        let leftSidebarOpen = false;
+        let rightSidebarOpen = false;
 
         // Gravitational bodies
         let gravityBodies = [
             {
-                x: 100,  // World position X (meters)
-                y: -50,  // World position Y (meters)
-                mass: 27000, // Mass in arbitrary units (affects strength) - tuned for ~3 m/s² surface gravity
-                radius: 30, // Visual radius (meters)
-                influenceRadius: 200, // Maximum distance of gravitational influence (meters)
+                x: 100,
+                y: -50,
+                mass: 27000,
+                radius: 30,
+                influenceRadius: 200,
                 color: '#FF6B35'
             }
         ];
 
-        // Gravitational constant (tuned for gameplay)
         const G = 0.1;
 
-        // Calculate gravitational acceleration at a point
+        // Resize canvas to fill container
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawGrid();
+            if (currentPath) {
+                drawPath(currentPath.path);
+            }
+        }
+
+        // Sidebar toggle functions
+        function toggleLeftSidebar() {
+            leftSidebarOpen = !leftSidebarOpen;
+            const sidebar = document.getElementById('leftSidebar');
+            const toggle = document.getElementById('leftToggle');
+            const container = document.getElementById('canvasContainer');
+            const backdrop = document.getElementById('backdrop');
+
+            if (leftSidebarOpen) {
+                sidebar.classList.remove('collapsed');
+                toggle.classList.add('expanded');
+                if (window.innerWidth > 768) {
+                    container.classList.remove('left-expanded');
+                    if (rightSidebarOpen) {
+                        container.classList.remove('both-expanded');
+                    } else {
+                        container.classList.remove('both-expanded');
+                        container.classList.add('right-expanded');
+                    }
+                } else {
+                    backdrop.classList.add('active');
+                }
+            } else {
+                sidebar.classList.add('collapsed');
+                toggle.classList.remove('expanded');
+                if (window.innerWidth > 768) {
+                    container.classList.add('left-expanded');
+                    if (!rightSidebarOpen) {
+                        container.classList.add('both-expanded');
+                        container.classList.remove('right-expanded');
+                    }
+                } else {
+                    if (!rightSidebarOpen) {
+                        backdrop.classList.remove('active');
+                    }
+                }
+            }
+
+            setTimeout(resizeCanvas, 300);
+        }
+
+        function toggleRightSidebar() {
+            rightSidebarOpen = !rightSidebarOpen;
+            const sidebar = document.getElementById('rightSidebar');
+            const toggle = document.getElementById('rightToggle');
+            const container = document.getElementById('canvasContainer');
+            const backdrop = document.getElementById('backdrop');
+
+            if (rightSidebarOpen) {
+                sidebar.classList.remove('collapsed');
+                toggle.classList.add('expanded');
+                if (window.innerWidth > 768) {
+                    container.classList.remove('right-expanded');
+                    if (leftSidebarOpen) {
+                        container.classList.remove('both-expanded');
+                    } else {
+                        container.classList.remove('both-expanded');
+                        container.classList.add('left-expanded');
+                    }
+                } else {
+                    backdrop.classList.add('active');
+                }
+            } else {
+                sidebar.classList.add('collapsed');
+                toggle.classList.remove('expanded');
+                if (window.innerWidth > 768) {
+                    container.classList.add('right-expanded');
+                    if (!leftSidebarOpen) {
+                        container.classList.add('both-expanded');
+                        container.classList.remove('left-expanded');
+                    }
+                } else {
+                    if (!leftSidebarOpen) {
+                        backdrop.classList.remove('active');
+                    }
+                }
+            }
+
+            setTimeout(resizeCanvas, 300);
+        }
+
+        function closeAllSidebars() {
+            if (leftSidebarOpen) toggleLeftSidebar();
+            if (rightSidebarOpen) toggleRightSidebar();
+        }
+
+        // Initialize with sidebars closed
+        function initializeSidebars() {
+            const leftSidebar = document.getElementById('leftSidebar');
+            const rightSidebar = document.getElementById('rightSidebar');
+            const container = document.getElementById('canvasContainer');
+
+            leftSidebar.classList.add('collapsed');
+            rightSidebar.classList.add('collapsed');
+            container.classList.add('both-expanded');
+
+            resizeCanvas();
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', resizeCanvas);
+
         function calculateGravity(x, y) {
             let ax = 0;
             let ay = 0;
@@ -469,12 +808,8 @@
                 const distSq = dx * dx + dy * dy;
                 const dist = Math.sqrt(distSq);
 
-                // Only apply gravity within influence radius
                 if (dist < body.influenceRadius && dist > 0.1) {
-                    // F = G * M / r^2, a = F (ship mass = 1)
                     const accelMagnitude = G * body.mass / distSq;
-
-                    // Direction toward the body
                     ax += (dx / dist) * accelMagnitude;
                     ay += (dy / dist) * accelMagnitude;
                 }
@@ -507,7 +842,6 @@
             if (gridCalculated) calculate();
         });
 
-        // Update speed magnitude display when velocity changes
         document.getElementById('initialVx').addEventListener('input', () => {
             updateSpeedMagnitude();
             if (gridCalculated) calculate();
@@ -516,8 +850,7 @@
             updateSpeedMagnitude();
             if (gridCalculated) calculate();
         });
-        
-        // Add listeners for all other numeric inputs
+
         document.getElementById('maxAccel').addEventListener('input', () => { if (gridCalculated) calculate(); });
         document.getElementById('maxDecel').addEventListener('input', () => { if (gridCalculated) calculate(); });
         document.getElementById('maxSpeed').addEventListener('input', () => { if (gridCalculated) calculate(); });
@@ -548,132 +881,111 @@
                 decoupledControls.forEach(el => el.style.display = 'flex');
             }
 
-            // Reset target rotation slider when switching modes
             document.getElementById('targetRotation').value = 0;
             const currentAngle = parseFloat(document.getElementById('initialAngle').value);
             document.getElementById('targetRotationDisplay').textContent = `0° (target: ${Math.round(currentAngle)}°)`;
 
-            // Always recalculate grid when switching modes
             calculate();
         }
-        
-        // Add click handler
+
         canvas.addEventListener('click', handleCanvasClick);
-
-        // Add zoom handler
         canvas.addEventListener('wheel', handleZoom);
-
-        // Add pan handlers
         canvas.addEventListener('mousedown', handlePanStart);
         canvas.addEventListener('mousemove', handlePanMove);
         canvas.addEventListener('mouseup', handlePanEnd);
         canvas.addEventListener('mouseleave', handlePanEnd);
-        
-        // Touch handling variables for mobile
+
+        // Touch handling
         let touches = [];
         let lastTouchDistance = 0;
         let touchHoldTimer = null;
         let isTouchPanning = false;
         let touchPanStartX = 0, touchPanStartY = 0;
         let panStartOffsetX = 0, panStartOffsetY = 0;
-        
-        // Touch event handlers
+
         canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
         canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
         canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
         canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-        
+
         function handleTouchStart(e) {
             e.preventDefault();
             touches = Array.from(e.touches);
-            
+
             if (touches.length === 1) {
-                // Single touch - potential pan
                 const touch = touches[0];
                 const rect = canvas.getBoundingClientRect();
                 touchPanStartX = touch.clientX - rect.left;
                 touchPanStartY = touch.clientY - rect.top;
                 panStartOffsetX = panX;
                 panStartOffsetY = panY;
-                
-                // Start timer for tap and hold
+
                 touchHoldTimer = setTimeout(() => {
                     isTouchPanning = true;
                     showTouchIndicator('Pan Mode');
                 }, 200);
-                
+
             } else if (touches.length === 2) {
-                // Two touches - pinch zoom
                 clearTimeout(touchHoldTimer);
                 isTouchPanning = false;
                 lastTouchDistance = getTouchDistance(touches[0], touches[1]);
                 showTouchIndicator('Zoom Mode');
             }
         }
-        
+
         function handleTouchMove(e) {
             e.preventDefault();
             touches = Array.from(e.touches);
-            
+
             if (isTouchPanning && touches.length === 1) {
-                // Panning
                 const touch = touches[0];
                 const rect = canvas.getBoundingClientRect();
                 const currentX = touch.clientX - rect.left;
                 const currentY = touch.clientY - rect.top;
-                
+
                 panX = panStartOffsetX + (currentX - touchPanStartX);
                 panY = panStartOffsetY + (currentY - touchPanStartY);
-                
+
                 drawGrid();
                 if (currentPath) {
-                    drawPath(currentPath);
+                    drawPath(currentPath.path);
                 }
-                
+
             } else if (touches.length === 2) {
-                // Pinch zoom
                 const currentDistance = getTouchDistance(touches[0], touches[1]);
                 if (lastTouchDistance > 0) {
                     const delta = currentDistance / lastTouchDistance;
                     const newScale = Math.max(0.5, Math.min(10, scale * delta));
-                    
-                    // Get pinch center
+
                     const rect = canvas.getBoundingClientRect();
                     const centerX = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
                     const centerY = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
-                    
-                    // Adjust pan offset to zoom towards pinch center
+
                     const scaleDelta = newScale / scale;
                     panX = centerX - (centerX - panX) * scaleDelta;
                     panY = centerY - (centerY - panY) * scaleDelta;
-                    
+
                     scale = newScale;
                     lastTouchDistance = currentDistance;
-                    
+
                     drawGrid();
                     if (currentPath) {
-                        drawPath(currentPath);
+                        drawPath(currentPath.path);
                     }
-                    
+
                     const zoomPercent = Math.round((scale / 2) * 100);
                     document.getElementById('status').textContent = `Touch zoom: ${zoomPercent}%`;
                 }
             }
         }
-        
+
         function handleTouchEnd(e) {
             e.preventDefault();
-            
+
             clearTimeout(touchHoldTimer);
-            
-            // Check if it was a tap (not pan or zoom)
+
             if (!isTouchPanning && touches.length === 1 && e.changedTouches.length === 1) {
                 const touch = e.changedTouches[0];
-                const rect = canvas.getBoundingClientRect();
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                
-                // Simulate a click at this position
                 const clickEvent = new MouseEvent('click', {
                     clientX: touch.clientX,
                     clientY: touch.clientY,
@@ -681,19 +993,19 @@
                 });
                 canvas.dispatchEvent(clickEvent);
             }
-            
+
             isTouchPanning = false;
             touches = [];
             lastTouchDistance = 0;
             hideTouchIndicator();
         }
-        
+
         function getTouchDistance(touch1, touch2) {
             const dx = touch2.clientX - touch1.clientX;
             const dy = touch2.clientY - touch1.clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
-        
+
         function showTouchIndicator(text) {
             const indicator = document.getElementById('touchIndicator');
             if (indicator) {
@@ -701,14 +1013,14 @@
                 indicator.classList.add('active');
             }
         }
-        
+
         function hideTouchIndicator() {
             const indicator = document.getElementById('touchIndicator');
             if (indicator) {
                 indicator.classList.remove('active');
             }
         }
-        
+
         function simulatePathToTargetDecoupled(targetX, targetY, params) {
             const {
                 forwardThrust,
@@ -731,47 +1043,39 @@
             const numSegments = 10;
             const segmentTime = timeLimit / numSegments;
 
-            // Initialize state
             let x = 0, y = 0;
             let vx = initialVx, vy = initialVy;
             let heading = initialHeadingRad;
 
             const path = [{x, y, vx, vy, heading, t: 0}];
 
-            // Calculate total rotation needed
             let totalRotationNeeded = targetHeadingRad - initialHeadingRad;
             while (totalRotationNeeded > Math.PI) totalRotationNeeded -= 2 * Math.PI;
             while (totalRotationNeeded < -Math.PI) totalRotationNeeded += 2 * Math.PI;
 
-            // Distribute rotation evenly across segments
             const rotationPerSegment = totalRotationNeeded / numSegments;
             const maxRotationPerSegment = rotationRateRad * segmentTime;
 
             for (let seg = 1; seg <= numSegments; seg++) {
-                // Update heading (independent of velocity)
                 let actualRotation = rotationPerSegment;
                 actualRotation = Math.max(-maxRotationPerSegment, Math.min(maxRotationPerSegment, actualRotation));
                 heading += actualRotation;
 
-                // Calculate remaining distance and time
                 const dx = targetX - x;
                 const dy = targetY - y;
                 const distToTarget = Math.sqrt(dx * dx + dy * dy);
                 const remainingTime = (numSegments - seg + 1) * segmentTime;
 
-                // Calculate desired velocity change in world frame
                 const desiredVx = dx / remainingTime;
                 const desiredVy = dy / remainingTime;
                 const neededDvx = desiredVx - vx;
                 const neededDvy = desiredVy - vy;
 
-                // Convert needed acceleration to ship's local frame
                 const cosH = Math.cos(heading);
                 const sinH = Math.sin(heading);
                 const localForward = neededDvx * cosH + neededDvy * sinH;
                 const localRight = -neededDvx * sinH + neededDvy * cosH;
 
-                // Determine thrust based on needed acceleration
                 let thrustForward = 0;
                 let thrustRight = 0;
 
@@ -787,29 +1091,24 @@
                     thrustRight = Math.max(localRight / segmentTime, -leftThrust);
                 }
 
-                // Convert thrust back to world frame
                 const worldAccelX = thrustForward * cosH - thrustRight * sinH;
                 const worldAccelY = thrustForward * sinH + thrustRight * cosH;
 
-                // Update velocity with thrust
                 vx += worldAccelX * segmentTime;
                 vy += worldAccelY * segmentTime;
 
-                // Apply gravitational acceleration
                 const shipAbsX = shipWorldX + x;
                 const shipAbsY = shipWorldY + y;
                 const gravity = calculateGravity(shipAbsX, shipAbsY);
                 vx += gravity.ax * segmentTime;
                 vy += gravity.ay * segmentTime;
 
-                // Apply speed limit
                 const currentSpeed = Math.sqrt(vx * vx + vy * vy);
                 if (currentSpeed > maxSpeed) {
                     vx = vx * maxSpeed / currentSpeed;
                     vy = vy * maxSpeed / currentSpeed;
                 }
 
-                // Update position
                 x += vx * segmentTime;
                 y += vy * segmentTime;
 
@@ -851,63 +1150,46 @@
                 pathTimeStep
             } = params;
 
-            // This function generates a segmented path that tries to reach the target
-            // while respecting the 10-segment constraint
-
-            // Convert to radians
             const maxTurnRad = maxTurnRate * Math.PI / 180;
             const initialHeadingRad = initialHeading * Math.PI / 180;
 
-            // Number of segments (10 segments over the time interval)
             const numSegments = 10;
             const segmentTime = timeLimit / numSegments;
 
-            // Initialize position and velocity
             let x = 0, y = 0;
             let vx = initialVx, vy = initialVy;
             let heading = initialHeadingRad;
 
-            // Create path array
             const path = [{x, y, vx, vy, heading, t: 0}];
 
-            // For each segment, calculate optimal turn and speed to reach target
             for (let seg = 1; seg <= numSegments; seg++) {
-                // Calculate remaining time and current distance to target
                 const remainingTime = (numSegments - seg + 1) * segmentTime;
                 const dx = targetX - x;
                 const dy = targetY - y;
                 const distToTarget = Math.sqrt(dx * dx + dy * dy);
 
-                // Calculate desired heading to target
                 const desiredHeading = Math.atan2(dy, dx);
 
-                // Calculate heading error
                 let headingError = desiredHeading - heading;
                 while (headingError > Math.PI) headingError -= 2 * Math.PI;
                 while (headingError < -Math.PI) headingError += 2 * Math.PI;
 
-                // Calculate turn for this segment (limited by max turn rate)
                 const maxTurnThisSegment = maxTurnRad * segmentTime;
-                let turnThisSegment = headingError / (numSegments - seg + 1); // Distribute remaining turn
+                let turnThisSegment = headingError / (numSegments - seg + 1);
                 turnThisSegment = Math.max(-maxTurnThisSegment, Math.min(maxTurnThisSegment, turnThisSegment));
 
-                // Update heading (rotate gradually toward target)
                 heading += turnThisSegment;
 
-                // Calculate desired velocity in heading direction
                 const desiredSpeed = Math.min(distToTarget / remainingTime, maxSpeed);
                 const desiredVx = desiredSpeed * Math.cos(heading);
                 const desiredVy = desiredSpeed * Math.sin(heading);
 
-                // Calculate velocity change needed
                 const dvx = desiredVx - vx;
                 const dvy = desiredVy - vy;
                 const dvMagnitude = Math.sqrt(dvx * dvx + dvy * dvy);
 
-                // Apply acceleration constraints to velocity change
                 let maxDv;
                 if (dvMagnitude > 0.001) {
-                    // Check if we're accelerating or decelerating
                     const currentSpeed = Math.sqrt(vx * vx + vy * vy);
                     const newSpeed = Math.sqrt(desiredVx * desiredVx + desiredVy * desiredVy);
 
@@ -917,7 +1199,6 @@
                         maxDv = maxDecel * segmentTime;
                     }
 
-                    // Limit velocity change by acceleration constraint
                     if (dvMagnitude > maxDv) {
                         vx += (dvx / dvMagnitude) * maxDv;
                         vy += (dvy / dvMagnitude) * maxDv;
@@ -927,18 +1208,15 @@
                     }
                 }
 
-                // Apply gravitational acceleration
                 const shipAbsX = shipWorldX + x;
                 const shipAbsY = shipWorldY + y;
                 const gravity = calculateGravity(shipAbsX, shipAbsY);
                 vx += gravity.ax * segmentTime;
                 vy += gravity.ay * segmentTime;
 
-                // Move using current velocity
                 x += vx * segmentTime;
                 y += vy * segmentTime;
 
-                // Add to path
                 path.push({
                     x, y,
                     vx, vy,
@@ -947,11 +1225,7 @@
                 });
             }
 
-            // Check final distance to target
             const finalDist = Math.sqrt((targetX - x) * (targetX - x) + (targetY - y) * (targetY - y));
-
-            // Determine if target is reachable based on final distance
-            // Use a tolerance threshold - if we get within 5 meters, consider it reachable
             const reachThreshold = 5.0;
             const actuallyReachable = finalDist <= reachThreshold;
 
@@ -966,8 +1240,7 @@
                 finalDistance: finalDist
             };
         }
-        
-        
+
         function handleZoom(event) {
             event.preventDefault();
 
@@ -975,31 +1248,23 @@
             const mouseX = event.clientX - rect.left;
             const mouseY = event.clientY - rect.top;
 
-            // Get world coordinates before zoom
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const worldXBefore = (mouseX - centerX - panX) / scale;
             const worldYBefore = (mouseY - centerY - panY) / scale;
 
-            // Zoom in or out
             const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
             scale *= zoomFactor;
-
-            // Clamp scale to reasonable values
             scale = Math.max(0.5, Math.min(10, scale));
 
-            // Get world coordinates after zoom
             const worldXAfter = (mouseX - centerX - panX) / scale;
             const worldYAfter = (mouseY - centerY - panY) / scale;
 
-            // Adjust pan to keep mouse position in same world location
             panX += (worldXAfter - worldXBefore) * scale;
             panY += (worldYAfter - worldYBefore) * scale;
 
-            // Update zoom display
             updateZoomDisplay();
 
-            // Redraw
             drawGrid();
             if (currentPath) {
                 const targetX = currentPath.targetX;
@@ -1015,7 +1280,6 @@
         }
 
         function handlePanStart(event) {
-            // Only pan with right mouse button
             if (event.button === 2) {
                 event.preventDefault();
                 isPanning = true;
@@ -1025,7 +1289,6 @@
             }
         }
 
-        // Prevent context menu on right click
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
         });
@@ -1041,7 +1304,6 @@
                 lastMouseX = event.clientX;
                 lastMouseY = event.clientY;
 
-                // Redraw
                 drawGrid();
                 if (currentPath) {
                     const centerX = canvas.width / 2;
@@ -1071,17 +1333,16 @@
             const status = document.getElementById('status');
             const statusText = status.textContent;
             const parts = statusText.split('|');
-            if (parts.length >= 3) {
-                parts[1] = ` Zoom: ${zoomPercent}% `;
+            if (parts.length >= 2) {
+                parts[1] = ` Zoom: ${zoomPercent}%`;
                 status.textContent = parts.join('|');
             } else {
                 const baseText = parts[0];
-                status.textContent = `${baseText} | Zoom: ${zoomPercent}% | Use mouse wheel to zoom, right-click+drag to pan`;
+                status.textContent = `${baseText} | Zoom: ${zoomPercent}%`;
             }
         }
 
         function handleCanvasClick(event) {
-            // Don't trigger click if we were panning or right-clicking
             if (event.button === 2) {
                 return;
             }
@@ -1090,15 +1351,12 @@
             const clickX = event.clientX - rect.left;
             const clickY = event.clientY - rect.top;
 
-            // Convert to world coordinates
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Calculate world position relative to ship's current position
             const worldX = (clickX - centerX - panX) / scale - shipWorldX;
             const worldY = (clickY - centerY - panY) / scale - shipWorldY;
-            
-            // Get parameters based on flight mode
+
             const flightMode = document.getElementById('flightMode').value;
             let params, result;
 
@@ -1140,69 +1398,6 @@
 
             currentPath = result;
 
-            // Log the full path details for debugging
-            const pathDebug = {
-                initialConditions: {
-                    heading: params.initialHeading,
-                    velocityX: params.initialVx,
-                    velocityY: params.initialVy,
-                    maxAccel: params.maxAccel,
-                    maxDecel: params.maxDecel,
-                    maxSpeed: params.maxSpeed,
-                    maxTurnRate: params.maxTurnRate,
-                    timeLimit: params.timeLimit
-                },
-                target: {
-                    x: worldX,
-                    y: worldY
-                },
-                reachable: result.reached,
-                segments: result.path.map((segment, idx) => {
-                    const speed = Math.sqrt(segment.vx * segment.vx + segment.vy * segment.vy);
-                    const isValidSpeed = speed <= params.maxSpeed + 0.1;
-
-                    return {
-                        segmentIndex: idx,
-                        time: segment.t,
-                        position: {
-                            x: segment.x,
-                            y: segment.y
-                        },
-                        velocity: {
-                            x: segment.vx,
-                            y: segment.vy,
-                            magnitude: speed
-                        },
-                        heading: {
-                            radians: segment.heading,
-                            degrees: segment.heading * 180 / Math.PI
-                        },
-                        valid: isValidSpeed,
-                        validationDetails: {
-                            speedOk: isValidSpeed,
-                            speed: speed,
-                            maxSpeed: params.maxSpeed
-                        }
-                    };
-                }),
-                finalState: {
-                    position: {
-                        x: result.finalX,
-                        y: result.finalY
-                    },
-                    heading: {
-                        radians: result.finalHeading,
-                        degrees: result.finalHeading * 180 / Math.PI
-                    },
-                    distanceFromTarget: result.finalDistance,
-                    reachThreshold: 5.0,
-                    withinThreshold: result.finalDistance <= 5.0
-                }
-            };
-
-            console.log(JSON.stringify(pathDebug, null, 2));
-
-            // Enable/disable end turn button based on reachability
             const endTurnBtn = document.getElementById('endTurnBtn');
             if (result.reached) {
                 endTurnBtn.disabled = false;
@@ -1212,24 +1407,20 @@
                 endTurnBtn.style.opacity = '0.5';
             }
 
-            // Update status
             const status = document.getElementById('status');
             const zoomPercent = Math.round((scale / 2) * 100);
             if (result.reached) {
-                status.textContent = `✓ Target at (${worldX.toFixed(1)}, ${worldY.toFixed(1)}) is REACHABLE - Path shown in blue | Zoom: ${zoomPercent}% | Use mouse wheel to zoom, right-click+drag to pan`;
+                status.textContent = `Target (${worldX.toFixed(1)}, ${worldY.toFixed(1)}) REACHABLE | Zoom: ${zoomPercent}%`;
                 status.style.background = '#d4f4dd';
                 status.style.color = '#0d7829';
             } else {
-                status.textContent = `✗ Target at (${worldX.toFixed(1)}, ${worldY.toFixed(1)}) is UNREACHABLE | Zoom: ${zoomPercent}% | Use mouse wheel to zoom, right-click+drag to pan`;
+                status.textContent = `Target (${worldX.toFixed(1)}, ${worldY.toFixed(1)}) UNREACHABLE | Zoom: ${zoomPercent}%`;
                 status.style.background = '#ffd4d4';
                 status.style.color = '#d32f2f';
             }
-            
-            // Redraw with the new target
+
             drawGrid();
 
-            // Convert world coordinates back to screen for drawing target
-            // worldX/worldY are relative to ship, so add shipWorldX/Y to get absolute position
             const targetScreenX = centerX + (shipWorldX + worldX) * scale + panX;
             const targetScreenY = centerY + (shipWorldY + worldY) * scale + panY;
             drawTarget(targetScreenX, targetScreenY, result.reached);
@@ -1239,20 +1430,17 @@
                 drawBoatAtDestination(result.finalX, result.finalY, result.finalHeading);
             }
         }
-        
+
         function drawPath(path) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Draw path as segments with bezier curves
-            // Path coordinates are relative to ship, so add shipWorldX/Y
             for (let i = 0; i < path.length - 1; i++) {
                 const x1 = centerX + (shipWorldX + path[i].x) * scale + panX;
                 const y1 = centerY + (shipWorldY + path[i].y) * scale + panY;
                 const x2 = centerX + (shipWorldX + path[i + 1].x) * scale + panX;
                 const y2 = centerY + (shipWorldY + path[i + 1].y) * scale + panY;
 
-                // Draw bezier curve segment - cyan with glow
                 ctx.strokeStyle = `rgba(0, 212, 255, ${0.9 - i * 0.3 / path.length})`;
                 ctx.lineWidth = 3;
                 ctx.shadowColor = 'rgba(0, 212, 255, 0.6)';
@@ -1260,38 +1448,26 @@
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
 
-                // Calculate control points based on velocity vectors
-                // Use velocity to determine tangent direction and magnitude
                 const vx1 = path[i].vx;
                 const vy1 = path[i].vy;
                 const vx2 = path[i + 1].vx;
                 const vy2 = path[i + 1].vy;
 
-                // Time per segment (assuming equal time distribution)
                 const segmentTime = (path[i + 1].t - path[i].t);
-
-                // Control points should extend in velocity direction, scaled by time
-                // For cubic bezier, control points at 1/3 of the way work well
                 const t = segmentTime / 3.0;
 
-                // Control point 1: extends from point 1 in velocity direction
                 const cp1x = x1 + vx1 * scale * t;
                 const cp1y = y1 + vy1 * scale * t;
-
-                // Control point 2: extends backward from point 2 in velocity direction
                 const cp2x = x2 - vx2 * scale * t;
                 const cp2y = y2 - vy2 * scale * t;
 
-                // Draw cubic bezier curve
                 ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
                 ctx.stroke();
-                
-                // Draw boat at this segment position
+
                 ctx.save();
                 ctx.translate(x1, y1);
                 ctx.rotate(path[i].heading);
-                
-                // Draw boat triangle at each position
+
                 ctx.fillStyle = `rgba(65, 105, 225, ${0.5 - i * 0.3 / path.length})`;
                 ctx.strokeStyle = `rgba(30, 58, 138, ${0.6 - i * 0.3 / path.length})`;
                 ctx.lineWidth = 1;
@@ -1302,10 +1478,9 @@
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
-                
+
                 ctx.restore();
-                
-                // Draw segment number and time
+
                 if (i > 0) {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     ctx.font = 'bold 11px Arial';
@@ -1313,12 +1488,9 @@
                     ctx.font = '10px Arial';
                     ctx.fillText(`t=${path[i].t.toFixed(1)}s`, x1 + 10, y1 + 8);
 
-                    // Calculate and show speed
                     const speed = Math.sqrt(path[i].vx * path[i].vx + path[i].vy * path[i].vy);
                     const maxSpeed = parseFloat(document.getElementById('maxSpeed').value);
-
-                    // Check if segment is valid (speed doesn't exceed max)
-                    const isValid = speed <= maxSpeed + 0.1; // Small tolerance for floating point
+                    const isValid = speed <= maxSpeed + 0.1;
 
                     if (!isValid) {
                         ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
@@ -1329,8 +1501,7 @@
                     ctx.fillStyle = isValid ? 'rgba(255, 107, 107, 0.7)' : 'rgba(255, 0, 0, 0.9)';
                     ctx.fillText(`${speed.toFixed(1)}m/s`, x1 + 10, y1 + 20);
                 }
-                
-                // Draw velocity indicator
+
                 const vScale = 1.5;
                 const vx = path[i].vx * vScale;
                 const vy = path[i].vy * vScale;
@@ -1345,12 +1516,11 @@
                     ctx.setLineDash([]);
                 }
             }
-            
-            // Highlight segment endpoints with circles
+
             for (let i = 0; i < path.length; i++) {
                 const x = centerX + (shipWorldX + path[i].x) * scale + panX;
                 const y = centerY + (shipWorldY + path[i].y) * scale + panY;
-                
+
                 ctx.fillStyle = 'rgba(65, 105, 225, 0.3)';
                 ctx.strokeStyle = 'rgba(65, 105, 225, 0.8)';
                 ctx.lineWidth = 1.5;
@@ -1360,20 +1530,18 @@
                 ctx.stroke();
             }
         }
-        
+
         function drawBoatAtDestination(x, y, heading) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // x, y are relative to ship position, so add shipWorldX/Y
             const screenX = centerX + (shipWorldX + x) * scale + panX;
             const screenY = centerY + (shipWorldY + y) * scale + panY;
-            
+
             ctx.save();
             ctx.translate(screenX, screenY);
             ctx.rotate(heading);
-            
-            // Draw boat triangle (orange at destination)
+
             ctx.fillStyle = '#ffa500';
             ctx.strokeStyle = '#ff8c00';
             ctx.lineWidth = 2;
@@ -1386,18 +1554,17 @@
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-            
+
             ctx.restore();
         }
-        
+
         function drawTarget(x, y, reachable) {
             ctx.strokeStyle = reachable ? '#00FF00' : '#FF0000';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(x, y, 8, 0, Math.PI * 2);
             ctx.stroke();
-            
-            // Draw crosshair
+
             ctx.beginPath();
             ctx.moveTo(x - 12, y);
             ctx.lineTo(x + 12, y);
@@ -1405,9 +1572,8 @@
             ctx.lineTo(x, y + 12);
             ctx.stroke();
         }
-        
+
         function drawGrid() {
-            // Clear canvas - dark background
             ctx.fillStyle = '#0a0a0a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1415,18 +1581,14 @@
             const centerY = canvas.height / 2;
             const gridDensity = parseInt(document.getElementById('gridDensity').value);
 
-            // Use same world grid size as calculate function
-            const worldGridSize = 400; // meters
+            const worldGridSize = 400;
             const gridStep = worldGridSize / gridDensity;
 
-            // Update speed magnitude display
             updateSpeedMagnitude();
-            
-            // Draw grid lines - subtle dark theme grid
+
             ctx.strokeStyle = '#1a1a1a';
             ctx.lineWidth = 0.5;
 
-            // Calculate visible grid range
             const startI = Math.floor((-centerX - panX) / (gridStep * scale));
             const endI = Math.ceil((canvas.width - centerX - panX) / (gridStep * scale));
             const startJ = Math.floor((-centerY - panY) / (gridStep * scale));
@@ -1450,34 +1612,15 @@
                     ctx.stroke();
                 }
             }
-            
-            // Draw grid points if calculated
+
             if (gridCalculated) {
-                let debugCount = 0;
                 for (let key in gridResults) {
                     const [i, j] = key.split(',').map(Number);
-                    // Calculate relative position from ship
                     const relativeX = (i - gridDensity / 2) * gridStep;
                     const relativeY = (j - gridDensity / 2) * gridStep;
-                    // Convert to absolute world position then to screen
                     const screenX = centerX + (shipWorldX + relativeX) * scale + panX;
                     const screenY = centerY + (shipWorldY + relativeY) * scale + panY;
 
-                    if (debugCount === 0) {
-                        // console.log('Grid dot debug:', {
-                        //     key,
-                        //     i, j,
-                        //     gridDensity,
-                        //     gridStep,
-                        //     relativeX, relativeY,
-                        //     shipWorldX, shipWorldY,
-                        //     scale, panX, panY,
-                        //     screenX, screenY
-                        // });
-                        debugCount++;
-                    }
-
-                    // Only draw if on screen
                     if (screenX >= -10 && screenX <= canvas.width + 10 &&
                         screenY >= -10 && screenY <= canvas.height + 10) {
                         ctx.beginPath();
@@ -1487,8 +1630,7 @@
                     }
                 }
             }
-            
-            // Draw boat starting position and heading
+
             const initialHeading = parseFloat(document.getElementById('initialAngle').value);
             const initialVx = parseFloat(document.getElementById('initialVx').value);
             const initialVy = parseFloat(document.getElementById('initialVy').value);
@@ -1496,8 +1638,7 @@
             ctx.save();
             ctx.translate(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY);
             ctx.rotate(initialHeading * Math.PI / 180);
-            
-            // Draw boat triangle - bright blue with glow
+
             ctx.fillStyle = '#4a9eff';
             ctx.strokeStyle = '#00d4ff';
             ctx.lineWidth = 2;
@@ -1510,8 +1651,7 @@
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-            
-            // Draw heading indicator - cyan
+
             ctx.strokeStyle = '#00d4ff';
             ctx.lineWidth = 3;
             ctx.shadowBlur = 0;
@@ -1521,10 +1661,9 @@
             ctx.lineTo(50, 0);
             ctx.stroke();
             ctx.setLineDash([]);
-            
+
             ctx.restore();
-            
-            // Draw velocity vector if non-zero
+
             if (initialVx !== 0 || initialVy !== 0) {
                 ctx.save();
                 ctx.translate(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY);
@@ -1541,7 +1680,6 @@
                 ctx.lineTo(initialVx * scale * 2, initialVy * scale * 2);
                 ctx.stroke();
 
-                // Arrow head
                 ctx.save();
                 ctx.translate(initialVx * scale * 2, initialVy * scale * 2);
                 ctx.rotate(vAngle);
@@ -1556,24 +1694,19 @@
 
                 ctx.restore();
 
-                // Label velocity
                 ctx.fillStyle = '#ff6b6b';
                 ctx.font = 'bold 12px Arial';
                 ctx.shadowBlur = 0;
                 ctx.fillText(`V₀ = ${vMag.toFixed(1)} m/s`, centerX + shipWorldX * scale + panX + 20, centerY + shipWorldY * scale + panY - 20);
             }
 
-            // Draw center marker at ship position
             ctx.fillStyle = '#4a9eff';
             ctx.shadowBlur = 0;
             ctx.beginPath();
             ctx.arc(centerX + shipWorldX * scale + panX, centerY + shipWorldY * scale + panY, 4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw gravitational bodies
             drawGravityBodies();
-
-            // Draw all previous moves as a continuous green line
             drawMoveHistory();
         }
 
@@ -1585,10 +1718,8 @@
                 const screenX = centerX + body.x * scale + panX;
                 const screenY = centerY + body.y * scale + panY;
 
-                // Calculate surface acceleration (at radius)
                 const surfaceAccel = G * body.mass / (body.radius * body.radius);
 
-                // Draw influence radius (faint circle)
                 ctx.strokeStyle = 'rgba(255, 107, 53, 0.2)';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([5, 5]);
@@ -1597,30 +1728,25 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                // Draw gravitational field gradient with acceleration contours
                 const fieldSteps = 5;
                 for (let i = 1; i <= fieldSteps; i++) {
                     const distFromCenter = body.radius + (body.influenceRadius - body.radius) * (i / fieldSteps);
                     const radius = distFromCenter * scale;
                     const alpha = 0.15 * (1 - i / fieldSteps);
 
-                    // Draw filled circle
                     ctx.fillStyle = `rgba(255, 107, 53, ${alpha})`;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Draw contour line
                     ctx.strokeStyle = `rgba(255, 107, 53, ${0.4 + alpha})`;
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Calculate and display acceleration at this distance
                     const accelAtDist = G * body.mass / (distFromCenter * distFromCenter);
 
-                    // Only show labels for some contours to avoid clutter
                     if (i === 1 || i === 3 || i === 5) {
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                         ctx.font = 'bold 10px Arial';
@@ -1629,7 +1755,6 @@
                     }
                 }
 
-                // Draw main body (solid circle)
                 ctx.fillStyle = body.color;
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 2;
@@ -1638,14 +1763,12 @@
                 ctx.fill();
                 ctx.stroke();
 
-                // Draw label with surface acceleration
                 ctx.fillStyle = '#FFF';
                 ctx.font = 'bold 12px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('G', screenX, screenY - 5);
 
-                // Show surface acceleration
                 ctx.font = '9px Arial';
                 ctx.fillText(`${surfaceAccel.toFixed(1)} m/s²`, screenX, screenY + 8);
             }
@@ -1662,7 +1785,6 @@
             ctx.strokeStyle = 'rgba(0, 200, 0, 0.6)';
             ctx.lineWidth = 4;
 
-            // Track cumulative world position for drawing the path
             let cumulativeWorldX = 0;
             let cumulativeWorldY = 0;
 
@@ -1670,14 +1792,12 @@
                 const move = moveHistory[moveIndex];
                 const path = move.path;
 
-                // Draw this move's path
                 for (let i = 0; i < path.length - 1; i++) {
                     const x1 = centerX + (cumulativeWorldX + path[i].x) * scale + panX;
                     const y1 = centerY + (cumulativeWorldY + path[i].y) * scale + panY;
                     const x2 = centerX + (cumulativeWorldX + path[i + 1].x) * scale + panX;
                     const y2 = centerY + (cumulativeWorldY + path[i + 1].y) * scale + panY;
 
-                    // Use velocity for control points
                     const vx1 = path[i].vx;
                     const vy1 = path[i].vy;
                     const vx2 = path[i + 1].vx;
@@ -1697,21 +1817,19 @@
                     ctx.stroke();
                 }
 
-                // Update cumulative world position for next move
                 const finalSegment = path[path.length - 1];
                 cumulativeWorldX += finalSegment.x;
                 cumulativeWorldY += finalSegment.y;
             }
         }
-        
+
         function endTurn() {
             if (!currentPath || !currentPath.reached || isAnimating) {
                 return;
             }
 
-            // Store the move in history before executing it
             const moveRecord = {
-                path: JSON.parse(JSON.stringify(currentPath.path)), // Deep copy
+                path: JSON.parse(JSON.stringify(currentPath.path)),
                 startPanX: panX,
                 startPanY: panY,
                 targetX: currentPath.targetX,
@@ -1719,12 +1837,10 @@
             };
             moveHistory.push(moveRecord);
 
-            // Enable replay button
             const replayBtn = document.getElementById('replayBtn');
             replayBtn.disabled = false;
             replayBtn.style.opacity = '1';
 
-            // Animate the move
             animateMove(currentPath.path);
         }
 
@@ -1734,10 +1850,9 @@
 
             const finalSegment = path[path.length - 1];
 
-            const animationDuration = 2000; // 2 seconds
+            const animationDuration = 2000;
             const startTime = Date.now();
 
-            // Disable buttons during animation
             const endTurnBtn = document.getElementById('endTurnBtn');
             endTurnBtn.disabled = true;
             endTurnBtn.style.opacity = '0.5';
@@ -1746,21 +1861,18 @@
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / animationDuration, 1);
 
-                // Easing function (ease-in-out)
                 const eased = progress < 0.5
                     ? 2 * progress * progress
                     : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
                 animationProgress = eased;
 
-                // Draw current state
                 drawGrid();
                 drawAnimatedPath(path, eased);
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    // Animation complete
                     isAnimating = false;
                     animationProgress = 0;
                     completeMove(finalSegment);
@@ -1771,7 +1883,6 @@
         }
 
         function drawAnimatedPath(path, progress) {
-            // Determine which segment we're currently in
             const totalSegments = path.length - 1;
             const currentSegmentFloat = progress * totalSegments;
             const currentSegmentIndex = Math.floor(currentSegmentFloat);
@@ -1780,14 +1891,12 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Draw completed segments
             for (let i = 0; i < Math.min(currentSegmentIndex, totalSegments); i++) {
                 const x1 = centerX + (shipWorldX + path[i].x) * scale + panX;
                 const y1 = centerY + (shipWorldY + path[i].y) * scale + panY;
                 const x2 = centerX + (shipWorldX + path[i + 1].x) * scale + panX;
                 const y2 = centerY + (shipWorldY + path[i + 1].y) * scale + panY;
 
-                // Use velocity for control points
                 const vx1 = path[i].vx;
                 const vy1 = path[i].vy;
                 const vx2 = path[i + 1].vx;
@@ -1809,7 +1918,6 @@
                 ctx.stroke();
             }
 
-            // Draw current segment in progress
             if (currentSegmentIndex < totalSegments) {
                 const i = currentSegmentIndex;
                 const x1 = centerX + (shipWorldX + path[i].x) * scale + panX;
@@ -1817,7 +1925,6 @@
                 const x2 = centerX + (shipWorldX + path[i + 1].x) * scale + panX;
                 const y2 = centerY + (shipWorldY + path[i + 1].y) * scale + panY;
 
-                // Use velocity for control points
                 const vx1 = path[i].vx;
                 const vy1 = path[i].vy;
                 const vx2 = path[i + 1].vx;
@@ -1831,13 +1938,11 @@
                 const cp2x = x2 - vx2 * scale * tControl;
                 const cp2y = y2 - vy2 * scale * tControl;
 
-                // Draw partial bezier curve
                 ctx.strokeStyle = 'rgba(65, 105, 225, 0.7)';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
 
-                // Sample bezier curve and draw up to current progress
                 const steps = 20;
                 for (let j = 0; j <= steps * segmentProgress; j++) {
                     const t = j / steps;
@@ -1848,20 +1953,15 @@
                 }
                 ctx.stroke();
 
-                // Calculate boat position along the bezier curve
                 const t = segmentProgress;
                 const mt = 1 - t;
                 const boatX = mt * mt * mt * x1 + 3 * mt * mt * t * cp1x + 3 * mt * t * t * cp2x + t * t * t * x2;
                 const boatY = mt * mt * mt * y1 + 3 * mt * mt * t * cp1y + 3 * mt * t * t * cp2y + t * t * t * y2;
 
-                // Get actual heading from path data
                 const heading1 = path[i].heading;
                 const heading2 = path[i + 1].heading;
-
-                // Interpolate heading
                 const boatHeading = heading1 + (heading2 - heading1) * segmentProgress;
 
-                // Draw animated boat
                 ctx.save();
                 ctx.translate(boatX, boatY);
                 ctx.rotate(boatHeading);
@@ -1882,42 +1982,28 @@
         }
 
         function completeMove(finalSegment) {
-            // Update ship's world position
             shipWorldX += finalSegment.x;
             shipWorldY += finalSegment.y;
 
-            // Update initial velocity to final velocity
             document.getElementById('initialVx').value = finalSegment.vx.toFixed(2);
             document.getElementById('initialVy').value = finalSegment.vy.toFixed(2);
 
-            // Update initial heading to final heading
             let finalHeadingDegrees = (finalSegment.heading * 180 / Math.PI);
-            // Normalize to 0-360 range
             while (finalHeadingDegrees < 0) finalHeadingDegrees += 360;
             while (finalHeadingDegrees >= 360) finalHeadingDegrees -= 360;
             document.getElementById('initialAngle').value = Math.round(finalHeadingDegrees);
             document.getElementById('angleDisplay').textContent = Math.round(finalHeadingDegrees) + '°';
 
-            // Clear current path
             currentPath = null;
             gridCalculated = false;
             gridResults = {};
 
-            // Auto-calculate new range for the new position
             calculate();
 
-            // Update status
             const status = document.getElementById('status');
-            status.textContent = `Turn ended! Ship moved to new position. Range auto-calculated. | Zoom: ${Math.round((scale / 2) * 100)}% | Use mouse wheel to zoom, right-click+drag to pan`;
+            status.textContent = `Turn ended! Ship moved. Range recalculated. | Zoom: ${Math.round((scale / 2) * 100)}%`;
             status.style.background = 'linear-gradient(135deg, #1e4a2f 0%, #2a6a4f 100%)';
             status.style.color = '#fff';
-
-            console.log('Turn ended. New ship state:', {
-                position: { x: shipWorldX, y: shipWorldY },
-                velocity: { x: finalSegment.vx, y: finalSegment.vy },
-                heading: { radians: finalSegment.heading, degrees: finalHeadingDegrees },
-                totalMoves: moveHistory.length
-            });
         }
 
         function replayHistory() {
@@ -1925,34 +2011,27 @@
                 return;
             }
 
-            console.log('Replaying all moves:', moveHistory);
-
             isReplaying = true;
 
-            // Disable buttons
             const replayBtn = document.getElementById('replayBtn');
             replayBtn.disabled = true;
             replayBtn.style.opacity = '0.5';
 
-            // Animate each move in sequence
             let currentMoveIndex = 0;
 
             function playNextMove() {
                 if (currentMoveIndex >= moveHistory.length) {
-                    // All moves replayed
                     isReplaying = false;
                     replayShipState = null;
                     replayBtn.disabled = false;
                     replayBtn.style.opacity = '1';
                     drawGrid();
-                    console.log('Replay complete!');
                     return;
                 }
 
                 const move = moveHistory[currentMoveIndex];
                 currentMoveIndex++;
 
-                // Initialize replay ship state for this move
                 replayShipState = {
                     currentPath: move.path,
                     progress: 0,
@@ -1960,7 +2039,6 @@
                     cumulativeWorldY: 0
                 };
 
-                // Calculate cumulative world position up to this move
                 for (let i = 0; i < currentMoveIndex - 1; i++) {
                     const prevMove = moveHistory[i];
                     const prevFinalSegment = prevMove.path[prevMove.path.length - 1];
@@ -1968,7 +2046,6 @@
                     replayShipState.cumulativeWorldY += prevFinalSegment.y;
                 }
 
-                // Animate this move
                 isAnimating = true;
                 const animationDuration = 2000;
                 const startTime = Date.now();
@@ -1989,10 +2066,7 @@
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else {
-                        // This move complete
                         isAnimating = false;
-
-                        // Wait a bit then play next move
                         setTimeout(playNextMove, 500);
                     }
                 }
@@ -2011,7 +2085,6 @@
             const path = replayShipState.currentPath;
             const progress = replayShipState.progress;
 
-            // Determine which segment we're currently in
             const totalSegments = path.length - 1;
             const currentSegmentFloat = progress * totalSegments;
             const currentSegmentIndex = Math.floor(currentSegmentFloat);
@@ -2020,17 +2093,12 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Draw completed segments of current move
             for (let i = 0; i < Math.min(currentSegmentIndex, totalSegments); i++) {
                 const x1 = centerX + (replayShipState.cumulativeWorldX + path[i].x) * scale + panX;
                 const y1 = centerY + (replayShipState.cumulativeWorldY + path[i].y) * scale + panY;
                 const x2 = centerX + (replayShipState.cumulativeWorldX + path[i + 1].x) * scale + panX;
                 const y2 = centerY + (replayShipState.cumulativeWorldY + path[i + 1].y) * scale + panY;
 
-                const segmentDist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                const controlDist = segmentDist * 0.33;
-
-                // Use velocity for control points
                 const vx1 = path[i].vx;
                 const vy1 = path[i].vy;
                 const vx2 = path[i + 1].vx;
@@ -2044,7 +2112,7 @@
                 const cp2x = x2 - vx2 * scale * tControl;
                 const cp2y = y2 - vy2 * scale * tControl;
 
-                ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)'; // Orange for replay
+                ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
@@ -2052,7 +2120,6 @@
                 ctx.stroke();
             }
 
-            // Draw current segment in progress
             if (currentSegmentIndex < totalSegments) {
                 const i = currentSegmentIndex;
                 const x1 = centerX + (replayShipState.cumulativeWorldX + path[i].x) * scale + panX;
@@ -2060,10 +2127,6 @@
                 const x2 = centerX + (replayShipState.cumulativeWorldX + path[i + 1].x) * scale + panX;
                 const y2 = centerY + (replayShipState.cumulativeWorldY + path[i + 1].y) * scale + panY;
 
-                const segmentDist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                const controlDist = segmentDist * 0.33;
-
-                // Use velocity for control points
                 const vx1 = path[i].vx;
                 const vy1 = path[i].vy;
                 const vx2 = path[i + 1].vx;
@@ -2077,13 +2140,11 @@
                 const cp2x = x2 - vx2 * scale * tControl;
                 const cp2y = y2 - vy2 * scale * tControl;
 
-                // Draw partial bezier curve
                 ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
 
-                // Sample bezier curve and draw up to current progress
                 const steps = 20;
                 for (let j = 0; j <= steps * segmentProgress; j++) {
                     const t = j / steps;
@@ -2094,20 +2155,15 @@
                 }
                 ctx.stroke();
 
-                // Calculate boat position along the bezier curve
                 const t = segmentProgress;
                 const mt = 1 - t;
                 const boatX = mt * mt * mt * x1 + 3 * mt * mt * t * cp1x + 3 * mt * t * t * cp2x + t * t * t * x2;
                 const boatY = mt * mt * mt * y1 + 3 * mt * mt * t * cp1y + 3 * mt * t * t * cp2y + t * t * t * y2;
 
-                // Get actual heading from path data
                 const heading1 = path[i].heading;
                 const heading2 = path[i + 1].heading;
-
-                // Interpolate heading
                 const boatHeading = heading1 + (heading2 - heading1) * segmentProgress;
 
-                // Draw replay ghost boat (orange/transparent)
                 ctx.save();
                 ctx.translate(boatX, boatY);
                 ctx.rotate(boatHeading);
@@ -2166,18 +2222,13 @@
                     initialVy
                 };
             }
-            
-            // Calculate grid in world coordinates (independent of zoom/pan)
-            // gridDensity is number of grid cells, gridStep is world units per cell
-            const worldGridSize = 400; // Total world space size (meters)
+
+            const worldGridSize = 400;
             const gridStep = worldGridSize / gridDensity;
 
-            // Calculate reachability for each grid point
-            // Grid points are calculated relative to ship's current position
             gridResults = {};
             for (let i = 0; i <= gridDensity; i++) {
                 for (let j = 0; j <= gridDensity; j++) {
-                    // Calculate relative position from ship
                     const relativeX = (i - gridDensity / 2) * gridStep;
                     const relativeY = (j - gridDensity / 2) * gridStep;
 
@@ -2190,17 +2241,16 @@
                     gridResults[`${i},${j}`] = result.reached;
                 }
             }
-            
+
             gridCalculated = true;
             currentPath = null;
             drawGrid();
 
             const zoomPercent = Math.round((scale / 2) * 100);
-            document.getElementById('status').textContent = `Grid calculated! Click on any point to see the path. | Zoom: ${zoomPercent}% | Use mouse wheel to zoom, right-click+drag to pan`;
+            document.getElementById('status').textContent = `Grid calculated! Click any point to see the path. | Zoom: ${zoomPercent}%`;
         }
 
         function coastTurn() {
-            // Simulate coasting with no thrust, only gravity affects the ship
             const timeLimit = parseFloat(document.getElementById('timeInterval').value);
             const initialHeading = parseFloat(document.getElementById('initialAngle').value);
             const initialVx = parseFloat(document.getElementById('initialVx').value);
@@ -2217,16 +2267,12 @@
             const path = [{x, y, vx, vy, heading, t: 0}];
 
             for (let seg = 1; seg <= numSegments; seg++) {
-                // No thrust applied - heading stays constant, only gravity affects velocity
-
-                // Apply gravitational acceleration
                 const shipAbsX = shipWorldX + x;
                 const shipAbsY = shipWorldY + y;
                 const gravity = calculateGravity(shipAbsX, shipAbsY);
                 vx += gravity.ax * segmentTime;
                 vy += gravity.ay * segmentTime;
 
-                // Move using current velocity
                 x += vx * segmentTime;
                 y += vy * segmentTime;
 
@@ -2238,7 +2284,6 @@
                 });
             }
 
-            // Set this as the current path
             currentPath = {
                 reached: true,
                 path: path,
@@ -2250,28 +2295,23 @@
                 finalDistance: 0
             };
 
-            // Enable end turn button
             const endTurnBtn = document.getElementById('endTurnBtn');
             endTurnBtn.disabled = false;
             endTurnBtn.style.opacity = '1';
 
-            // Update status
             const zoomPercent = Math.round((scale / 2) * 100);
             const status = document.getElementById('status');
-            status.textContent = `Coasting with current velocity - only gravity affects trajectory | Zoom: ${zoomPercent}% | Use mouse wheel to zoom, right-click+drag to pan`;
+            status.textContent = `Coasting with current velocity - gravity only | Zoom: ${zoomPercent}%`;
             status.style.background = '#d4f4dd';
             status.style.color = '#0d7829';
 
-            // Redraw
             drawGrid();
             drawPath(currentPath.path);
             drawBoatAtDestination(currentPath.finalX, currentPath.finalY, currentPath.finalHeading);
         }
 
-        // Initial draw
-        drawGrid();
-        
-        // Auto-calculate range on initial load
+        // Initialize
+        initializeSidebars();
         calculate();
     </script>
 </body>
