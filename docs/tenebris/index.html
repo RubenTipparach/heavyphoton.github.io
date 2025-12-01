@@ -136,12 +136,57 @@
       height: 40px;
       image-rendering: pixelated;
     }
+
+    .hotbar-slot .item-count {
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 1px 1px 1px black;
+    }
+
+    .hotbar-slot {
+      position: relative;
+    }
+
+    /* Mining progress bar */
+    #mining-progress-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 30px);
+      width: 200px;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid #555;
+      border-radius: 4px;
+      overflow: hidden;
+      z-index: 100;
+      display: none;
+    }
+
+    #mining-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      transition: width 0.05s linear;
+    }
+
+    #mining-progress-container.active {
+      display: block;
+    }
   </style>
-  <script type="module" crossorigin src="/assets/index-dbckG91T.js"></script>
+  <script type="module" crossorigin src="/assets/index-DnsEqdhT.js"></script>
 </head>
 <body>
   <div id="game-container"></div>
   <div id="crosshair"></div>
+
+  <!-- Mining progress bar -->
+  <div id="mining-progress-container">
+    <div id="mining-progress-bar"></div>
+  </div>
 
   <div id="ui-overlay">
     <div id="position">Position: 0, 0, 0</div>
