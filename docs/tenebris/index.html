@@ -288,25 +288,35 @@
       z-index: 150;
     }
 
-    /* Left joystick */
-    .joystick-container {
+    /* Left and right control areas - Portrait mode (default) */
+    #left-controls, #right-controls {
       position: absolute;
-      bottom: 100px;
+      bottom: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    #left-controls {
+      left: 20px;
+    }
+
+    #right-controls {
+      right: 20px;
+    }
+
+    /* Joystick styling */
+    .joystick-container {
       pointer-events: auto;
       touch-action: none;
-    }
-
-    .joystick-container.left {
-      left: 30px;
-    }
-
-    .joystick-container.right {
-      right: 30px;
+      order: 2; /* Joystick below buttons in portrait */
     }
 
     .joystick-base {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       background: rgba(255, 255, 255, 0.15);
       border: 3px solid rgba(255, 255, 255, 0.4);
       border-radius: 50%;
@@ -316,34 +326,32 @@
     }
 
     .joystick-thumb {
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
       background: rgba(255, 255, 255, 0.5);
       border: 2px solid rgba(255, 255, 255, 0.8);
       border-radius: 50%;
       transition: transform 0.05s ease-out;
     }
 
-    /* Action buttons */
-    #action-buttons {
-      position: absolute;
-      bottom: 230px;
-      right: 20px;
+    /* Action buttons - Portrait: horizontal row above joystick */
+    #left-buttons, #right-buttons {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 10px;
       pointer-events: auto;
+      order: 1; /* Buttons above joystick in portrait */
     }
 
     .action-btn {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.2);
       border: 3px solid rgba(255, 255, 255, 0.5);
       color: white;
       font-family: 'Courier New', monospace;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: bold;
       cursor: pointer;
       touch-action: none;
@@ -367,6 +375,55 @@
 
     .action-btn.attack:active {
       background: rgba(255, 80, 80, 0.5);
+    }
+
+    /* Landscape mode - horizontal layout with buttons beside joystick */
+    @media (orientation: landscape) {
+      #left-controls, #right-controls {
+        bottom: 20px;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 15px;
+      }
+
+      #left-controls {
+        left: 20px;
+      }
+
+      #right-controls {
+        right: 20px;
+      }
+
+      .joystick-container {
+        order: 0; /* Reset order for landscape */
+      }
+
+      #left-buttons, #right-buttons {
+        flex-direction: column;
+        order: 0; /* Reset order for landscape */
+      }
+
+      /* In landscape: left side = joystick then buttons, right side = buttons then joystick */
+      #left-controls .joystick-container { order: 1; }
+      #left-controls #left-buttons { order: 2; }
+      #right-controls #right-buttons { order: 1; }
+      #right-controls .joystick-container { order: 2; }
+
+      .joystick-base {
+        width: 90px;
+        height: 90px;
+      }
+
+      .joystick-thumb {
+        width: 40px;
+        height: 40px;
+      }
+
+      .action-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 8px;
+      }
     }
 
     /* Mobile-specific adjustments */
@@ -404,7 +461,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-B2Ye3IeA.js"></script>
+  <script type="module" crossorigin src="/assets/index-NKmBEDWn.js"></script>
 </head>
 <body>
   <div id="game-container"></div>
