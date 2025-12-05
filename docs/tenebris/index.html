@@ -72,6 +72,19 @@
       z-index: 100;
     }
 
+    #ui-overlay-right {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      color: white;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      text-shadow: 1px 1px 2px black;
+      pointer-events: none;
+      z-index: 100;
+      text-align: right;
+    }
+
     #instructions {
       position: fixed;
       top: 50%;
@@ -247,6 +260,32 @@
 
     #start-button:active {
       background: #3d8b40;
+    }
+
+    /* Teleport dropdown */
+    .teleport-select {
+      padding: 6px 12px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .teleport-select:hover {
+      border-color: #777;
+    }
+
+    .teleport-select:focus {
+      border-color: #4CAF50;
+    }
+
+    .teleport-select option {
+      background: #333;
+      color: white;
     }
 
     /* Mining progress bar */
@@ -461,7 +500,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-CUZllmn0.js"></script>
+  <script type="module" crossorigin src="/assets/index-SdG0YF3G.js"></script>
 </head>
 <body>
   <div id="game-container"></div>
@@ -476,6 +515,10 @@
     <div id="position">Position: 0, 0, 0</div>
     <div id="fps">FPS: 0</div>
     <div id="block-type">Block: Stone</div>
+  </div>
+
+  <div id="ui-overlay-right">
+    <div id="block-depth">Depth: 0</div>
   </div>
 
   <div id="instructions">
@@ -506,6 +549,13 @@
           <input type="checkbox" id="toggle-clouds" checked>
           <span class="toggle-slider"></span>
         </div>
+      </div>
+      <div class="settings-row">
+        <label for="teleport-select">Teleport</label>
+        <select id="teleport-select" class="teleport-select">
+          <option value="earth">Earth</option>
+          <option value="moon">Moon</option>
+        </select>
       </div>
     </div>
 
