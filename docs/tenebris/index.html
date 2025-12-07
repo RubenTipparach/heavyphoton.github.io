@@ -146,6 +146,8 @@
       color: white;
       font-family: 'Courier New', monospace;
       font-size: 12px;
+      touch-action: manipulation;
+      cursor: pointer;
     }
 
     .hotbar-slot.selected {
@@ -294,6 +296,27 @@
 
     .teleport-select option {
       background: #333;
+    }
+
+    /* Reset button */
+    .reset-btn {
+      padding: 6px 16px;
+      background: #c62828;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #e53935;
+    }
+
+    .reset-btn:active {
+      background: #b71c1c;
     }
 
     /* Menu tabs */
@@ -475,6 +498,41 @@
 
     .action-btn.attack:active {
       background: rgba(255, 80, 80, 0.5);
+    }
+
+    .action-btn.inventory {
+      background: rgba(80, 150, 255, 0.3);
+      border-color: rgba(100, 170, 255, 0.6);
+    }
+
+    .action-btn.inventory:active {
+      background: rgba(80, 150, 255, 0.5);
+    }
+
+    .action-btn.pause {
+      background: rgba(150, 150, 150, 0.3);
+      border-color: rgba(180, 180, 180, 0.6);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .action-btn.pause:active {
+      background: rgba(150, 150, 150, 0.5);
+    }
+
+    /* Top corner buttons */
+    .action-btn.top-left {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      pointer-events: auto;
+    }
+
+    .action-btn.top-right {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      pointer-events: auto;
     }
 
     /* Landscape mode - horizontal layout with buttons beside joystick */
@@ -792,7 +850,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/tenebris/assets/index-DnqyH8tp.js"></script>
+  <script type="module" crossorigin src="/tenebris/assets/index-VOefIyte.js"></script>
 </head>
 <body>
   <div id="game-container"></div>
@@ -857,6 +915,10 @@
           <option value="earth">Earth</option>
           <option value="moon">Moon</option>
         </select>
+      </div>
+      <div class="settings-row">
+        <label>Reset Game</label>
+        <button id="reset-game-btn" class="reset-btn">Reset</button>
       </div>
     </div>
 
