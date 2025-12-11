@@ -72,6 +72,8 @@ if (initialHash && ['about', 'work', 'contact'].includes(initialHash)) {
   underwaterScene.navigateTo(initialHash);
   showPanel(initialHash);
 } else {
+  // Navigate to home to ensure camera position matches home location
+  underwaterScene.navigateTo('home');
   showPanel('home');
 }
 

@@ -28,7 +28,7 @@ interface SeaPlant {
 interface LocationPoint {
   name: string;
   position: THREE.Vector3;
-  lookAt: THREE.Vector3;
+  rotation: THREE.Euler; // Camera rotation in Euler angles (x=pitch, y=yaw, z=roll)
   marker: THREE.Group;
   lightColor: number;
   fogDensity: number;
@@ -55,7 +55,7 @@ export class UnderwaterScene {
 
   // Camera transition
   private cameraTarget: THREE.Vector3;
-  private cameraLookTarget: THREE.Vector3;
+  private cameraTargetRotation: THREE.Euler;
   private isTransitioning = false;
   private currentLocation: string = 'home';
 
@@ -94,16 +94,18 @@ export class UnderwaterScene {
     this.scene.background = new THREE.Color(0x001a33);
     this.scene.fog = new THREE.FogExp2(0x001a33, 0.015);
 
-    // Camera setup
+    // Camera setup - start at home position looking into the scene
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
-    this.camera.position.set(0, 5, 20);
+    // Home position: set camera position and rotation (Euler angles)
+    this.camera.position.set(0, 8, -25);
+    this.cameraTargetRotation = new THREE.Euler(0, Math.PI, 0); // 180 degrees yaw - looking toward -Z
+    this.camera.rotation.copy(this.cameraTargetRotation);
     this.cameraTarget = this.camera.position.clone();
-    this.cameraLookTarget = new THREE.Vector3(0, 2, -10);
 
     // Renderer setup
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -164,56 +166,56 @@ export class UnderwaterScene {
   }
 
   private createLocationPoints(): void {
-    // Home - center, bright blue
+    // Home - camera looking forward (Euler: x=pitch down/up, y=yaw left/right, z=roll)
     this.locations.set('home', {
       name: 'home',
-      position: new THREE.Vector3(0, 5, 20),
-      lookAt: new THREE.Vector3(0, 2, -10),
+      position: new THREE.Vector3(0, 8, -15),
+      rotation: new THREE.Euler(0, Math.PI, 0), // 180 degrees yaw - looking toward -Z
       marker: new THREE.Group(),
       lightColor: 0x88ccff,
       fogDensity: 0.015,
       ambientIntensity: 0.4,
     });
 
-    // About - left side, warmer tones
+    // About - left side, orb in front of home camera
     const aboutMarker = this.createLocationMarker('About', 0x4ecdc4);
-    aboutMarker.position.set(-25, 8, -15);
+    aboutMarker.position.set(-12, 6, 0);
     this.scene.add(aboutMarker);
     this.locationMarkers.push(aboutMarker);
     this.locations.set('about', {
       name: 'about',
-      position: new THREE.Vector3(-18, 10, 5),
-      lookAt: new THREE.Vector3(-25, 8, -15),
+      position: new THREE.Vector3(-6, 6, -10),
+      rotation: new THREE.Euler(0, Math.PI, 0), // Yaw left toward the orb
       marker: aboutMarker,
       lightColor: 0x4ecdc4,
       fogDensity: 0.012,
       ambientIntensity: 0.5,
     });
 
-    // Work - right side, energetic orange/coral
+    // Work - right side, orb in front of home camera
     const workMarker = this.createLocationMarker('Work', 0xff6b6b);
-    workMarker.position.set(25, 5, -20);
+    workMarker.position.set(12, 4, 5);
     this.scene.add(workMarker);
     this.locationMarkers.push(workMarker);
     this.locations.set('work', {
       name: 'work',
-      position: new THREE.Vector3(18, 8, 0),
-      lookAt: new THREE.Vector3(25, 5, -20),
+      position: new THREE.Vector3(6, 5, -8),
+      rotation: new THREE.Euler(0, Math.PI, 0), // Yaw right toward the orb
       marker: workMarker,
       lightColor: 0xff8866,
       fogDensity: 0.018,
       ambientIntensity: 0.45,
     });
 
-    // Contact - deep, bioluminescent feel
+    // Contact - deeper into scene, center
     const contactMarker = this.createLocationMarker('Contact', 0xaa96da);
-    contactMarker.position.set(0, 2, -35);
+    contactMarker.position.set(0, 3, 15);
     this.scene.add(contactMarker);
     this.locationMarkers.push(contactMarker);
     this.locations.set('contact', {
       name: 'contact',
-      position: new THREE.Vector3(0, 5, -15),
-      lookAt: new THREE.Vector3(0, 2, -35),
+      position: new THREE.Vector3(0, 5, 0),
+      rotation: new THREE.Euler(0, Math.PI, 0), // Looking straight forward
       marker: contactMarker,
       lightColor: 0xaa96da,
       fogDensity: 0.025,
@@ -845,7 +847,7 @@ export class UnderwaterScene {
     this.isTransitioning = true;
     this.currentLocation = locationName;
     this.cameraTarget = location.position.clone();
-    this.cameraLookTarget = location.lookAt.clone();
+    this.cameraTargetRotation = location.rotation.clone();
     this.targetLightColor.setHex(location.lightColor);
     this.targetFogDensity = location.fogDensity;
 
@@ -1161,10 +1163,15 @@ export class UnderwaterScene {
   }
 
   private updateCamera(): void {
-    // Smooth transition to target
-    const lerpSpeed = this.isTransitioning ? 0.03 : 0.02;
+    // Smooth transition to target position
+    const positionLerpSpeed = this.isTransitioning ? 0.025 : 0.02;
+    const rotationLerpSpeed = this.isTransitioning ? 0.03 : 0.02;
 
-    this.camera.position.lerp(this.cameraTarget, lerpSpeed);
+    // Store current camera quaternion before any changes
+    const currentQuaternion = this.camera.quaternion.clone();
+
+    // Lerp position smoothly
+    this.camera.position.lerp(this.cameraTarget, positionLerpSpeed);
 
     // Check if transition is complete
     if (this.isTransitioning &&
@@ -1173,23 +1180,25 @@ export class UnderwaterScene {
     }
 
     // Subtle mouse influence (less when transitioning)
-    const mouseInfluence = this.isTransitioning ? 0.5 : 2;
+    const mouseInfluence = this.isTransitioning ? 0.3 : 1.5;
     const targetX = this.cameraTarget.x + this.mouseX * mouseInfluence;
     const targetY = this.cameraTarget.y - this.mouseY * mouseInfluence * 0.5;
 
-    this.camera.position.x += (targetX - this.camera.position.x) * 0.02;
-    this.camera.position.y += (targetY - this.camera.position.y) * 0.02;
+    this.camera.position.x += (targetX - this.camera.position.x) * 0.015;
+    this.camera.position.y += (targetY - this.camera.position.y) * 0.015;
 
-    // Gentle floating motion
-    this.camera.position.y += Math.sin(this.clock.elapsedTime * 0.5) * 0.008;
-    this.camera.position.x += Math.cos(this.clock.elapsedTime * 0.3) * 0.004;
+    // Gentle floating motion (reduced when transitioning)
+    const floatAmount = this.isTransitioning ? 0.3 : 1;
+    this.camera.position.y += Math.sin(this.clock.elapsedTime * 0.5) * 0.008 * floatAmount;
+    this.camera.position.x += Math.cos(this.clock.elapsedTime * 0.3) * 0.004 * floatAmount;
 
-    // Smooth look target
-    const currentLook = new THREE.Vector3();
-    this.camera.getWorldDirection(currentLook);
-    currentLook.add(this.camera.position);
-    currentLook.lerp(this.cameraLookTarget, 0.02);
-    this.camera.lookAt(this.cameraLookTarget);
+    // Smooth rotation using quaternion slerp from Euler target
+    const targetQuaternion = new THREE.Quaternion();
+    targetQuaternion.setFromEuler(this.cameraTargetRotation);
+
+    // Smoothly interpolate rotation
+    currentQuaternion.slerp(targetQuaternion, rotationLerpSpeed);
+    this.camera.quaternion.copy(currentQuaternion);
   }
 
   private updateLighting(): void {
