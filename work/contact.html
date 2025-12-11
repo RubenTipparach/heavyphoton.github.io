@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact - Heavy Photon</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #001a33 0%, #003366 50%, #001a33 100%);
+        min-height: 100vh;
+        color: white;
+      }
+
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        background: linear-gradient(180deg, rgba(0, 26, 51, 0.9) 0%, transparent 100%);
+      }
+
+      .nav-logo {
+        font-size: 1.2rem;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: white;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border: 1px solid transparent;
+        border-radius: 4px;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
+
+      .page-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 8rem 2rem 4rem;
+      }
+
+      .page-title {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        font-weight: 200;
+        letter-spacing: 0.1em;
+        opacity: 0.7;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+      }
+
+      .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .form-group label {
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: rgba(136, 204, 255, 0.6);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 20px rgba(136, 204, 255, 0.1);
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .form-group textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .submit-btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: white;
+        background: linear-gradient(135deg, rgba(0, 150, 200, 0.6), rgba(0, 100, 150, 0.6));
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        margin-top: 1rem;
+      }
+
+      .submit-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 180, 230, 0.8), rgba(0, 130, 180, 0.8));
+        box-shadow: 0 0 30px rgba(136, 204, 255, 0.5);
+        transform: translateY(-2px);
+      }
+
+      .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .contact-info h2 {
+        font-size: 1.5rem;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        color: #88ccff;
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-info p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        opacity: 0.9;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .contact-icon {
+        font-size: 1.5rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(136, 204, 255, 0.1);
+        border-radius: 12px;
+        flex-shrink: 0;
+      }
+
+      .contact-details h3 {
+        font-size: 1rem;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.3rem;
+      }
+
+      .contact-details p {
+        font-size: 0.95rem;
+        opacity: 0.7;
+      }
+
+      .contact-details a {
+        color: #88ccff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .contact-details a:hover {
+        color: white;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .social-link {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        font-size: 1.3rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .social-link:hover {
+        background: rgba(136, 204, 255, 0.2);
+        border-color: rgba(136, 204, 255, 0.4);
+        transform: translateY(-3px);
+      }
+
+      .bubbles-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .bubble {
+        position: absolute;
+        bottom: -100px;
+        background: radial-gradient(circle at 30% 30%, rgba(136, 204, 255, 0.2), rgba(136, 204, 255, 0.05));
+        border-radius: 50%;
+        animation: rise linear infinite;
+      }
+
+      @keyframes rise {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0.4;
+        }
+        100% {
+          transform: translateY(-110vh) scale(0.5);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .nav {
+          padding: 1rem;
+        }
+
+        .nav-links {
+          gap: 1rem;
+        }
+
+        .nav-links a {
+          font-size: 0.8rem;
+          padding: 0.4rem 0.6rem;
+        }
+
+        .contact-grid {
+          grid-template-columns: 1fr;
+          gap: 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bubbles-bg" id="bubbles"></div>
+
+    <nav class="nav">
+      <a href="index.html" class="nav-logo">Heavy Photon</a>
+      <div class="nav-links">
+        <a href="about.html">About</a>
+        <a href="work.html">Work</a>
+        <a href="contact.html" class="active">Contact</a>
+      </div>
+    </nav>
+
+    <main class="page-content">
+      <h1 class="page-title">Contact</h1>
+      <p class="page-subtitle">Let's create something extraordinary together</p>
+
+      <div class="contact-grid">
+        <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent! (Demo)');">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" placeholder="What's this about?" />
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" placeholder="Tell us about your project..." required></textarea>
+          </div>
+          <button type="submit" class="submit-btn">Send Message</button>
+        </form>
+
+        <div class="contact-info">
+          <div>
+            <h2>Get in Touch</h2>
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod, nisi vel consectetur interdum, nisl nisi aliquet nunc.
+            </p>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon">📧</div>
+            <div class="contact-details">
+              <h3>Email</h3>
+              <p><a href="mailto:hello@heavyphoton.com">hello@heavyphoton.com</a></p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon">📍</div>
+            <div class="contact-details">
+              <h3>Location</h3>
+              <p>Somewhere beneath the waves</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-icon">⏰</div>
+            <div class="contact-details">
+              <h3>Response Time</h3>
+              <p>Usually within 24-48 hours</p>
+            </div>
+          </div>
+
+          <div>
+            <h2>Follow Us</h2>
+            <div class="social-links">
+              <a href="#" class="social-link" title="Twitter">🐦</a>
+              <a href="#" class="social-link" title="GitHub">💻</a>
+              <a href="#" class="social-link" title="Discord">💬</a>
+              <a href="#" class="social-link" title="YouTube">🎬</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const bubblesContainer = document.getElementById('bubbles');
+      for (let i = 0; i < 15; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const size = Math.random() * 30 + 10;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.animationDuration = (Math.random() * 15 + 15) + 's';
+        bubble.style.animationDelay = Math.random() * 10 + 's';
+        bubblesContainer.appendChild(bubble);
+      }
+    </script>
+  </body>
+</html>

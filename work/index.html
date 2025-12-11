@@ -1,184 +1,601 @@
-<!DOCTYPE HTML>
-<!--
-	Stellar by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>Stellar by HTML5 UP</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-	</head>
-	<body class="is-preload">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heavy Photon</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-		<!-- Wrapper -->
-			<div id="wrapper">
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: white;
+      }
 
-				<!-- Header -->
-					<header id="header" class="alt">
-						<span class="logo"><img src="images/logo.svg" alt="" /></span>
-						<h1>Stellar</h1>
-						<p>Just another free, fully responsive site template<br />
-						built by <a href="https://twitter.com/ajlkn">@ajlkn</a> for <a href="https://html5up.net">HTML5 UP</a>.</p>
-					</header>
+      #underwater-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
 
-				<!-- Nav -->
-					<nav id="nav">
-						<ul>
-							<li><a href="#intro" class="active">Introduction</a></li>
-							<li><a href="#first">First Section</a></li>
-							<li><a href="#second">Second Section</a></li>
-							<li><a href="#cta">Get Started</a></li>
-						</ul>
-					</nav>
+      /* Navigation */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        background: linear-gradient(180deg, rgba(0, 26, 51, 0.8) 0%, transparent 100%);
+      }
 
-				<!-- Main -->
-					<div id="main">
+      .nav-logo {
+        font-size: 1.2rem;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        transition: text-shadow 0.3s ease;
+      }
 
-						<!-- Introduction -->
-							<section id="intro" class="main">
-								<div class="spotlight">
-									<div class="content">
-										<header class="major">
-											<h2>Ipsum sed adipiscing</h2>
-										</header>
-										<p>Sed lorem ipsum dolor sit amet nullam consequat feugiat consequat magna
-										adipiscing magna etiam amet veroeros. Lorem ipsum dolor tempus sit cursus.
-										Tempus nisl et nullam lorem ipsum dolor sit amet aliquam.</p>
-										<ul class="actions">
-											<li><a href="generic.html" class="button">Learn More</a></li>
-										</ul>
-									</div>
-									<span class="image"><img src="images/pic01.jpg" alt="" /></span>
-								</div>
-							</section>
+      .nav-logo:hover {
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
 
-						<!-- First Section -->
-							<section id="first" class="main special">
-								<header class="major">
-									<h2>Magna veroeros</h2>
-								</header>
-								<ul class="features">
-									<li>
-										<span class="icon solid major style1 fa-code"></span>
-										<h3>Ipsum consequat</h3>
-										<p>Sed lorem amet ipsum dolor et amet nullam consequat a feugiat consequat tempus veroeros sed consequat.</p>
-									</li>
-									<li>
-										<span class="icon major style3 fa-copy"></span>
-										<h3>Amed sed feugiat</h3>
-										<p>Sed lorem amet ipsum dolor et amet nullam consequat a feugiat consequat tempus veroeros sed consequat.</p>
-									</li>
-									<li>
-										<span class="icon major style5 fa-gem"></span>
-										<h3>Dolor nullam</h3>
-										<p>Sed lorem amet ipsum dolor et amet nullam consequat a feugiat consequat tempus veroeros sed consequat.</p>
-									</li>
-								</ul>
-								<footer class="major">
-									<ul class="actions special">
-										<li><a href="generic.html" class="button">Learn More</a></li>
-									</ul>
-								</footer>
-							</section>
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
 
-						<!-- Second Section -->
-							<section id="second" class="main special">
-								<header class="major">
-									<h2>Ipsum consequat</h2>
-									<p>Donec imperdiet consequat consequat. Suspendisse feugiat congue<br />
-									posuere. Nulla massa urna, fermentum eget quam aliquet.</p>
-								</header>
-								<ul class="statistics">
-									<li class="style1">
-										<span class="icon solid fa-code-branch"></span>
-										<strong>5,120</strong> Etiam
-									</li>
-									<li class="style2">
-										<span class="icon fa-folder-open"></span>
-										<strong>8,192</strong> Magna
-									</li>
-									<li class="style3">
-										<span class="icon solid fa-signal"></span>
-										<strong>2,048</strong> Tempus
-									</li>
-									<li class="style4">
-										<span class="icon solid fa-laptop"></span>
-										<strong>4,096</strong> Aliquam
-									</li>
-									<li class="style5">
-										<span class="icon fa-gem"></span>
-										<strong>1,024</strong> Nullam
-									</li>
-								</ul>
-								<p class="content">Nam elementum nisl et mi a commodo porttitor. Morbi sit amet nisl eu arcu faucibus hendrerit vel a risus. Nam a orci mi, elementum ac arcu sit amet, fermentum pellentesque et purus. Integer maximus varius lorem, sed convallis diam accumsan sed. Etiam porttitor placerat sapien, sed eleifend a enim pulvinar faucibus semper quis ut arcu. Ut non nisl a mollis est efficitur vestibulum. Integer eget purus nec nulla mattis et accumsan ut magna libero. Morbi auctor iaculis porttitor. Sed ut magna ac risus et hendrerit scelerisque. Praesent eleifend lacus in lectus aliquam porta. Cras eu ornare dui curabitur lacinia.</p>
-								<footer class="major">
-									<ul class="actions special">
-										<li><a href="generic.html" class="button">Learn More</a></li>
-									</ul>
-								</footer>
-							</section>
+      .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-						<!-- Get Started -->
-							<section id="cta" class="main special">
-								<header class="major">
-									<h2>Congue imperdiet</h2>
-									<p>Donec imperdiet consequat consequat. Suspendisse feugiat congue<br />
-									posuere. Nulla massa urna, fermentum eget quam aliquet.</p>
-								</header>
-								<footer class="major">
-									<ul class="actions special">
-										<li><a href="generic.html" class="button primary">Get Started</a></li>
-										<li><a href="generic.html" class="button">Learn More</a></li>
-									</ul>
-								</footer>
-							</section>
+      .nav-link:hover,
+      .nav-link.active {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
 
-					</div>
+      /* Content Panels */
+      .panel {
+        position: fixed;
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
 
-				<!-- Footer -->
-					<footer id="footer">
-						<section>
-							<h2>Aliquam sed mauris</h2>
-							<p>Sed lorem ipsum dolor sit amet et nullam consequat feugiat consequat magna adipiscing tempus etiam dolore veroeros. eget dapibus mauris. Cras aliquet, nisl ut viverra sollicitudin, ligula erat egestas velit, vitae tincidunt odio.</p>
-							<ul class="actions">
-								<li><a href="generic.html" class="button">Learn More</a></li>
-							</ul>
-						</section>
-						<section>
-							<h2>Etiam feugiat</h2>
-							<dl class="alt">
-								<dt>Address</dt>
-								<dd>1234 Somewhere Road &bull; Nashville, TN 00000 &bull; USA</dd>
-								<dt>Phone</dt>
-								<dd>(000) 000-0000 x 0000</dd>
-								<dt>Email</dt>
-								<dd><a href="#">information@untitled.tld</a></dd>
-							</dl>
-							<ul class="icons">
-								<li><a href="#" class="icon brands fa-twitter alt"><span class="label">Twitter</span></a></li>
-								<li><a href="#" class="icon brands fa-facebook-f alt"><span class="label">Facebook</span></a></li>
-								<li><a href="#" class="icon brands fa-instagram alt"><span class="label">Instagram</span></a></li>
-								<li><a href="#" class="icon brands fa-github alt"><span class="label">GitHub</span></a></li>
-								<li><a href="#" class="icon brands fa-dribbble alt"><span class="label">Dribbble</span></a></li>
-							</ul>
-						</section>
-						<p class="copyright">&copy; Untitled. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
-					</footer>
+      .panel.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
 
-			</div>
+      .panel-content {
+        background: rgba(0, 20, 40, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+      .panel-content::-webkit-scrollbar {
+        width: 6px;
+      }
 
-	</body>
+      .panel-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      .panel-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      /* Home Panel - Center */
+      #panel-home {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none; /* Allow clicks to pass through to orbs */
+      }
+
+      #panel-home.active {
+        pointer-events: none; /* Keep it click-through even when active */
+      }
+
+      #panel-home .panel-content {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        padding: 0;
+        pointer-events: none; /* Ensure content is also click-through */
+      }
+
+      .home-title {
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 200;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: none;
+        animation: fadeInUp 1s ease-out;
+      }
+
+      .home-subtitle {
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        font-weight: 200;
+        letter-spacing: 0.15em;
+        opacity: 0.8;
+        margin-bottom: 2rem;
+        animation: fadeInUp 1s ease-out 0.2s both;
+      }
+
+      .home-hint {
+        font-size: 0.9rem;
+        opacity: 0.5;
+        letter-spacing: 0.1em;
+        animation: fadeInUp 1s ease-out 0.4s both;
+      }
+
+      /* About Panel - Left */
+      #panel-about {
+        top: 50%;
+        left: 5%;
+        transform: translateY(-50%);
+        max-width: 450px;
+      }
+
+      /* Work Panel - Right */
+      #panel-work {
+        top: 50%;
+        right: 5%;
+        transform: translateY(-50%);
+        max-width: 500px;
+      }
+
+      /* Contact Panel - Bottom Center */
+      #panel-contact {
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 600px;
+        width: 90%;
+      }
+
+      .panel-title {
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .panel-text {
+        font-size: 1rem;
+        line-height: 1.8;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+      }
+
+      .panel-section {
+        margin-bottom: 2rem;
+      }
+
+      .panel-section h3 {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        color: #88ccff;
+        margin-bottom: 0.8rem;
+      }
+
+      /* Project Cards */
+      .projects-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .project-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .project-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(136, 204, 255, 0.3);
+        transform: translateX(5px);
+      }
+
+      .project-card h4 {
+        font-size: 1rem;
+        font-weight: 400;
+        margin-bottom: 0.3rem;
+      }
+
+      .project-card .tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .project-card .tag {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        background: rgba(136, 204, 255, 0.2);
+        border-radius: 10px;
+        color: #88ccff;
+      }
+
+      .project-card p {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        line-height: 1.5;
+      }
+
+      /* Contact Form */
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+
+      .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: rgba(136, 204, 255, 0.5);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .submit-btn {
+        padding: 0.8rem 2rem;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: white;
+        background: linear-gradient(135deg, rgba(0, 150, 200, 0.6), rgba(0, 100, 150, 0.6));
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .submit-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 180, 230, 0.8), rgba(0, 130, 180, 0.8));
+        box-shadow: 0 0 20px rgba(136, 204, 255, 0.4);
+      }
+
+      .contact-info h3 {
+        font-size: 1rem;
+        font-weight: 400;
+        color: #88ccff;
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-info p {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+
+      .contact-info a {
+        color: #88ccff;
+        text-decoration: none;
+      }
+
+      .contact-info a:hover {
+        color: white;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 0.8rem;
+      }
+
+      .social-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .social-link:hover {
+        background: rgba(136, 204, 255, 0.2);
+        border-color: rgba(136, 204, 255, 0.4);
+        transform: translateY(-2px);
+      }
+
+      /* Audio Toggle */
+      #audio-toggle {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(0, 30, 60, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+      }
+
+      #audio-toggle:hover {
+        background: rgba(0, 50, 100, 0.8);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      #audio-toggle.active {
+        background: rgba(0, 100, 150, 0.7);
+        border-color: rgba(136, 204, 255, 0.6);
+        box-shadow: 0 0 20px rgba(136, 204, 255, 0.3);
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .nav {
+          padding: 1rem;
+        }
+
+        .nav-links {
+          gap: 0.5rem;
+        }
+
+        .nav-link {
+          font-size: 0.75rem;
+          padding: 0.4rem 0.6rem;
+        }
+
+        #panel-about,
+        #panel-work {
+          left: 5%;
+          right: 5%;
+          max-width: none;
+          transform: translateY(-50%);
+        }
+
+        #panel-work {
+          right: 5%;
+          left: 5%;
+        }
+
+        .contact-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .panel-content {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="underwater-canvas"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <a class="nav-logo nav-link" data-location="home">Heavy Photon</a>
+      <div class="nav-links">
+        <a class="nav-link" data-location="about">About</a>
+        <a class="nav-link" data-location="work">Work</a>
+        <a class="nav-link" data-location="contact">Contact</a>
+      </div>
+    </nav>
+
+    <!-- Home Panel -->
+    <div id="panel-home" class="panel active">
+      <div class="panel-content">
+        <h1 class="home-title">Heavy Photon</h1>
+        <p class="home-subtitle">Dive into the depths of creativity</p>
+        <p class="home-hint">Click the glowing orbs to explore</p>
+      </div>
+    </div>
+
+    <!-- About Panel -->
+    <div id="panel-about" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">About</h2>
+
+        <div class="panel-section">
+          <h3>Our Story</h3>
+          <p class="panel-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod, nisi vel consectetur interdum, nisl nisi aliquet nunc, eget aliquam nisl nisi eu nunc.
+          </p>
+        </div>
+
+        <div class="panel-section">
+          <h3>Our Mission</h3>
+          <p class="panel-text">
+            Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+          </p>
+        </div>
+
+        <div class="panel-section">
+          <h3>The Team</h3>
+          <p class="panel-text">
+            Aenean lacinia bibendum nulla sed consectetur. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Work Panel -->
+    <div id="panel-work" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">Work</h2>
+
+        <div class="projects-grid">
+          <div class="project-card">
+            <h4>Abyssal Voyage</h4>
+            <div class="tags">
+              <span class="tag">Unity</span>
+              <span class="tag">VR</span>
+            </div>
+            <p>An immersive underwater exploration experience in virtual reality.</p>
+          </div>
+
+          <div class="project-card">
+            <h4>Reef Simulator</h4>
+            <div class="tags">
+              <span class="tag">Three.js</span>
+              <span class="tag">WebGL</span>
+            </div>
+            <p>Interactive coral reef ecosystem simulation for the web.</p>
+          </div>
+
+          <div class="project-card">
+            <h4>Tidal Rush</h4>
+            <div class="tags">
+              <span class="tag">Godot</span>
+              <span class="tag">Arcade</span>
+            </div>
+            <p>Fast-paced arcade game riding the ocean waves.</p>
+          </div>
+
+          <div class="project-card">
+            <h4>Bioluminescence</h4>
+            <div class="tags">
+              <span class="tag">Unreal</span>
+              <span class="tag">Art</span>
+            </div>
+            <p>Interactive art installation exploring deep sea creatures.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Panel -->
+    <div id="panel-contact" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">Contact</h2>
+
+        <div class="contact-grid">
+          <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent! (Demo)');">
+            <div class="form-group">
+              <input type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <input type="email" placeholder="your@email.com" required />
+            </div>
+            <div class="form-group">
+              <textarea placeholder="Your message..." required></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Send Message</button>
+          </form>
+
+          <div class="contact-info">
+            <h3>Email</h3>
+            <p><a href="mailto:hello@heavyphoton.com">hello@heavyphoton.com</a></p>
+
+            <h3>Location</h3>
+            <p>Somewhere beneath the waves</p>
+
+            <h3>Follow Us</h3>
+            <div class="social-links">
+              <a href="#" class="social-link">🐦</a>
+              <a href="#" class="social-link">💻</a>
+              <a href="#" class="social-link">💬</a>
+              <a href="#" class="social-link">🎬</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Toggle -->
+    <button id="audio-toggle">🔇</button>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
