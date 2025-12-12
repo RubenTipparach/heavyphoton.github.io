@@ -225,14 +225,14 @@ export class UnderwaterScene {
       ambientIntensity: 0.3,
     });
 
-    // Projects - upper left area
+    // Projects - upper center area
     const projectsMarker = this.createLocationMarker('Projects', 0x64c896);
-    projectsMarker.position.set(-15, 10, -5);
+    projectsMarker.position.set(-6, 8, 8);
     this.scene.add(projectsMarker);
     this.locationMarkers.push(projectsMarker);
     this.locations.set('projects', {
       name: 'projects',
-      position: new THREE.Vector3(-8, 8, -12),
+      position: new THREE.Vector3(-3, 6, -5),
       rotation: new THREE.Euler(0, Math.PI, 0),
       marker: projectsMarker,
       lightColor: 0x64c896,
