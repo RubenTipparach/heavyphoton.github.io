@@ -1,6 +1,6 @@
 @echo off
 echo Building Heavy Photon site...
-cd /d "%~dp0work"
+cd /d "%~dp0"
 call npm run build
 if %errorlevel% neq 0 (
     echo Build failed!

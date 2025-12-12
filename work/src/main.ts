@@ -1,7 +1,7 @@
 import { UnderwaterScene } from './UnderwaterScene';
 import { UnderwaterAudio } from './UnderwaterAudio';
 import { SceneManager } from './SceneManager';
-import { games } from './config';
+import { games, about, projects } from './config';
 
 const container = document.getElementById('underwater-canvas');
 if (!container) {
@@ -241,3 +241,52 @@ function renderGames() {
 }
 
 renderGames();
+
+// Render about from config
+function renderAbout() {
+  const bioContainer = document.getElementById('about-bio');
+  const missionContainer = document.getElementById('about-mission');
+  const valuesContainer = document.getElementById('about-values');
+  const skillsContainer = document.getElementById('about-skills');
+
+  if (bioContainer) {
+    bioContainer.innerHTML = about.bio.map(p => `<p class="panel-text">${p}</p>`).join('');
+  }
+
+  if (missionContainer) {
+    missionContainer.innerHTML = `<p class="panel-text mission-text">${about.mission}</p>`;
+  }
+
+  if (valuesContainer) {
+    valuesContainer.innerHTML = about.values.map(v => `<li>${v}</li>`).join('');
+  }
+
+  if (skillsContainer) {
+    skillsContainer.innerHTML = about.skills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+  }
+}
+
+renderAbout();
+
+// Render projects from config
+function renderProjects() {
+  const projectsGrid = document.getElementById('projects-grid');
+  if (!projectsGrid) return;
+
+  const projectsHTML = projects.map(project => `
+    <a href="${project.url}" target="_blank" rel="noopener noreferrer" class="project-card${project.featured ? ' featured-project' : ''}">
+      <div class="project-info">
+        <h4>${project.title}</h4>
+        <div class="tags">
+          ${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+        <p>${project.description}</p>
+        <span class="learn-more">${project.linkText} &rarr;</span>
+      </div>
+    </a>
+  `).join('');
+
+  projectsGrid.innerHTML = projectsHTML;
+}
+
+renderProjects();
