@@ -333,6 +333,20 @@ export class UnderwaterAudio {
     }
   }
 
+  fadeIn(duration = 0.5): void {
+    if (!this.audioContext || !this.masterGain) return;
+    this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
+    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioContext.currentTime);
+    this.masterGain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + duration);
+  }
+
+  fadeOut(duration = 0.5): void {
+    if (!this.audioContext || !this.masterGain) return;
+    this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
+    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioContext.currentTime);
+    this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + duration);
+  }
+
   get playing(): boolean {
     return this.isPlaying;
   }

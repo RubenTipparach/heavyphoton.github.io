@@ -13,9 +13,11 @@ interface Fish {
   changeTimer: number;
   isPredator: boolean;
   speed: number;
+  baseSpeed: number;
   isAlive: boolean;
   fleeTarget: Fish | null;
   chaseTarget: Fish | null;
+  glowingUntil: number; // timestamp when glow effect ends
 }
 
 interface SeaPlant {
@@ -39,7 +41,6 @@ export class UnderwaterScene {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
-  private container: HTMLElement;
   private clock: THREE.Clock;
   private raycaster: THREE.Raycaster;
   private mouse: THREE.Vector2;
@@ -83,8 +84,10 @@ export class UnderwaterScene {
   private readonly FLEE_DISTANCE = 12;
   private readonly EAT_DISTANCE = 1.5;
 
+  // Floor settings for terrain sampling
+  private readonly FLOOR_BASE_Y = -5;
+
   constructor(container: HTMLElement) {
-    this.container = container;
     this.clock = new THREE.Clock();
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -192,16 +195,16 @@ export class UnderwaterScene {
       ambientIntensity: 0.5,
     });
 
-    // Work - right side, orb in front of home camera
-    const workMarker = this.createLocationMarker('Work', 0xff6b6b);
-    workMarker.position.set(12, 4, 5);
-    this.scene.add(workMarker);
-    this.locationMarkers.push(workMarker);
-    this.locations.set('work', {
-      name: 'work',
+    // Games - right side, orb in front of home camera
+    const gamesMarker = this.createLocationMarker('Games', 0xff6b6b);
+    gamesMarker.position.set(12, 4, 5);
+    this.scene.add(gamesMarker);
+    this.locationMarkers.push(gamesMarker);
+    this.locations.set('games', {
+      name: 'games',
       position: new THREE.Vector3(6, 5, -8),
       rotation: new THREE.Euler(0, Math.PI, 0), // Yaw right toward the orb
-      marker: workMarker,
+      marker: gamesMarker,
       lightColor: 0xff8866,
       fogDensity: 0.018,
       ambientIntensity: 0.45,
@@ -220,6 +223,21 @@ export class UnderwaterScene {
       lightColor: 0xaa96da,
       fogDensity: 0.025,
       ambientIntensity: 0.3,
+    });
+
+    // Projects - upper left area
+    const projectsMarker = this.createLocationMarker('Projects', 0x64c896);
+    projectsMarker.position.set(-15, 10, -5);
+    this.scene.add(projectsMarker);
+    this.locationMarkers.push(projectsMarker);
+    this.locations.set('projects', {
+      name: 'projects',
+      position: new THREE.Vector3(-8, 8, -12),
+      rotation: new THREE.Euler(0, Math.PI, 0),
+      marker: projectsMarker,
+      lightColor: 0x64c896,
+      fogDensity: 0.014,
+      ambientIntensity: 0.45,
     });
   }
 
@@ -407,9 +425,11 @@ export class UnderwaterScene {
       changeTimer: Math.random() * 5,
       isPredator,
       speed,
+      baseSpeed: speed,
       isAlive: true,
       fleeTarget: null,
       chaseTarget: null,
+      glowingUntil: 0,
     };
 
     this.fish.push(fishData);
@@ -577,16 +597,30 @@ export class UnderwaterScene {
     return { group };
   }
 
+  // Sample terrain height at a given x, z position
+  // Uses the same formula as createSeaFloor for consistency
+  private getTerrainHeight(x: number, z: number): number {
+    // Match the terrain generation formula from createSeaFloor
+    // Note: in the floor geometry, x and y (in plane coords) map to world x and z
+    const terrainOffset = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2;
+    return this.FLOOR_BASE_Y + terrainOffset;
+  }
+
   private createCorals(): void {
     const coralColors = [0xff6b6b, 0xff8e72, 0xffc6c6, 0xe17055, 0xd63031];
 
     for (let i = 0; i < 30; i++) {
       const coral = this.createCoral(coralColors[Math.floor(Math.random() * coralColors.length)]);
-      coral.position.set(
-        (Math.random() - 0.5) * 60,
-        -5,
-        (Math.random() - 0.5) * 60 - 5
-      );
+
+      // Random x, z position
+      const x = (Math.random() - 0.5) * 60;
+      const z = (Math.random() - 0.5) * 60 - 5;
+
+      // Sample terrain height and place coral slightly under the surface
+      const terrainY = this.getTerrainHeight(x, z);
+      const coralY = terrainY - 0.1;
+
+      coral.position.set(x, coralY, z);
       coral.rotation.y = Math.random() * Math.PI * 2;
       this.scene.add(coral);
     }
@@ -639,12 +673,16 @@ export class UnderwaterScene {
 
     for (let i = 0; i < 50; i++) {
       const plant = this.createSeaPlant(plantColors[Math.floor(Math.random() * plantColors.length)]);
-      // Plant group is positioned, mesh inside has correct offset
-      plant.group.position.set(
-        (Math.random() - 0.5) * 70,
-        -5, // Floor level
-        (Math.random() - 0.5) * 70
-      );
+
+      // Random x, z position
+      const x = (Math.random() - 0.5) * 70;
+      const z = (Math.random() - 0.5) * 70;
+
+      // Sample terrain height and place plant slightly under the surface
+      const terrainY = this.getTerrainHeight(x, z);
+      const plantY = terrainY - 0.1; // Slightly under terrain surface
+
+      plant.group.position.set(x, plantY, z);
 
       this.seaPlants.push(plant);
       this.scene.add(plant.group);
@@ -813,6 +851,23 @@ export class UnderwaterScene {
 
       this.raycaster.setFromCamera(this.mouse, this.camera);
 
+      // Check for fish clicks first
+      const fishGroups = this.fish.map(f => f.group);
+      const fishIntersects = this.raycaster.intersectObjects(fishGroups, true);
+
+      if (fishIntersects.length > 0) {
+        // Find which fish was clicked
+        let clickedObject = fishIntersects[0].object;
+        while (clickedObject.parent && !fishGroups.includes(clickedObject as THREE.Group)) {
+          clickedObject = clickedObject.parent as THREE.Object3D;
+        }
+        const clickedFish = this.fish.find(f => f.group === clickedObject);
+        if (clickedFish && clickedFish.isAlive) {
+          this.activateFishGlow(clickedFish);
+          return; // Don't check location markers if fish was clicked
+        }
+      }
+
       const intersects = this.raycaster.intersectObjects(
         this.locationMarkers.flatMap(m => m.children),
         true
@@ -832,12 +887,70 @@ export class UnderwaterScene {
     // Change cursor on hover
     this.renderer.domElement.addEventListener('mousemove', () => {
       this.raycaster.setFromCamera(this.mouse, this.camera);
+
+      // Check fish hover
+      const fishGroups = this.fish.map(f => f.group);
+      const fishIntersects = this.raycaster.intersectObjects(fishGroups, true);
+
+      if (fishIntersects.length > 0) {
+        this.renderer.domElement.style.cursor = 'pointer';
+        return;
+      }
+
       const intersects = this.raycaster.intersectObjects(
         this.locationMarkers.flatMap(m => m.children),
         true
       );
       this.renderer.domElement.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
     });
+  }
+
+  private activateFishGlow(fish: Fish): void {
+    const now = this.clock.elapsedTime;
+    fish.glowingUntil = now + 10; // Glow for 10 seconds
+    fish.speed = fish.baseSpeed * 2; // Double speed
+
+    // Change fish material to yellow glow
+    const fishContainer = fish.group.userData.fishContainer as THREE.Group;
+    if (fishContainer) {
+      fishContainer.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          // Store original color if not already stored
+          if (!child.userData.originalColor) {
+            child.userData.originalColor = child.material.color.getHex();
+            child.userData.originalEmissive = child.material.emissive.getHex();
+            child.userData.originalEmissiveIntensity = child.material.emissiveIntensity;
+          }
+          // Set yellow glow
+          child.material.color.setHex(0xffff00);
+          child.material.emissive.setHex(0xffaa00);
+          child.material.emissiveIntensity = 0.8;
+        }
+      });
+    }
+  }
+
+  private updateFishGlow(fish: Fish): void {
+    const now = this.clock.elapsedTime;
+
+    if (fish.glowingUntil > 0 && now >= fish.glowingUntil) {
+      // Glow period ended - restore original appearance
+      fish.glowingUntil = 0;
+      fish.speed = fish.baseSpeed;
+
+      const fishContainer = fish.group.userData.fishContainer as THREE.Group;
+      if (fishContainer) {
+        fishContainer.traverse((child) => {
+          if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+            if (child.userData.originalColor !== undefined) {
+              child.material.color.setHex(child.userData.originalColor);
+              child.material.emissive.setHex(child.userData.originalEmissive || 0x000000);
+              child.material.emissiveIntensity = child.userData.originalEmissiveIntensity || 0;
+            }
+          }
+        });
+      }
+    }
   }
 
   navigateTo(locationName: string): void {
@@ -882,6 +995,9 @@ export class UnderwaterScene {
 
     for (const fish of this.fish) {
       if (!fish.isAlive) continue;
+
+      // Update glow effect (check if it should expire)
+      this.updateFishGlow(fish);
 
       if (fish.isPredator) {
         // Predator behavior: hunt prey
@@ -1180,8 +1296,9 @@ export class UnderwaterScene {
     }
 
     // Subtle mouse influence (less when transitioning)
+    // Invert X so camera moves opposite to mouse (look where you point)
     const mouseInfluence = this.isTransitioning ? 0.3 : 1.5;
-    const targetX = this.cameraTarget.x + this.mouseX * mouseInfluence;
+    const targetX = this.cameraTarget.x - this.mouseX * mouseInfluence;
     const targetY = this.cameraTarget.y - this.mouseY * mouseInfluence * 0.5;
 
     this.camera.position.x += (targetX - this.camera.position.x) * 0.015;
