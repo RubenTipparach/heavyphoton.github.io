@@ -29,6 +29,34 @@ const panels = {
 const navLinks = document.querySelectorAll('.nav-link');
 const socialBadges = document.querySelector('.social-badges');
 
+// Mobile menu
+const navMenuBtn = document.getElementById('nav-menu-btn');
+const navLinksContainer = document.getElementById('nav-links');
+
+if (navMenuBtn && navLinksContainer) {
+  navMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    navLinksContainer.classList.toggle('open');
+    navMenuBtn.innerHTML = navLinksContainer.classList.contains('open') ? '&#10005;' : '&#9776;';
+  });
+
+  // Close menu when clicking a link
+  navLinksContainer.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinksContainer.classList.remove('open');
+      navMenuBtn.innerHTML = '&#9776;';
+    });
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!navLinksContainer.contains(e.target as Node) && !navMenuBtn.contains(e.target as Node)) {
+      navLinksContainer.classList.remove('open');
+      navMenuBtn.innerHTML = '&#9776;';
+    }
+  });
+}
+
 // Track current scene for UI updates
 let currentSceneType: 'underwater' | 'astronautics' = 'underwater';
 

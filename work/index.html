@@ -757,13 +757,39 @@
           padding: 1rem;
         }
 
+        .nav-menu-btn {
+          display: block;
+          z-index: 101;
+        }
+
         .nav-links {
-          gap: 0.5rem;
+          position: absolute;
+          top: 100%;
+          right: 1rem;
+          flex-direction: column;
+          background: rgba(0, 20, 40, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 0.5rem;
+          gap: 0.25rem;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+        }
+
+        .nav-links.open {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
         }
 
         .nav-link {
-          font-size: 0.75rem;
-          padding: 0.4rem 0.6rem;
+          font-size: 0.85rem;
+          padding: 0.75rem 1.25rem;
+          width: 100%;
+          text-align: left;
         }
 
         #panel-about,
@@ -812,7 +838,8 @@
     <!-- Navigation -->
     <nav class="nav">
       <a class="nav-logo nav-link" data-location="home">Heavy Photon</a>
-      <div class="nav-links">
+      <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Toggle menu">&#9776;</button>
+      <div class="nav-links" id="nav-links">
         <a class="nav-link" data-location="about">About</a>
         <a class="nav-link" data-location="games">Games</a>
         <a class="nav-link" data-location="projects">Projects</a>
@@ -919,13 +946,13 @@
 
           <a href="https://heavyphoton.com/boat-movement.html" target="_blank" rel="noopener noreferrer" class="project-card">
             <div class="project-info">
-              <h4>Boat Movement</h4>
+              <h4>Delta-V</h4>
               <div class="tags">
                 <span class="tag">Physics</span>
-                <span class="tag">Simulation</span>
-                <span class="tag">Demo</span>
+                <span class="tag">Turn-Based</span>
+                <span class="tag">Space</span>
               </div>
-              <p>Interactive boat physics simulation demonstrating realistic water movement and buoyancy mechanics.</p>
+              <p>A physics simulation for turn-based spacecraft movement across a grid. Unlimited speed with future positions mapped out ahead of you.</p>
               <span class="learn-more">Try Demo &rarr;</span>
             </div>
           </a>
@@ -943,7 +970,7 @@
             <p><a href="mailto:ruben.tipparach@gmail.com">ruben.tipparach@gmail.com</a></p>
 
             <h3>Location</h3>
-            <p>Somewhere beneath the waves</p>
+            <p>Beyond the sea</p>
 
             <h3>Follow Us</h3>
             <div class="social-links">
