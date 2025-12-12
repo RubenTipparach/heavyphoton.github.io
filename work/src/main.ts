@@ -1,7 +1,7 @@
 import { UnderwaterScene } from './UnderwaterScene';
 import { UnderwaterAudio } from './UnderwaterAudio';
 import { SceneManager } from './SceneManager';
-import { games, about, projects } from './config';
+import { games, about, projects, socials, contactInfo } from './config';
 
 const container = document.getElementById('underwater-canvas');
 if (!container) {
@@ -290,3 +290,41 @@ function renderProjects() {
 }
 
 renderProjects();
+
+// Render contact info from config
+function renderContact() {
+  const emailContainer = document.getElementById('contact-email');
+  const locationContainer = document.getElementById('contact-location');
+  const socialLinksContainer = document.getElementById('contact-socials');
+  const socialBadgesContainer = document.getElementById('social-badges-container');
+
+  if (emailContainer) {
+    emailContainer.innerHTML = `<a href="mailto:${contactInfo.email}">${contactInfo.email}</a>`;
+  }
+
+  if (locationContainer) {
+    locationContainer.textContent = contactInfo.location;
+  }
+
+  const socialsHTML = socials.map(social => `
+    <a href="${social.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${social.name}">
+      ${social.icon}
+    </a>
+  `).join('');
+
+  if (socialLinksContainer) {
+    socialLinksContainer.innerHTML = socialsHTML;
+  }
+
+  // Also render the footer social badges
+  if (socialBadgesContainer) {
+    const badgesHTML = socials.map(social => `
+      <a href="${social.url}" target="_blank" rel="noopener noreferrer" class="social-badge" title="${social.name}">
+        ${social.icon}
+      </a>
+    `).join('');
+    socialBadgesContainer.innerHTML = badgesHTML;
+  }
+}
+
+renderContact();
