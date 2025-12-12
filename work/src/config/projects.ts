@@ -15,7 +15,7 @@ export const projects: Project[] = [
     description: 'Hexagonal voxel solar system game with a focus on survival, crafting, and space exploration. A strong emphasis on hard sci-fi and rocket building logistics.',
     tags: ['Space', 'Survival', 'Crafting'],
     url: 'https://heavyphoton.com/tenebris',
-    linkText: 'Learn More',
+    linkText: 'Try Demo',
     featured: true,
   },
   {
