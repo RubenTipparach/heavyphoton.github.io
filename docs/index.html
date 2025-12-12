@@ -1,90 +1,1001 @@
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<title>Heavy Photon Homepage</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-	</head>
-	<body class="is-preload">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heavy Photon</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-		<!-- Wrapper -->
-			<div id="wrapper">
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: white;
+      }
 
-				<!-- Header -->
-					<header id="header">
-						<h1>HEAVY PHOTON</h1>
-						<p>Redefining the final frontier.</p>
-					</header>
+      #underwater-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
 
-				<!-- Main -->
-					<div id="main">
+      /* Navigation */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        background: linear-gradient(180deg, rgba(0, 26, 51, 0.8) 0%, transparent 100%);
+      }
 
-						<!-- Content -->
-							<section id="content" class="main">
-								<span class="image main"><img src="images/space-1.png" alt="" /></span>
-								<h2>FALLEN TRIBES</h2>
-								<p>A tactical space combat simulator with a unique blend of strategic turn based gameplay with real-time simulation. Each turn ends with a live battle revealing the outcome of your careful and deliberate choices in a fresh take on space combat.</p>
-								<p>Feel the beating heart of your spaceships, the nerves and morale of the crew, and the cold darkness of the unforgiving void. Do you dare to expand your conquest into hostile uncharted territory or build up your empire and crush anyone who defies you?</p>
-							</section>
+      .nav-logo {
+        font-size: 1.2rem;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        transition: text-shadow 0.3s ease;
+      }
 
-					</div>
+      .nav-logo:hover {
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
 
-				<!-- Footer -->
-					<footer id="footer">
-						<section>
-							<h2>About the Studio</h2>
-							<p>Minnesota based games enthusiasts injecting a blend of the cold dark north midwestern frontier and thrilling old school sci-fi to craft unique strategy games. We also like anime and cats.</p>
-							<!--<ul class="actions">
-								<li><a href="#" class="button">Learn More</a></li>
-							</ul>-->
-						</section>
-						<section>
-							<h2>Social</h2>
-							<!--<dl class="alt">
-								<dt>Address</dt>
-								<dd>1234 Somewhere Road &bull; Nashville, TN 00000 &bull; USA</dd>
-								<dt>Phone</dt>
-								<dd>(000) 000-0000 x 0000</dd>
-								<dt>Email</dt>
-								<dd><a href="#">information@untitled.tld</a></dd>
-							</dl>-->
-							<ul class="icons">
-								<li><a href="https://www.youtube.com/channel/UCcBqxWfXvPXNQTHY2wdZNQw" class="icon brands fa-youtube alt"><span class="label">YouTube</span></a></li>
-								<!--<li><a href="#" class="icon brands fa-facebook-f alt"><span class="label">Facebook</span></a></li>-->
-								<li><a href="https://twitter.com/RubenTipparach" class="icon brands fa-twitter alt"><span class="label">Twitter</span></a></li>
-								<li><a href="https://discord.gg/YTkJ899TZm" class="icon brands fa-discord alt"><span class="label">Discord</span></a></li>
-								<li><a href="https://ruben-tipparach.itch.io/fallen-tribes" class="icon brands fab fa-itch-io alt"><span class="label">ItchIO</span></a></li>
-								<!--<li><a href="#" class="icon brands fa-github alt"><span class="label">GitHub</span></a></li>-->
-								<!--<li><a href="#" class="icon brands fa-dribbble alt"><span class="label">Dribbble</span></a></li>-->
-							</ul>
-						</section>
-						<!--<p class="copyright">&copy; Untitled. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>-->
-					</footer>
-			</div>
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+      .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-	</body>
+      .nav-link:hover,
+      .nav-link.active {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
+
+      /* Content Panels */
+      .panel {
+        position: fixed;
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      .panel.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .panel-content {
+        background: rgba(0, 20, 40, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      .panel-content::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .panel-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+
+      .panel-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+
+      /* Home Panel - Center */
+      #panel-home {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none; /* Allow clicks to pass through to orbs */
+      }
+
+      #panel-home.active {
+        pointer-events: none; /* Keep it click-through even when active */
+      }
+
+      #panel-home .panel-content {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        padding: 0;
+        pointer-events: none; /* Ensure content is also click-through */
+      }
+
+      .home-title {
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 200;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: none;
+        animation: fadeInUp 1s ease-out;
+      }
+
+      .home-subtitle {
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        font-weight: 200;
+        letter-spacing: 0.15em;
+        opacity: 0.8;
+        margin-bottom: 2rem;
+        animation: fadeInUp 1s ease-out 0.2s both;
+      }
+
+      .home-hint {
+        font-size: 0.9rem;
+        opacity: 0.5;
+        letter-spacing: 0.1em;
+        animation: fadeInUp 1s ease-out 0.4s both;
+      }
+
+      .social-badges {
+        position: fixed;
+        bottom: 2rem;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        z-index: 50;
+        animation: fadeInUp 1s ease-out 0.6s both;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+
+      .social-badges.hidden {
+        opacity: 0 !important;
+        transform: translateY(20px) !important;
+        pointer-events: none;
+      }
+
+      .social-badge {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+      }
+
+      .social-badge:hover {
+        background: rgba(136, 204, 255, 0.2);
+        border-color: rgba(136, 204, 255, 0.5);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(136, 204, 255, 0.3);
+      }
+
+      .social-badge svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* About Panel - Left */
+      #panel-about {
+        top: 50%;
+        left: 5%;
+        transform: translateY(-50%);
+        max-width: 450px;
+      }
+
+      /* Games Panel - Right */
+      #panel-games {
+        top: 50%;
+        right: 5%;
+        transform: translateY(-50%);
+        max-width: 500px;
+      }
+
+      /* Projects Panel - Left */
+      #panel-projects {
+        top: 50%;
+        left: 5%;
+        transform: translateY(-50%);
+        max-width: 450px;
+      }
+
+      /* Contact Panel - Bottom Center */
+      #panel-contact {
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 600px;
+        width: 90%;
+      }
+
+      .panel-title {
+        font-size: 2rem;
+        font-weight: 300;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .panel-text {
+        font-size: 1rem;
+        line-height: 1.8;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+      }
+
+      .panel-section {
+        margin-bottom: 2rem;
+      }
+
+      .panel-section h3 {
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        color: #88ccff;
+        margin-bottom: 0.8rem;
+      }
+
+      /* Project Cards */
+      .projects-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .project-card {
+        display: flex;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .project-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(136, 204, 255, 0.3);
+        transform: translateX(5px);
+      }
+
+      .project-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+
+      .project-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .view-all-card {
+        display: block;
+        background: rgba(136, 204, 255, 0.1);
+        border-color: rgba(136, 204, 255, 0.3);
+        text-align: center;
+      }
+
+      .view-all-card:hover {
+        background: rgba(136, 204, 255, 0.2);
+        border-color: rgba(136, 204, 255, 0.5);
+      }
+
+      .view-all-card h4 {
+        color: #88ccff;
+      }
+
+      .project-card h4 {
+        font-size: 1rem;
+        font-weight: 400;
+        margin-bottom: 0.3rem;
+      }
+
+      .project-card .tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .project-card .tag {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        background: rgba(136, 204, 255, 0.2);
+        border-radius: 10px;
+        color: #88ccff;
+      }
+
+      .project-card p {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        line-height: 1.5;
+      }
+
+      .featured-project {
+        flex-direction: column;
+        background: rgba(136, 204, 255, 0.08);
+        border-color: rgba(136, 204, 255, 0.25);
+      }
+
+      .featured-project:hover {
+        background: rgba(136, 204, 255, 0.15);
+        border-color: rgba(136, 204, 255, 0.4);
+      }
+
+      .featured-project h4 {
+        font-size: 1.3rem;
+        color: #88ccff;
+        margin-bottom: 0.5rem;
+      }
+
+      .learn-more {
+        display: inline-block;
+        margin-top: 0.8rem;
+        color: #88ccff;
+        font-size: 0.9rem;
+        transition: transform 0.3s ease;
+      }
+
+      .featured-project:hover .learn-more {
+        transform: translateX(5px);
+      }
+
+      /* Contact Form */
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+
+      .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: rgba(136, 204, 255, 0.5);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .submit-btn {
+        padding: 0.8rem 2rem;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: white;
+        background: linear-gradient(135deg, rgba(0, 150, 200, 0.6), rgba(0, 100, 150, 0.6));
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .submit-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 180, 230, 0.8), rgba(0, 130, 180, 0.8));
+        box-shadow: 0 0 20px rgba(136, 204, 255, 0.4);
+      }
+
+      .contact-info h3 {
+        font-size: 1rem;
+        font-weight: 400;
+        color: #88ccff;
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-info p {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+
+      .contact-info a {
+        color: #88ccff;
+        text-decoration: none;
+      }
+
+      .contact-info a:hover {
+        color: white;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 0.8rem;
+      }
+
+      .social-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .social-link:hover {
+        background: rgba(136, 204, 255, 0.2);
+        border-color: rgba(136, 204, 255, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .social-link svg {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .social-link:hover svg {
+        color: white;
+      }
+
+      /* Audio Toggle */
+      #audio-toggle {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(0, 30, 60, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+      }
+
+      #audio-toggle:hover {
+        background: rgba(0, 50, 100, 0.8);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      #audio-toggle.active {
+        background: rgba(0, 100, 150, 0.7);
+        border-color: rgba(136, 204, 255, 0.6);
+        box-shadow: 0 0 20px rgba(136, 204, 255, 0.3);
+      }
+
+      /* Scene Transition Overlay */
+      .scene-transition {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1000;
+        transition: opacity 0.5s ease;
+      }
+
+      .scene-transition.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Astronautics UI */
+      .astronautics-ui {
+        position: fixed;
+        z-index: 60;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      .astronautics-ui.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .seed-display {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: monospace;
+        letter-spacing: 0.05em;
+      }
+
+      .randomize-btn {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.6rem 1.5rem;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(100, 50, 150, 0.4);
+        border: 1px solid rgba(150, 100, 200, 0.4);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .randomize-btn:hover {
+        background: rgba(130, 80, 180, 0.6);
+        border-color: rgba(180, 130, 230, 0.6);
+        box-shadow: 0 0 20px rgba(150, 100, 200, 0.4);
+      }
+
+      .planet-info {
+        position: fixed;
+        top: 50%;
+        right: 5%;
+        transform: translateY(-50%);
+        max-width: 300px;
+        background: rgba(20, 10, 40, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(150, 100, 200, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .planet-info.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .planet-info h3 {
+        font-size: 1.5rem;
+        font-weight: 300;
+        color: #c8a8ff;
+        margin-bottom: 1rem;
+      }
+
+      .planet-stat {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .planet-stat-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .planet-stat-value {
+        color: #c8a8ff;
+      }
+
+      .zoom-out-btn {
+        margin-top: 1rem;
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(150, 100, 200, 0.3);
+        border: 1px solid rgba(150, 100, 200, 0.4);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .zoom-out-btn:hover {
+        background: rgba(150, 100, 200, 0.5);
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Mission text */
+      .mission-text {
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* Values list */
+      .values-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .values-list li {
+        position: relative;
+        padding-left: 1.2rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+        opacity: 0.9;
+      }
+
+      .values-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.5em;
+        width: 6px;
+        height: 6px;
+        background: #88ccff;
+        border-radius: 50%;
+      }
+
+      /* Skills list */
+      .skills-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .skill-tag {
+        background: rgba(78, 205, 196, 0.2);
+        border: 1px solid rgba(78, 205, 196, 0.4);
+        color: #4ecdc4;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .nav {
+          padding: 1rem;
+        }
+
+        .nav-links {
+          gap: 0.5rem;
+        }
+
+        .nav-link {
+          font-size: 0.75rem;
+          padding: 0.4rem 0.6rem;
+        }
+
+        #panel-about,
+        #panel-games,
+        #panel-projects {
+          left: 5%;
+          right: 5%;
+          max-width: none;
+          transform: translateY(-50%);
+        }
+
+        #panel-games {
+          right: 5%;
+          left: 5%;
+        }
+
+        .astronautics-ui .seed-display {
+          font-size: 0.65rem;
+        }
+
+        .astronautics-ui .randomize-btn {
+          font-size: 0.75rem;
+          padding: 0.5rem 1rem;
+        }
+
+        .planet-info {
+          right: 3%;
+          left: 3%;
+          max-width: none;
+        }
+
+        .contact-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .panel-content {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-CybP8utw.js"></script>
+  </head>
+  <body>
+    <div id="underwater-canvas"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <a class="nav-logo nav-link" data-location="home">Heavy Photon</a>
+      <div class="nav-links">
+        <a class="nav-link" data-location="about">About</a>
+        <a class="nav-link" data-location="games">Games</a>
+        <a class="nav-link" data-location="projects">Projects</a>
+        <a class="nav-link" data-location="astronautics">Astronautics</a>
+        <a class="nav-link" data-location="contact">Contact</a>
+      </div>
+    </nav>
+
+    <!-- Home Panel -->
+    <div id="panel-home" class="panel active">
+      <div class="panel-content">
+        <h1 class="home-title">Heavy Photon</h1>
+        <!-- <p class="home-subtitle">Dive into the depths of creativity</p> -->
+        <p class="home-hint">Click the glowing orbs to explore</p>
+      </div>
+    </div>
+
+    <!-- About Panel -->
+    <div id="panel-about" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">About</h2>
+
+        <div class="panel-section">
+          <h3>Our Story</h3>
+          <p class="panel-text">
+            Heavy Photon is a studio led by Ruben Tipparach. We create award-winning games across multiple platforms.
+          </p>
+          <p class="panel-text">
+            Our games focus on deep, meaningful mechanics with a strong emphasis on space exploration and immersion.
+          </p>
+          <p class="panel-text">
+            Based in beautiful Minnesota, we draw inspiration from the wildlife in warmer seasons and the stunning Northern Lights in winter.
+          </p>
+        </div>
+
+        <div class="panel-section">
+          <h3>Mission</h3>
+          <p class="panel-text mission-text">
+            To craft meaningful interactive experiences that inspire wonder and push the boundaries of what games can be.
+          </p>
+        </div>
+
+        <div class="panel-section">
+          <h3>Values</h3>
+          <ul class="values-list">
+            <li>Creativity over convention</li>
+            <li>Player experience first</li>
+            <li>Attention to detail</li>
+            <li>Continuous learning</li>
+            <li>Independent spirit</li>
+          </ul>
+        </div>
+
+        <div class="panel-section">
+          <h3>Skills</h3>
+          <div class="skills-list">
+            <span class="skill-tag">Game Development</span>
+            <span class="skill-tag">Unity3D</span>
+            <span class="skill-tag">Raylib</span>
+            <span class="skill-tag">Monogame</span>
+            <span class="skill-tag">Pico8</span>
+            <span class="skill-tag">Picotron</span>
+            <span class="skill-tag">Tic80</span>
+            <span class="skill-tag">WebGL & Three.js</span>
+            <span class="skill-tag">Virtual Reality</span>
+            <span class="skill-tag">Interactive Art</span>
+            <span class="skill-tag">Sound Design</span>
+            <span class="skill-tag">Creative Coding</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Games Panel -->
+    <div id="panel-games" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">Games</h2>
+
+        <div class="projects-grid" id="games-grid">
+          <!-- Games are dynamically rendered from config -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Panel -->
+    <div id="panel-projects" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">Ongoing Projects</h2>
+
+        <div class="projects-grid">
+          <a href="https://heavyphoton.com/tenebris" target="_blank" rel="noopener noreferrer" class="project-card featured-project">
+            <div class="project-info">
+              <h4>TENEBRIS</h4>
+              <div class="tags">
+                <span class="tag">Space</span>
+                <span class="tag">Survival</span>
+                <span class="tag">Crafting</span>
+              </div>
+              <p>Hexagonal voxel solar system game with a focus on survival, crafting, and space exploration. A strong emphasis on hard sci-fi and rocket building logistics.</p>
+              <span class="learn-more">Learn More &rarr;</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Panel -->
+    <div id="panel-contact" class="panel">
+      <div class="panel-content">
+        <h2 class="panel-title">Contact</h2>
+
+        <div class="contact-grid">
+          <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent! (Demo)');">
+            <div class="form-group">
+              <input type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <input type="email" placeholder="your@email.com" required />
+            </div>
+            <div class="form-group">
+              <textarea placeholder="Your message..." required></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Send Message</button>
+          </form>
+
+          <div class="contact-info">
+            <h3>Email</h3>
+            <p><a href="mailto:hello@heavyphoton.com">hello@heavyphoton.com</a></p>
+
+            <h3>Location</h3>
+            <p>Somewhere beneath the waves</p>
+
+            <h3>Follow Us</h3>
+            <div class="social-links">
+              <a href="https://ruben-tipparach.itch.io" target="_blank" rel="noopener noreferrer" class="social-link" title="itch.io">
+                <svg viewBox="0 0 245.371 220.736" fill="currentColor"><path d="M31.99 1.365C21.287 7.72.2 31.945 0 38.298v10.516C0 62.144 12.46 73.86 23.773 73.86c13.584 0 24.902-11.258 24.903-24.62 0 13.362 10.93 24.62 24.515 24.62 13.586 0 24.165-11.258 24.165-24.62 0 13.362 11.622 24.62 25.207 24.62h.246c13.586 0 25.208-11.258 25.208-24.62 0 13.362 10.58 24.62 24.164 24.62 13.585 0 24.515-11.258 24.515-24.62 0 13.362 11.32 24.62 24.903 24.62 11.313 0 23.773-11.714 23.773-25.046V38.298c-.2-6.354-21.287-30.58-31.988-36.933C180.118.197 157.056-.005 122.685 0c-34.37.003-81.228.54-90.697 1.365zm65.194 66.217a28.025 28.025 0 0 1-4.78 6.155c-5.128 5.014-12.157 8.122-19.906 8.122a28.482 28.482 0 0 1-19.948-8.126c-1.858-1.82-3.27-3.766-4.563-6.032l-.006.004c-1.292 2.27-3.092 4.215-4.954 6.037a28.5 28.5 0 0 1-19.948 8.12c-.934 0-1.906-.258-2.692-.528-1.092 11.372-1.553 22.24-1.716 30.164l-.002.045c-.02 4.024-.04 7.333-.06 11.93.21 23.86-2.363 77.334 10.52 90.473 19.964 4.655 56.7 6.775 93.555 6.788h.006c36.854-.013 73.59-2.133 93.554-6.788 12.883-13.14 10.31-66.614 10.52-90.474-.022-4.596-.04-7.905-.06-11.93l-.003-.045c-.162-7.926-.623-18.793-1.715-30.165-.786.27-1.757.528-2.692.528a28.5 28.5 0 0 1-19.948-8.12c-1.862-1.822-3.662-3.766-4.955-6.037l-.006-.004c-1.294 2.266-2.705 4.213-4.563 6.032a28.48 28.48 0 0 1-19.947 8.125c-7.748 0-14.778-3.11-19.906-8.123a28.025 28.025 0 0 1-4.78-6.155 27.99 27.99 0 0 1-4.736 6.155 28.49 28.49 0 0 1-19.95 8.124c-.27 0-.54-.012-.81-.02h-.007c-.27.008-.54.02-.813.02a28.49 28.49 0 0 1-19.95-8.123 27.992 27.992 0 0 1-4.736-6.155zm-20.486 26.49l-.002.01h.015c8.113.017 15.32 0 24.25 9.746 7.028-.737 14.372-1.105 21.722-1.094h.006c7.35-.01 14.694.357 21.723 1.094 8.93-9.747 16.137-9.73 24.25-9.746h.014l-.002-.01c3.833 0 19.166 0 29.85 30.007L210 165.244c8.504 30.624-2.723 31.373-16.727 31.4-20.768-.773-32.267-15.855-32.267-30.935-11.496 1.884-24.907 2.826-38.318 2.827h-.006c-13.412 0-26.823-.943-38.318-2.827 0 15.08-11.5 30.162-32.267 30.935-14.004-.027-25.23-.775-16.726-31.4L46.85 124.08c10.684-30.007 26.017-30.007 29.85-30.007zm45.985 23.582v.006c-.02.02-21.863 20.08-25.79 27.215l14.304-.573v12.474c0 .584 5.74.346 11.486.08h.006c5.744.266 11.485.504 11.485-.08v-12.474l14.304.573c-3.928-7.135-25.79-27.215-25.79-27.215v-.006l-.003.002z"/></svg>
+              </a>
+              <a href="https://bsky.app/profile/heavyphoton.bsky.social" target="_blank" rel="noopener noreferrer" class="social-link" title="Bluesky">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8z"/></svg>
+              </a>
+              <a href="https://github.com/heavyphoton" target="_blank" rel="noopener noreferrer" class="social-link" title="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+              <a href="https://youtube.com/@heavyphoton" target="_blank" rel="noopener noreferrer" class="social-link" title="YouTube">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene Transition Overlay -->
+    <div class="scene-transition" id="scene-transition"></div>
+
+    <!-- Astronautics UI (hidden by default) -->
+    <div class="astronautics-ui" id="astronautics-ui">
+      <div class="seed-display" id="seed-display">Seed: --------</div>
+      <button class="randomize-btn" id="randomize-btn">Randomize</button>
+      <div class="planet-info" id="planet-info">
+        <h3 id="planet-name">Planet Name</h3>
+        <div class="planet-stat">
+          <span class="planet-stat-label">Radius</span>
+          <span class="planet-stat-value" id="planet-radius">--</span>
+        </div>
+        <div class="planet-stat">
+          <span class="planet-stat-label">Orbital Period</span>
+          <span class="planet-stat-value" id="planet-period">--</span>
+        </div>
+        <div class="planet-stat">
+          <span class="planet-stat-label">Distance</span>
+          <span class="planet-stat-value" id="planet-distance">--</span>
+        </div>
+        <div class="planet-stat">
+          <span class="planet-stat-label">Moons</span>
+          <span class="planet-stat-value" id="planet-moons">--</span>
+        </div>
+        <button class="zoom-out-btn" id="zoom-out-btn">Zoom Out</button>
+      </div>
+    </div>
+
+    <!-- Audio Toggle -->
+    <button id="audio-toggle">🔇</button>
+
+    <!-- Social Media Badges -->
+    <div class="social-badges">
+      <a href="https://ruben-tipparach.itch.io" target="_blank" rel="noopener noreferrer" class="social-badge" title="itch.io">
+        <svg viewBox="0 0 245.371 220.736" fill="currentColor">
+          <path d="M31.99 1.365C21.287 7.72.2 31.945 0 38.298v10.516C0 62.144 12.46 73.86 23.773 73.86c13.584 0 24.902-11.258 24.903-24.62 0 13.362 10.93 24.62 24.515 24.62 13.586 0 24.165-11.258 24.165-24.62 0 13.362 11.622 24.62 25.207 24.62h.246c13.586 0 25.208-11.258 25.208-24.62 0 13.362 10.58 24.62 24.164 24.62 13.585 0 24.515-11.258 24.515-24.62 0 13.362 11.32 24.62 24.903 24.62 11.313 0 23.773-11.714 23.773-25.046V38.298c-.2-6.354-21.287-30.58-31.988-36.933C180.118.197 157.056-.005 122.685 0c-34.37.003-81.228.54-90.697 1.365zm65.194 66.217a28.025 28.025 0 0 1-4.78 6.155c-5.128 5.014-12.157 8.122-19.906 8.122a28.482 28.482 0 0 1-19.948-8.126c-1.858-1.82-3.27-3.766-4.563-6.032l-.006.004c-1.292 2.27-3.092 4.215-4.954 6.037a28.5 28.5 0 0 1-19.948 8.12c-.934 0-1.906-.258-2.692-.528-1.092 11.372-1.553 22.24-1.716 30.164l-.002.045c-.02 4.024-.04 7.333-.06 11.93.21 23.86-2.363 77.334 10.52 90.473 19.964 4.655 56.7 6.775 93.555 6.788h.006c36.854-.013 73.59-2.133 93.554-6.788 12.883-13.14 10.31-66.614 10.52-90.474-.022-4.596-.04-7.905-.06-11.93l-.003-.045c-.162-7.926-.623-18.793-1.715-30.165-.786.27-1.757.528-2.692.528a28.5 28.5 0 0 1-19.948-8.12c-1.862-1.822-3.662-3.766-4.955-6.037l-.006-.004c-1.294 2.266-2.705 4.213-4.563 6.032a28.48 28.48 0 0 1-19.947 8.125c-7.748 0-14.778-3.11-19.906-8.123a28.025 28.025 0 0 1-4.78-6.155 27.99 27.99 0 0 1-4.736 6.155 28.49 28.49 0 0 1-19.95 8.124c-.27 0-.54-.012-.81-.02h-.007c-.27.008-.54.02-.813.02a28.49 28.49 0 0 1-19.95-8.123 27.992 27.992 0 0 1-4.736-6.155zm-20.486 26.49l-.002.01h.015c8.113.017 15.32 0 24.25 9.746 7.028-.737 14.372-1.105 21.722-1.094h.006c7.35-.01 14.694.357 21.723 1.094 8.93-9.747 16.137-9.73 24.25-9.746h.014l-.002-.01c3.833 0 19.166 0 29.85 30.007L210 165.244c8.504 30.624-2.723 31.373-16.727 31.4-20.768-.773-32.267-15.855-32.267-30.935-11.496 1.884-24.907 2.826-38.318 2.827h-.006c-13.412 0-26.823-.943-38.318-2.827 0 15.08-11.5 30.162-32.267 30.935-14.004-.027-25.23-.775-16.726-31.4L46.85 124.08c10.684-30.007 26.017-30.007 29.85-30.007zm45.985 23.582v.006c-.02.02-21.863 20.08-25.79 27.215l14.304-.573v12.474c0 .584 5.74.346 11.486.08h.006c5.744.266 11.485.504 11.485-.08v-12.474l14.304.573c-3.928-7.135-25.79-27.215-25.79-27.215v-.006l-.003.002z"/>
+        </svg>
+      </a>
+      <a href="https://bsky.app/profile/heavyphoton.bsky.social" target="_blank" rel="noopener noreferrer" class="social-badge" title="Bluesky">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8z"/>
+        </svg>
+      </a>
+      <a href="https://github.com/heavyphoton" target="_blank" rel="noopener noreferrer" class="social-badge" title="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+      </a>
+      <a href="https://youtube.com/@heavyphoton" target="_blank" rel="noopener noreferrer" class="social-badge" title="YouTube">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+      </a>
+    </div>
+
+  </body>
 </html>
-
-<!--
-
-
-
-	also need:
-
-	Company Logo
-	Action shot of the game
-	Cover image for the game
-
-	Social media handles.
--->

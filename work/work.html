@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work - Heavy Photon</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #001a33 0%, #003366 50%, #001a33 100%);
+        min-height: 100vh;
+        color: white;
+      }
+
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        background: linear-gradient(180deg, rgba(0, 26, 51, 0.9) 0%, transparent 100%);
+      }
+
+      .nav-logo {
+        font-size: 1.2rem;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: white;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border: 1px solid transparent;
+        border-radius: 4px;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        text-shadow: 0 0 20px rgba(136, 204, 255, 0.8);
+      }
+
+      .page-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 8rem 2rem 4rem;
+      }
+
+      .page-title {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        font-weight: 200;
+        letter-spacing: 0.1em;
+        opacity: 0.7;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+      }
+
+      .project-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+      }
+
+      .project-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border-color: rgba(136, 204, 255, 0.3);
+      }
+
+      .project-image {
+        height: 200px;
+        background: linear-gradient(135deg, #1a4a6e 0%, #003366 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .project-image::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 40%, rgba(136, 204, 255, 0.1) 50%, transparent 60%);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      .project-info {
+        padding: 1.5rem;
+      }
+
+      .project-info h3 {
+        font-size: 1.4rem;
+        font-weight: 400;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.05em;
+      }
+
+      .project-tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .project-tag {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.8rem;
+        background: rgba(136, 204, 255, 0.2);
+        border-radius: 20px;
+        color: #88ccff;
+        letter-spacing: 0.05em;
+      }
+
+      .project-info p {
+        font-size: 0.95rem;
+        line-height: 1.7;
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+
+      .project-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #88ccff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        transition: all 0.3s ease;
+      }
+
+      .project-link:hover {
+        color: white;
+        gap: 0.8rem;
+      }
+
+      .featured-project {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .featured-project .project-image {
+        height: 100%;
+        min-height: 300px;
+        border-radius: 16px 0 0 16px;
+      }
+
+      .featured-project .project-info {
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .featured-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.8rem;
+        background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+        border-radius: 20px;
+        color: white;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        width: fit-content;
+      }
+
+      .bubbles-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .bubble {
+        position: absolute;
+        bottom: -100px;
+        background: radial-gradient(circle at 30% 30%, rgba(136, 204, 255, 0.2), rgba(136, 204, 255, 0.05));
+        border-radius: 50%;
+        animation: rise linear infinite;
+      }
+
+      @keyframes rise {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0.4;
+        }
+        100% {
+          transform: translateY(-110vh) scale(0.5);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .nav {
+          padding: 1rem;
+        }
+
+        .nav-links {
+          gap: 1rem;
+        }
+
+        .nav-links a {
+          font-size: 0.8rem;
+          padding: 0.4rem 0.6rem;
+        }
+
+        .featured-project {
+          grid-template-columns: 1fr;
+        }
+
+        .featured-project .project-image {
+          border-radius: 16px 16px 0 0;
+          min-height: 200px;
+        }
+
+        .projects-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bubbles-bg" id="bubbles"></div>
+
+    <nav class="nav">
+      <a href="index.html" class="nav-logo">Heavy Photon</a>
+      <div class="nav-links">
+        <a href="about.html">About</a>
+        <a href="work.html" class="active">Work</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </nav>
+
+    <main class="page-content">
+      <h1 class="page-title">Our Work</h1>
+      <p class="page-subtitle">Exploring the boundaries of interactive experiences</p>
+
+      <div class="projects-grid">
+        <article class="project-card featured-project">
+          <div class="project-image">🌊</div>
+          <div class="project-info">
+            <span class="featured-badge">Featured</span>
+            <h3>Abyssal Voyage</h3>
+            <div class="project-tags">
+              <span class="project-tag">Unity</span>
+              <span class="project-tag">VR</span>
+              <span class="project-tag">Adventure</span>
+            </div>
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod, nisi vel consectetur interdum, nisl nisi aliquet nunc. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec id elit non mi porta gravida at eget metus.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-image">🐠</div>
+          <div class="project-info">
+            <h3>Reef Simulator</h3>
+            <div class="project-tags">
+              <span class="project-tag">Three.js</span>
+              <span class="project-tag">WebGL</span>
+            </div>
+            <p>
+              Aenean lacinia bibendum nulla sed consectetur. Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-image">🎮</div>
+          <div class="project-info">
+            <h3>Tidal Rush</h3>
+            <div class="project-tags">
+              <span class="project-tag">Godot</span>
+              <span class="project-tag">Arcade</span>
+            </div>
+            <p>
+              Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Cras justo odio, dapibus ac facilisis in.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-image">🔮</div>
+          <div class="project-info">
+            <h3>Bioluminescence</h3>
+            <div class="project-tags">
+              <span class="project-tag">Unreal</span>
+              <span class="project-tag">Art</span>
+            </div>
+            <p>
+              Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis dis parturient montes.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-image">⚓</div>
+          <div class="project-info">
+            <h3>Sunken Treasures</h3>
+            <div class="project-tags">
+              <span class="project-tag">Unity</span>
+              <span class="project-tag">Puzzle</span>
+            </div>
+            <p>
+              Maecenas faucibus mollis interdum. Sed posuere consectetur est at lobortis. Cras mattis consectetur purus.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-image">🐋</div>
+          <div class="project-info">
+            <h3>Leviathan's Call</h3>
+            <div class="project-tags">
+              <span class="project-tag">Web Audio</span>
+              <span class="project-tag">Experimental</span>
+            </div>
+            <p>
+              Vestibulum id ligula porta felis euismod semper. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
+            </p>
+            <a href="#" class="project-link">View Project →</a>
+          </div>
+        </article>
+      </div>
+    </main>
+
+    <script>
+      const bubblesContainer = document.getElementById('bubbles');
+      for (let i = 0; i < 15; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const size = Math.random() * 30 + 10;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.animationDuration = (Math.random() * 15 + 15) + 's';
+        bubble.style.animationDelay = Math.random() * 10 + 's';
+        bubblesContainer.appendChild(bubble);
+      }
+    </script>
+  </body>
+</html>
