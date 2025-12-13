@@ -7,6 +7,7 @@ export class SpaceAudio {
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private isPlaying = false;
+  private isStopping = false;
 
   // Audio nodes
   private droneOscillators: OscillatorNode[] = [];
@@ -31,7 +32,7 @@ export class SpaceAudio {
   }
 
   async start(): Promise<void> {
-    if (this.isPlaying) return;
+    if (this.isPlaying || this.isStopping) return;
 
     this.initAudioContext();
     if (!this.audioContext || !this.masterGain) return;
@@ -56,11 +57,15 @@ export class SpaceAudio {
   stop(): void {
     if (!this.isPlaying) return;
 
+    // Mark as stopped immediately so toggle works correctly
+    this.isPlaying = false;
+    this.isStopping = true;
+
     this.fadeToVolume(0, 0.5);
 
     setTimeout(() => {
       this.cleanup();
-      this.isPlaying = false;
+      this.isStopping = false;
     }, 600);
   }
 

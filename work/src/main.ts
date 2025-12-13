@@ -190,18 +190,25 @@ const updateAudioButton = (playing: boolean) => {
 
 if (audioButton) {
   audioButton.addEventListener('click', (e) => {
+    console.log('[Audio] Button clicked', {
+      currentSceneType,
+      audioInitialized,
+      underwaterAudioPlaying: underwaterAudio.playing,
+      target: e.target,
+      currentTarget: e.currentTarget,
+    });
     e.stopPropagation(); // Don't trigger location click
 
     if (currentSceneType === 'underwater') {
       if (!audioInitialized) {
-        // First click initializes audio
+        // First click initializes audio - start it
+        console.log('[Audio] Initializing underwater audio');
         audioInitialized = true;
-        if (!underwaterAudio.playing) {
-          underwaterAudio.start();
-          setAudioPreference(true);
-          updateAudioButton(true);
-        }
+        underwaterAudio.start();
+        setAudioPreference(true);
+        updateAudioButton(true);
       } else {
+        console.log('[Audio] Toggling underwater audio');
         underwaterAudio.toggle();
         setAudioPreference(underwaterAudio.playing);
         updateAudioButton(underwaterAudio.playing);
@@ -209,26 +216,47 @@ if (audioButton) {
     } else {
       // Toggle space audio when in astronautics mode
       const spaceAudio = sceneManager.getSpaceAudio();
-      spaceAudio.toggle();
+      console.log('[Audio] Toggling space audio, currently playing:', spaceAudio.playing);
+      if (!spaceAudio.playing) {
+        spaceAudio.start();
+      } else {
+        spaceAudio.stop();
+      }
       setAudioPreference(spaceAudio.playing);
       updateAudioButton(spaceAudio.playing);
     }
   });
+
+  // Debug: Log when pointer events might be blocked
+  audioButton.addEventListener('pointerdown', (e) => {
+    console.log('[Audio] Pointer down on audio button', { x: e.clientX, y: e.clientY });
+  });
 }
 
-// Start audio on first user interaction only if user previously enabled it
-const startAudioOnInteraction = () => {
-  if (getAudioPreference() && currentSceneType === 'underwater' && !underwaterAudio.playing) {
-    underwaterAudio.start();
-    audioInitialized = true;
-    updateAudioButton(true);
-  }
-  document.removeEventListener('click', startAudioOnInteraction);
-  document.removeEventListener('keydown', startAudioOnInteraction);
-};
+// Debug: Global click logger to see what's capturing clicks
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement;
+  const rect = audioButton?.getBoundingClientRect();
+  const isInAudioButtonArea = rect &&
+    e.clientX >= rect.left && e.clientX <= rect.right &&
+    e.clientY >= rect.top && e.clientY <= rect.bottom;
 
-document.addEventListener('click', startAudioOnInteraction);
-document.addEventListener('keydown', startAudioOnInteraction);
+  if (isInAudioButtonArea) {
+    console.log('[Debug] Click in audio button area captured by:', {
+      tagName: target.tagName,
+      id: target.id,
+      className: target.className,
+      isAudioButton: target === audioButton,
+    });
+  }
+}, true); // Use capture phase
+
+// Initialize audio button state from saved preference (but don't auto-play)
+// Audio will only start when user clicks the audio button
+if (getAudioPreference()) {
+  // User had audio enabled before - show the unmuted icon but wait for click to actually start
+  // This is handled in the click handler above
+}
 
 window.addEventListener('resize', () => {
   underwaterScene.onResize();

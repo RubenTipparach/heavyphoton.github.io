@@ -2,11 +2,12 @@ export class UnderwaterAudio {
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private isPlaying = false;
+  private isStopping = false;
   private oscillators: OscillatorNode[] = [];
   private intervalIds: number[] = [];
 
   async start(): Promise<void> {
-    if (this.isPlaying) return;
+    if (this.isPlaying || this.isStopping) return;
 
     this.audioContext = new AudioContext();
     this.masterGain = this.audioContext.createGain();
@@ -30,6 +31,10 @@ export class UnderwaterAudio {
   stop(): void {
     if (!this.isPlaying || !this.audioContext || !this.masterGain) return;
 
+    // Mark as stopped immediately so toggle works correctly
+    this.isPlaying = false;
+    this.isStopping = true;
+
     // Fade out
     this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1);
 
@@ -43,7 +48,7 @@ export class UnderwaterAudio {
       this.intervalIds = [];
       this.audioContext?.close();
       this.audioContext = null;
-      this.isPlaying = false;
+      this.isStopping = false;
     }, 1100);
   }
 

@@ -548,8 +548,9 @@
         border-radius: 50%;
         cursor: pointer;
         transition: all 0.3s ease;
-        z-index: 100;
+        z-index: 200;
         backdrop-filter: blur(10px);
+        pointer-events: auto;
       }
 
       #audio-toggle:hover {
@@ -593,6 +594,11 @@
 
       .astronautics-ui.active {
         opacity: 1;
+        /* Keep pointer-events: none on container, children handle their own */
+      }
+
+      .astronautics-ui.active .seed-display,
+      .astronautics-ui.active .randomize-btn {
         pointer-events: auto;
       }
 
