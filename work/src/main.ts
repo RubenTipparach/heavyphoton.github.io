@@ -172,34 +172,56 @@ window.addEventListener('popstate', async () => {
   }
 });
 
+// Audio preference storage
+const AUDIO_PREF_KEY = 'heavyphoton-audio-enabled';
+const getAudioPreference = (): boolean => localStorage.getItem(AUDIO_PREF_KEY) === 'true';
+const setAudioPreference = (enabled: boolean) => localStorage.setItem(AUDIO_PREF_KEY, String(enabled));
+
 // Audio toggle button
 const audioButton = document.getElementById('audio-toggle');
+let audioInitialized = false;
+
+const updateAudioButton = (playing: boolean) => {
+  if (audioButton) {
+    audioButton.textContent = playing ? '🔊' : '🔇';
+    audioButton.classList.toggle('active', playing);
+  }
+};
+
 if (audioButton) {
   audioButton.addEventListener('click', (e) => {
     e.stopPropagation(); // Don't trigger location click
 
     if (currentSceneType === 'underwater') {
-      underwaterAudio.toggle();
-      audioButton.textContent = underwaterAudio.playing ? '🔊' : '🔇';
-      audioButton.classList.toggle('active', underwaterAudio.playing);
+      if (!audioInitialized) {
+        // First click initializes audio
+        audioInitialized = true;
+        if (!underwaterAudio.playing) {
+          underwaterAudio.start();
+          setAudioPreference(true);
+          updateAudioButton(true);
+        }
+      } else {
+        underwaterAudio.toggle();
+        setAudioPreference(underwaterAudio.playing);
+        updateAudioButton(underwaterAudio.playing);
+      }
     } else {
       // Toggle space audio when in astronautics mode
       const spaceAudio = sceneManager.getSpaceAudio();
       spaceAudio.toggle();
-      audioButton.textContent = spaceAudio.playing ? '🔊' : '🔇';
-      audioButton.classList.toggle('active', spaceAudio.playing);
+      setAudioPreference(spaceAudio.playing);
+      updateAudioButton(spaceAudio.playing);
     }
   });
 }
 
-// Start audio on first user interaction (required by browsers)
+// Start audio on first user interaction only if user previously enabled it
 const startAudioOnInteraction = () => {
-  if (currentSceneType === 'underwater' && !underwaterAudio.playing) {
+  if (getAudioPreference() && currentSceneType === 'underwater' && !underwaterAudio.playing) {
     underwaterAudio.start();
-    if (audioButton) {
-      audioButton.textContent = '🔊';
-      audioButton.classList.add('active');
-    }
+    audioInitialized = true;
+    updateAudioButton(true);
   }
   document.removeEventListener('click', startAudioOnInteraction);
   document.removeEventListener('keydown', startAudioOnInteraction);
