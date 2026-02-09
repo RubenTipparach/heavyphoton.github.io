@@ -60,6 +60,10 @@ if (navMenuBtn && navLinksContainer) {
 // Track current scene for UI updates
 let currentSceneType: 'underwater' | 'astronautics' = 'underwater';
 
+// Steam widget management
+const steamWidgetContainer = document.querySelector('#panel-home .steam-widget');
+const STEAM_IFRAME_HTML = '<iframe src="https://store.steampowered.com/widget/4342510/" frameborder="0" width="646" height="190" style="max-width: 100%; border-radius: 8px;"></iframe>';
+
 function showPanel(location: string) {
   // Don't show panels when in astronautics mode
   if (currentSceneType === 'astronautics' && location !== 'astronautics') {
@@ -72,6 +76,15 @@ function showPanel(location: string) {
       panel.classList.remove('active');
     }
   });
+
+  // Manage Steam widget iframe lifecycle
+  if (steamWidgetContainer) {
+    if (location === 'home') {
+      steamWidgetContainer.innerHTML = STEAM_IFRAME_HTML;
+    } else {
+      steamWidgetContainer.innerHTML = '';
+    }
+  }
 
   // Show the target panel (not for astronautics - it has its own UI)
   if (location !== 'astronautics') {

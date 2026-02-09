@@ -113,12 +113,14 @@
         z-index: 50;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.5s ease;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
       }
 
       .panel.active {
         opacity: 1;
         pointer-events: auto;
+        visibility: visible;
       }
 
       .panel-content {
@@ -837,7 +839,7 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-DNga5q07.js"></script>
+    <script type="module" crossorigin src="./assets/index-DFkRnoEC.js"></script>
   </head>
   <body>
     <div id="underwater-canvas"></div>
@@ -861,7 +863,6 @@
         <h1 class="home-title">Heavy Photon</h1>
         <!-- <p class="home-subtitle">Dive into the depths of creativity</p> -->
         <div class="steam-widget" style="margin-top: 2rem; pointer-events: auto; animation: fadeInUp 1s ease-out 0.6s both;">
-          <iframe src="https://store.steampowered.com/widget/4342510/" frameborder="0" width="646" height="190" style="max-width: 100%; border-radius: 8px;"></iframe>
         </div>
       </div>
     </div>
