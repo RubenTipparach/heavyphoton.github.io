@@ -496,11 +496,10 @@ BR = {
 BR["wsp"] = ((1440 - BR["wtx"]) / BR["ws"] - 360) / 5   # justify PHOTON in beam
 
 def brand_heavy(brand_fill):
-    """HEAVY stamp for the gun body: stroked to stay optically heavy small."""
+    """HEAVY stamp spanning the full gun: stretched wide, body to muzzle."""
     wmB, _, _ = wordmark2("HEAVY", 8)
-    return (f'<g fill="{brand_fill}" stroke="{brand_fill}" stroke-width="6" '
-            f'stroke-linejoin="miter" transform="translate(42 98) scale(0.28)">'
-            f'{wmB}</g>')
+    return (f'<g fill="{brand_fill}" '
+            f'transform="translate(36 90) scale(0.702 0.475)">{wmB}</g>')
 
 def branded_gun(fill, accent, brand_fill, notch_fill):
     """Gun with HEAVY stamped on the body (vents dropped for the brand)."""
@@ -511,22 +510,31 @@ def branded_gun(fill, accent, brand_fill, notch_fill):
             f'{brand_heavy(brand_fill)}</g>')
 
 def raygun_v2_branded():
-    """Flat cut: fat cyan beam, PHOTON punched out, first O solid bone."""
+    """Flat cut: fat cyan beam; PHOTON raised in 3D relief on the beam,
+    first O solid bone."""
     W, H = BR["W"], BR["H"]
     body = [f'<path fill="{CYAN}" d="{BR["beam"]}"/>']
-    wmP, _, _ = wordmark2("PHOTON", BR["wsp"], accents={2}, accent_fill=BONE,
-                          kern=BR["kern"])
-    body.append(f'<g fill="{INK}" transform="translate({BR["wtx"]} {BR["wty"]}) '
-                f'scale({BR["ws"]})">{wmP}</g>')
+    wmP, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
+    L = (f'<g transform="translate({BR["wtx"]} {BR["wty"]}) '
+         f'scale({BR["ws"]})">{wmP}</g>')
+    # flat-style emboss: deep-cyan cast shadow, pale rim light, dark face
+    body.append(f'<g fill="#063C50" transform="translate(7 8)">{L}</g>')
+    body.append(f'<g fill="#B9F4FF" transform="translate(-3 -3)">{L}</g>')
+    body.append(f'<g fill="{INK}">{L}</g>')
+    # first O face in bone (shares the shadow/highlight above)
+    o_inner = "".join(glyph_parts2("O", 0))
+    o_t = (f'translate({BR["wtx"] + pos[2]*BR["ws"]} {BR["wty"]}) '
+           f'scale({BR["ws"]})')
+    body.append(f'<g fill="{BONE}"><g transform="{o_t}">{o_inner}</g></g>')
     body.append(branded_gun(BONE, CYAN, INK, INK))
     svg_file("raygun-v2-branded.svg", W, H, "".join(body), bg=INK)
 
 def raygun_v2_branded_steel():
-    """Embossed cut: glowing beam with PHOTON knocked through to the plate,
-    first O bone with a cyan glow so the photon survives the material change."""
+    """Embossed cut: PHOTON in raised steel relief riding the glowing beam,
+    first O bone with a cyan glow so the photon stays the hero."""
     W, H = BR["W"], BR["H"]
     tx, ty, s = BR["wtx"], BR["wty"], BR["ws"]
-    wm_mask, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
+    wmP, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
     defs = (
         '<defs>'
         '<linearGradient id="plate2" x1="0" y1="0" x2="0.7" y2="1">'
@@ -540,10 +548,7 @@ def raygun_v2_branded_steel():
         '<feGaussianBlur stdDeviation="2.2"/></filter>'
         '<filter id="glow2" x="-60%" y="-60%" width="220%" height="220%">'
         '<feGaussianBlur stdDeviation="6"/></filter>'
-        '<mask id="pknock">'
-        f'<rect x="460" y="100" width="{W-460}" height="220" fill="#fff"/>'
-        f'<g fill="#000" transform="translate({tx} {ty}) scale({s})">{wm_mask}</g>'
-        '</mask></defs>')
+        '</defs>')
     # inner keyline breaks where the beam exits the plate (routed slot)
     keyline = (f'M{W-22},129 L{W-22},22 L22,22 L22,{H-22} '
                f'L{W-22},{H-22} L{W-22},273')
@@ -556,11 +561,10 @@ def raygun_v2_branded_steel():
                     f'opacity="0.6" filter="url(#soften2)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel2)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
-    # fat beam (glow + crisp) with PHOTON knocked through it
-    body.append(f'<g mask="url(#pknock)">'
-                f'<path fill="{CYAN}" opacity="0.85" filter="url(#glow2)" '
+    # fat beam (glow + crisp)
+    body.append(f'<path fill="{CYAN}" opacity="0.85" filter="url(#glow2)" '
                 f'd="{BR["beam"]}"/>'
-                f'<path fill="{CYAN}" d="{BR["beam"]}"/></g>')
+                f'<path fill="{CYAN}" d="{BR["beam"]}"/>')
     # embossed gun over the beam root
     content = f'<g transform="{BR["gun_t"]}">{raygun2_struct()}</g>'
     body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
@@ -573,7 +577,13 @@ def raygun_v2_branded_steel():
                 f'{brand_heavy("#232936")}'
                 f'<rect x="118" y="158" width="14" height="8" fill="#232936"/>'
                 f'{raygun2_energy(CYAN, vents=False)}</g>')
-    # first O: bone with a cyan halo — the photon stays the hero on steel
+    # PHOTON in raised steel relief on the beam
+    L = f'<g transform="translate({tx} {ty}) scale({s})">{wmP}</g>'
+    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
+                f'transform="translate(6 7)">{L}</g>')
+    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{L}</g>')
+    body.append(f'<g fill="url(#steel2)">{L}</g>')
+    # first O: bone face with a cyan halo — the photon stays the hero on steel
     o_inner = "".join(glyph_parts2("O", 0))
     o_t = f'translate({tx + pos[2]*s} {ty}) scale({s})'
     body.append(f'<g fill="{CYAN}" opacity="0.9" filter="url(#glow2)">'
