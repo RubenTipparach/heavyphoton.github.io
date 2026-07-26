@@ -301,18 +301,21 @@ def raygun2(fill, accent, detail=None):
 
 # shared layout for mainline + embossed: gun fires at an asteroid, the beam
 # ricochets off to the side, and a chipped shard of rock flies away
+# The asteroid's flat upper-left face is the mirror: it runs at -30deg from
+# (1036,224) to (1122,174), so a horizontal beam reflects up-right at 60deg.
+# The beam is ONE continuous ribbon whose miter (A=1113,180 to B=1067,206)
+# lies exactly along that face.
 ML = {
     "W": 1280, "H": 420, "gun": (28, 86), "tx": 352, "ty": 78, "s": 0.72,
-    "beam_main": "M320,180 L1060,180 L1060,206 L320,206 Z",
-    "beam_bounce": "M1040,186 L1180,46 L1198,64 L1058,204 Z",
-    "asteroid": ("M1048,180 L1072,132 L1118,112 L1168,128 L1196,168 "
-                 "L1188,224 L1150,262 L1094,254 L1052,222 Z"),
-    "craters": [(1102, 162, 13), (1148, 212, 16), (1086, 222, 9)],
-    "shards": ["M1030,178 L1004,162 L1024,152 Z",
-               "M1026,196 L992,192 L1026,208 Z",
-               "M1032,216 L1010,232 L1040,228 Z"],
-    "chip": "M1204,84 L1232,92 L1224,116 L1198,108 Z",
-    "chip_ticks": ((1246, 70, 1258, 58), (1252, 98, 1268, 92)),
+    "beam": ("M320,180 L1113,180 L1196,36 L1165,36 L1067,206 L320,206 Z"),
+    "asteroid": ("M1036,224 L1122,174 L1160,190 L1196,226 L1190,278 "
+                 "L1148,310 L1092,304 L1052,270 Z"),
+    "craters": [(1120, 236, 14), (1158, 264, 10), (1092, 266, 9)],
+    "shards": ["M1030,196 L1000,184 L1024,174 Z",
+               "M1024,220 L992,226 L1014,206 Z",
+               "M1044,240 L1020,262 L1012,238 Z"],
+    "chip": "M1204,74 L1232,82 L1224,106 L1198,98 Z",
+    "chip_ticks": ((1246, 60, 1258, 48), (1252, 88, 1268, 82)),
 }
 
 def asteroid_details(crater_fill):
@@ -323,8 +326,7 @@ def raygun_v2_mainline():
     """Beam ricochets off an asteroid; a chipped shard flies off. First O lit."""
     W, H = ML["W"], ML["H"]
     gx, gy = ML["gun"]
-    body = [f'<path fill="{CYAN}" d="{ML["beam_main"]}"/>',
-            f'<path fill="{CYAN}" d="{ML["beam_bounce"]}"/>',
+    body = [f'<path fill="{CYAN}" d="{ML["beam"]}"/>',
             f'<path fill="{BONE}" d="{ML["asteroid"]}"/>',
             asteroid_details(INK)]
     for sh in ML["shards"]:
@@ -369,11 +371,6 @@ def raygun_v2_embossed():
                     f'opacity="0.6" filter="url(#soften)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
-    # beams first so the asteroid's embossed edge overlaps the ricochet graze
-    beams = (f'<path d="{ML["beam_main"]}"/>'
-             f'<path d="{ML["beam_bounce"]}"/>')
-    body.append(f'<g fill="{CYAN}" opacity="0.85" filter="url(#glow)">{beams}</g>')
-    body.append(f'<g fill="{CYAN}">{beams}</g>')
     # structure content (no fills) reused across emboss layers
     wm_s, _, pos = wordmark2("HEAVY PHOTON", 12, skip={8})
     content = (f'<g transform="translate({gx} {gy})">{raygun2_struct()}</g>'
@@ -387,11 +384,13 @@ def raygun_v2_embossed():
     body.append(asteroid_details("#3A4150"))
     body.append(f'<g transform="translate({gx} {gy})">'
                 f'<rect x="118" y="158" width="14" height="8" fill="#232936"/></g>')
-    # live cyan energy: impact shards, glowing O, chip motion ticks, vents
+    # live cyan energy: continuous ricochet beam, impact shards, glowing O,
+    # chip motion ticks, vents
     o_inner = "".join(glyph_parts2("O", 0))
     ticks = "".join(f'<line x1="{a}" y1="{b}" x2="{c}" y2="{d}"/>'
                     for a, b, c, d in ML["chip_ticks"])
-    energy = ("".join(f'<path d="{sh}"/>' for sh in ML["shards"]) +
+    energy = (f'<path d="{ML["beam"]}"/>' +
+              "".join(f'<path d="{sh}"/>' for sh in ML["shards"]) +
               f'<g transform="translate({tx+pos[8]*s} {ty}) scale({s})">{o_inner}</g>'
               f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square" '
               f'fill="none">{ticks}</g>')
