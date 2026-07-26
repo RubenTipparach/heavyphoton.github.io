@@ -275,55 +275,119 @@ def scanmask(mid, w, y=46):
             f'fill="#000"/></mask>')
 
 # ================================================================ raygun v2
-def raygun2(fill, accent):
-    """v1 gun with sharper details, ~300x220 box, points right."""
+def raygun2_struct():
+    """Gun structural shapes, no fills (inherit from parent), ~300x220 box."""
     fins = "".join(f'<rect x="{2+i*10}" y="{66+i*6}" width="7" height="{104-i*12}"/>'
                    for i in range(3))
-    body_blk = "M32,64 L128,64 L150,84 L150,150 L32,150 Z"
-    grip = "M56,150 L112,150 L94,218 L40,218 Z"
-    trig = f'<rect x="112" y="150" width="30" height="12" fill="{fill}"/>' \
-           f'<rect x="118" y="158" width="14" height="8" fill="{INK}"/>'
-    sight = "M48,42 L112,42 L120,64 L40,64 Z"
-    barrel = "M150,84 L242,84 L242,132 L150,132 Z"
-    rail = f'<rect x="154" y="132" width="76" height="10" fill="{accent}"/>'
-    muzzle = "M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"
-    tip = f'<rect x="274" y="94" width="14" height="26" fill="{fill}"/>'
-    vents = "".join(f'<path fill="{accent}" d="M{56+i*26},76 L{68+i*26},76 '
+    return (fins +
+            '<path d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"'
+            '/><path d="M56,150 L112,150 L94,218 L40,218 Z"'
+            '/><rect x="112" y="150" width="30" height="12"'
+            '/><path d="M48,42 L112,42 L120,64 L40,64 Z"'
+            '/><path d="M150,84 L242,84 L242,132 L150,132 Z"'
+            '/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 '
+            'L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/>')
+
+def raygun2_energy(accent):
+    """Gun accent details: under-rail + charge vents."""
+    vents = "".join(f'<path d="M{56+i*26},76 L{68+i*26},76 '
                     f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3))
-    return (f'<g fill="{fill}">{fins}<path d="{body_blk}"/><path d="{grip}"/>'
-            f'<path d="{sight}"/><path d="{barrel}"/><path d="{muzzle}"/></g>'
-            f'{trig}{tip}{rail}{vents}')
+    return (f'<g fill="{accent}"><rect x="154" y="132" width="76" height="10"/>'
+            f'{vents}</g>')
+
+def raygun2(fill, accent, detail=None):
+    return (f'<g fill="{fill}">{raygun2_struct()}</g>{raygun2_energy(accent)}'
+            f'<rect x="118" y="158" width="14" height="8" fill="{detail or INK}"/>')
+
+# shared layout for mainline + embossed: gun, intact wordmark (both O's lit),
+# beam sagging past the word under the weight of the slug it carries
+ML = {
+    "W": 1280, "H": 420, "gun": (28, 86), "tx": 352, "ty": 78, "s": 0.72,
+    "beam_main": "M320,180 L980,180 L964,206 L320,206 Z",
+    "beam_drop": "M980,180 L1096,254 L1078,274 L964,206 Z",
+    "slug": (1060, 250, 18),
+    "ticks": ((934, 226, 918, 242), (962, 240, 952, 260)),
+}
 
 def raygun_v2_mainline():
-    """The dropped-O: last O of PHOTON is the heavy photon, sagging the beam."""
-    W, H = 1180, 400
-    body = [f'<g transform="translate(28 76)">{raygun2(BONE, CYAN)}</g>']
-    text = "HEAVY PHOTON"
-    s = 0.72
-    tx, ty = 350, 78
-    o_idx = 10
-    wm, wmw, pos = wordmark2(text, 12, accents={8}, accent_fill=CYAN,
-                             skip={o_idx})
-    # word (minus the fallen O) rides above the beam
-    body.append(f'<g fill="{BONE}" transform="translate({tx} {ty}) scale({s})">{wm}</g>')
-    # the fallen O: accent-filled, chunkier than its slot, hanging off the beam
-    o_inner = "".join(glyph_parts2("O", 0))
-    ox = tx + pos[o_idx] * s
-    so = 0.95
-    body.append(f'<g transform="translate({ox-7} 238) scale({so}) rotate(10 30 40)" '
-                f'fill="{CYAN}">{o_inner}</g>')
-    # beam: straight from muzzle, then sags down onto the fallen O
-    by0, by1 = 170, 194
-    bx = ox - 36
-    body.append(f'<path fill="{CYAN}" d="M320,{by0} L{bx},{by0} '
-                f'L{bx-16},{by1} L320,{by1} Z"/>')
-    body.append(f'<path fill="{CYAN}" d="M{bx},{by0} L{ox+40},232 '
-                f'L{ox+22},252 L{bx-16},{by1} Z"/>')
-    # strain ticks at the bend
+    """Intact wordmark, both O's lit; beam sags carrying the heavy slug."""
+    W, H = ML["W"], ML["H"]
+    gx, gy = ML["gun"]
+    body = [f'<g transform="translate({gx} {gy})">{raygun2(BONE, CYAN)}</g>']
+    wm, wmw, pos = wordmark2("HEAVY PHOTON", 12, accents={8, 10},
+                             accent_fill=CYAN)
+    body.append(f'<g fill="{BONE}" transform="translate({ML["tx"]} {ML["ty"]}) '
+                f'scale({ML["s"]})">{wm}</g>')
+    body.append(f'<path fill="{CYAN}" d="{ML["beam_main"]}"/>')
+    body.append(f'<path fill="{CYAN}" d="{ML["beam_drop"]}"/>')
+    sx, sy, srot = ML["slug"]
+    body.append(f'<g transform="translate({sx} {sy}) rotate({srot})">'
+                f'<rect width="74" height="74" fill="{BONE}"/>'
+                f'<rect x="19" y="19" width="36" height="36" fill="{CYAN}"/></g>')
+    ticks = "".join(f'<line x1="{a}" y1="{b}" x2="{c}" y2="{d}"/>'
+                    for a, b, c, d in ML["ticks"])
     body.append(f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square">'
-                f'<line x1="{bx-40}" y1="216" x2="{bx-56}" y2="232"/>'
-                f'<line x1="{bx-12}" y1="230" x2="{bx-22}" y2="250"/></g>')
+                f'{ticks}</g>')
     svg_file("raygun-v2-mainline.svg", W, H, "".join(body), bg=INK)
+
+def raygun_v2_embossed():
+    """Same lockup stamped into a steel plate; cyan energy stays live."""
+    W, H = ML["W"], ML["H"]
+    gx, gy = ML["gun"]
+    tx, ty, s = ML["tx"], ML["ty"], ML["s"]
+    sx, sy, srot = ML["slug"]
+    defs = (
+        '<defs>'
+        '<linearGradient id="plate" x1="0" y1="0" x2="0.7" y2="1">'
+        f'<stop offset="0" stop-color="#2B313D"/>'
+        f'<stop offset="1" stop-color="#161A23"/></linearGradient>'
+        '<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">'
+        '<stop offset="0" stop-color="#C6CEDA"/>'
+        '<stop offset="0.55" stop-color="#96A0B0"/>'
+        '<stop offset="1" stop-color="#6C7688"/></linearGradient>'
+        '<filter id="soften" x="-20%" y="-20%" width="140%" height="140%">'
+        '<feGaussianBlur stdDeviation="2.2"/></filter>'
+        '<filter id="glow" x="-60%" y="-60%" width="220%" height="220%">'
+        '<feGaussianBlur stdDeviation="6"/></filter>'
+        '</defs>')
+    body = [defs,
+            f'<rect width="{W}" height="{H}" fill="url(#plate)"/>',
+            f'<rect x="22" y="22" width="{W-44}" height="{H-44}" fill="none" '
+            f'stroke="#3A4150" stroke-width="2"/>']
+    # corner bolts
+    for bx, by in ((46, 46), (W-46, 46), (46, H-46), (W-46, H-46)):
+        body.append(f'<circle cx="{bx+2}" cy="{by+3}" r="13" fill="#04060A" '
+                    f'opacity="0.6" filter="url(#soften)"/>'
+                    f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel)"/>'
+                    f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
+    # structure content (no fills) reused across emboss layers
+    wm_s, _, pos = wordmark2("HEAVY PHOTON", 12, skip={8, 10})
+    content = (f'<g transform="translate({gx} {gy})">{raygun2_struct()}</g>'
+               f'<g transform="translate({tx} {ty}) scale({s})">{wm_s}</g>'
+               f'<g transform="translate({sx} {sy}) rotate({srot})">'
+               f'<rect width="74" height="74"/></g>')
+    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften)" '
+                f'transform="translate(6 7)">{content}</g>')
+    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{content}</g>')
+    body.append(f'<g fill="url(#steel)">{content}</g>')
+    body.append(f'<g transform="translate({gx} {gy})">'
+                f'<rect x="118" y="158" width="14" height="8" fill="#232936"/></g>')
+    # live cyan energy: beam, O's, vents/rail, slug core, strain ticks
+    o_inner = "".join(glyph_parts2("O", 0))
+    ticks = "".join(f'<line x1="{a}" y1="{b}" x2="{c}" y2="{d}"/>'
+                    for a, b, c, d in ML["ticks"])
+    energy = (f'<path d="{ML["beam_main"]}"/>'
+              f'<path d="{ML["beam_drop"]}"/>'
+              f'<g transform="translate({tx+pos[8]*s} {ty}) scale({s})">{o_inner}</g>'
+              f'<g transform="translate({tx+pos[10]*s} {ty}) scale({s})">{o_inner}</g>'
+              f'<g transform="translate({sx} {sy}) rotate({srot})">'
+              f'<rect x="19" y="19" width="36" height="36"/></g>'
+              f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square" '
+              f'fill="none">{ticks}</g>')
+    body.append(f'<g fill="{CYAN}" opacity="0.85" filter="url(#glow)">{energy}</g>')
+    body.append(f'<g fill="{CYAN}">{energy}</g>')
+    body.append(f'<g transform="translate({gx} {gy})">{raygun2_energy(CYAN)}</g>')
+    svg_file("raygun-v2-embossed.svg", W, H, "".join(body))
 
 def raygun_v2_strike():
     """Beam fired straight through the wordmark, slug punches out the far side."""
@@ -400,6 +464,7 @@ def raygun_v2_icon():
     svg_file("raygun-v2-icon.svg", W, H, "".join(body))
 
 raygun_v2_mainline()
+raygun_v2_embossed()
 raygun_v2_strike()
 raygun_v2_sticker()
 raygun_v2_icon()

@@ -21,7 +21,8 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 
 | # | File | Variant |
 |---|------|---------|
-| 03.1 | `raygun-v2-mainline.svg` | **The Fallen O** — the last O of PHOTON is the heavy photon; it drops out of the word and bends the beam carrying it. Primary lockup. |
+| 03.1 | `raygun-v2-mainline.svg` | **Mainline** — full wordmark with both O's lit cyan; the beam sags past the word under the weight of the slug it hauls. Primary lockup. |
+| 03.5 | `raygun-v2-embossed.svg` | **Stamped Steel** — the mainline lockup embossed into a bolted gunmetal plate, cyan energy still glowing. |
 | 03.2 | `raygun-v2-strike.svg` | **Strike** — beam fired straight through the name; both O's ride the beam, slug punches out the far side. Widescreen banner. |
 | 03.3 | `raygun-v2-sticker.svg` | **Slap** — square sticker, tilted gun, stacked stencil-scanline wordmark. Volt colorway. |
 | 03.4 | `raygun-v2-icon.svg` | **Roundel** — icon-only cut for avatars/favicons. |
