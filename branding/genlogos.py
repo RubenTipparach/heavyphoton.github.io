@@ -277,24 +277,28 @@ def scanmask(mid, w, y=46):
             f'fill="#000"/></mask>')
 
 # ================================================================ raygun v2
-def raygun2_struct():
-    """Gun structural shapes, no fills (inherit from parent), ~300x220 box."""
+def raygun2_struct(fat=False):
+    """Gun structural shapes, no fills (inherit from parent), ~300x220 box.
+    fat=True deepens the barrel band (y76-140 vs y84-132) so a full-height
+    brand stamp fits across the gun with clear margins."""
+    bt, bb = (76, 140) if fat else (84, 132)     # barrel top/bottom
+    lt, lb = (82, 134) if fat else (84, 130)     # muzzle inner lips
     fins = "".join(f'<rect x="{2+i*10}" y="{66+i*6}" width="7" height="{104-i*12}"/>'
                    for i in range(3))
     return (fins +
-            '<path d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"'
+            f'<path d="M32,64 L128,64 L150,{bt} L150,150 L32,150 Z"'
             '/><path d="M56,150 L112,150 L94,218 L40,218 Z"'
             '/><rect x="112" y="150" width="30" height="12"'
             '/><path d="M48,42 L112,42 L120,64 L40,64 Z"'
-            '/><path d="M150,84 L242,84 L242,132 L150,132 Z"'
-            '/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 '
+            f'/><path d="M150,{bt} L242,{bt} L242,{bb} L150,{bb} Z"'
+            f'/><path d="M242,66 L262,66 L262,{lt} L274,{lt} L274,{lb} L262,{lb} '
             'L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/>')
 
-def raygun2_energy(accent, vents=True):
+def raygun2_energy(accent, vents=True, rail_y=132):
     """Gun accent details: under-rail + charge vents."""
     v = "".join(f'<path d="M{56+i*26},76 L{68+i*26},76 '
                 f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3)) if vents else ""
-    return (f'<g fill="{accent}"><rect x="154" y="132" width="76" height="10"/>'
+    return (f'<g fill="{accent}"><rect x="154" y="{rail_y}" width="76" height="10"/>'
             f'{v}</g>')
 
 def raygun2(fill, accent, detail=None):
@@ -487,25 +491,27 @@ raygun_v2_icon()
 # right edge with a full letter-gap of clear cyan after the N; letters keep
 # ~17% cap-height margin inside the beam; tracking tightened around the T.
 BR = {
-    "W": 1520, "H": 420,
-    "gun_t": "translate(40 30) scale(1.6)",
-    "beam": "M500,180 L600,129 L1520,129 L1520,273 L600,273 L500,222 Z",
-    "wtx": 640, "wty": 147, "ws": 1.35,
+    "W": 1600, "H": 460,
+    "gun_t": "translate(40 20) scale(1.95)",
+    "beam": "M600,204 L700,152 L1600,152 L1600,304 L700,304 L600,254 Z",
+    "by0": 152, "by1": 304,
+    "wtx": 740, "wty": 173, "ws": 1.375,
     "kern": {2: -8, 3: -8},
 }
-BR["wsp"] = ((1440 - BR["wtx"]) / BR["ws"] - 360) / 5   # justify PHOTON in beam
+BR["wsp"] = ((1520 - BR["wtx"]) / BR["ws"] - 360) / 5   # justify PHOTON in beam
 
 def brand_heavy(brand_fill):
-    """HEAVY stamp spanning the full gun: stretched wide, body to muzzle."""
+    """HEAVY stamp spanning the full gun, cap 48 in the fat barrel band
+    (y76-140) so it clears every surface top and bottom."""
     wmB, _, _ = wordmark2("HEAVY", 8)
     return (f'<g fill="{brand_fill}" '
-            f'transform="translate(36 90) scale(0.702 0.475)">{wmB}</g>')
+            f'transform="translate(36 84) scale(0.702 0.6)">{wmB}</g>')
 
 def branded_gun(fill, accent, brand_fill, notch_fill):
     """Gun with HEAVY stamped on the body (vents dropped for the brand)."""
     return (f'<g transform="{BR["gun_t"]}">'
-            f'<g fill="{fill}">{raygun2_struct()}</g>'
-            f'{raygun2_energy(accent, vents=False)}'
+            f'<g fill="{fill}">{raygun2_struct(fat=True)}</g>'
+            f'{raygun2_energy(accent, vents=False, rail_y=144)}'
             f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
             f'{brand_heavy(brand_fill)}</g>')
 
@@ -550,8 +556,8 @@ def raygun_v2_branded_steel():
         '<feGaussianBlur stdDeviation="6"/></filter>'
         '</defs>')
     # inner keyline breaks where the beam exits the plate (routed slot)
-    keyline = (f'M{W-22},129 L{W-22},22 L22,22 L22,{H-22} '
-               f'L{W-22},{H-22} L{W-22},273')
+    keyline = (f'M{W-22},{BR["by0"]} L{W-22},22 L22,22 L22,{H-22} '
+               f'L{W-22},{H-22} L{W-22},{BR["by1"]}')
     body = [defs,
             f'<rect width="{W}" height="{H}" fill="url(#plate2)"/>',
             f'<path d="{keyline}" fill="none" stroke="#3A4150" '
