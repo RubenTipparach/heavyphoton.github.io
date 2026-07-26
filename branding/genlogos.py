@@ -202,3 +202,204 @@ if __name__ == "__main__":
     concept1()
     concept2()
     concept3()
+
+# ================================================================ v2 alphabet
+# Sharper display cut: chamfered corners, blade-cut arm terminals,
+# pointed A, near-pointed V. cap 80, width 60 (A 64), stem 18.
+GLYPHS2 = {
+    "H": {"w": 60, "rects": [(18,34,24,14)],
+          "polys": [[(0,12),(12,0),(18,0),(18,80),(0,80)],
+                    [(42,0),(60,0),(60,68),(48,80),(42,80)]]},
+    "E": {"w": 60, "polys": [[(0,12),(12,0),(18,0),(18,80),(0,80)],
+                             [(18,0),(60,0),(60,6),(52,14),(18,14)],
+                             [(18,33),(52,33),(46,47),(18,47)],
+                             [(18,66),(52,66),(60,74),(60,80),(18,80)]]},
+    "A": {"w": 64, "paths": ["M23,0 L41,0 L64,80 L46,80 L41,62 L23,62 L18,80 "
+                              "L0,80 Z M32,20 L37,46 L27,46 Z"]},
+    "V": {"w": 60, "polys": [[(0,0),(18,0),(30,50),(42,0),(60,0),(34,80),(26,80)]]},
+    "Y": {"w": 60, "polys": [[(0,0),(18,0),(30,32),(42,0),(60,0),(39,45),(39,80),(21,80),(21,45)]]},
+    "P": {"w": 60, "polys": [[(0,12),(12,0),(18,0),(18,80),(0,80)]],
+          "paths": ["M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 "
+                     "L46,30 L46,18 L42,14 L18,14 Z"]},
+    "O": {"w": 60, "paths": ["M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 "
+                              "L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 "
+                              "L18,64 L16,62 L16,18 Z"]},
+    "T": {"w": 60, "polys": [[(0,0),(60,0),(60,8),(54,14),(6,14),(0,8)],
+                             [(21,14),(39,14),(39,80),(27,80),(21,74)]]},
+    "N": {"w": 60, "rects": [(0,0,18,80),(42,0,18,80)],
+          "polys": [[(0,0),(18,0),(60,56),(60,80),(42,80),(0,26)]]},
+    " ": {"w": 26},
+}
+
+def glyph_parts2(ch, x):
+    g = GLYPHS2[ch]
+    parts = []
+    for p in g.get("paths", []):
+        parts.append(f'<path fill-rule="evenodd" transform="translate({x} 0)" d="{p}"/>')
+    for (rx, ry, rw, rh) in g.get("rects", []):
+        parts.append(f'<rect x="{x+rx}" y="{ry}" width="{rw}" height="{rh}"/>')
+    for poly in g.get("polys", []):
+        pts = " ".join(f"{x+px},{py}" for px, py in poly)
+        parts.append(f'<polygon points="{pts}"/>')
+    return parts
+
+def wordmark2(text, spacing=12, accents=None, accent_fill=None,
+              offsets=None, skip=None):
+    """v2 wordmark. offsets={idx:(dx,dy,rot)} per-glyph; skip={idx,...} omits.
+    Returns (inner_svg, width, positions list of glyph x)."""
+    accents = accents or set()
+    offsets = offsets or {}
+    skip = skip or set()
+    x = 0.0
+    out = []
+    pos = []
+    for i, ch in enumerate(text):
+        pos.append(x)
+        if ch != " " and i not in skip:
+            parts = "".join(glyph_parts2(ch, 0))
+            fill = f' fill="{accent_fill}"' if i in accents else ""
+            dx, dy, rot = offsets.get(i, (0, 0, 0))
+            w2 = GLYPHS2[ch]["w"] / 2
+            tr = f'translate({x+dx} {dy})'
+            if rot:
+                tr += f' rotate({rot} {w2} 40)'
+            out.append(f'<g transform="{tr}"{fill}>{parts}</g>')
+        x += GLYPHS2[ch]["w"] + spacing
+    return "".join(out), x - spacing, pos
+
+def scanmask(mid, w, y=46):
+    """Slanted stencil band mask for a wordmark group (local coords)."""
+    return (f'<mask id="{mid}"><rect x="-80" y="-40" width="{w+160}" '
+            f'height="180" fill="#fff"/>'
+            f'<polygon points="-40,{y+6} {w+40},{y-4} {w+40},{y+4} -40,{y+14}" '
+            f'fill="#000"/></mask>')
+
+# ================================================================ raygun v2
+def raygun2(fill, accent):
+    """v1 gun with sharper details, ~300x220 box, points right."""
+    fins = "".join(f'<rect x="{2+i*10}" y="{66+i*6}" width="7" height="{104-i*12}"/>'
+                   for i in range(3))
+    body_blk = "M32,64 L128,64 L150,84 L150,150 L32,150 Z"
+    grip = "M56,150 L112,150 L94,218 L40,218 Z"
+    trig = f'<rect x="112" y="150" width="30" height="12" fill="{fill}"/>' \
+           f'<rect x="118" y="158" width="14" height="8" fill="{INK}"/>'
+    sight = "M48,42 L112,42 L120,64 L40,64 Z"
+    barrel = "M150,84 L242,84 L242,132 L150,132 Z"
+    rail = f'<rect x="154" y="132" width="76" height="10" fill="{accent}"/>'
+    muzzle = "M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"
+    tip = f'<rect x="274" y="94" width="14" height="26" fill="{fill}"/>'
+    vents = "".join(f'<path fill="{accent}" d="M{56+i*26},76 L{68+i*26},76 '
+                    f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3))
+    return (f'<g fill="{fill}">{fins}<path d="{body_blk}"/><path d="{grip}"/>'
+            f'<path d="{sight}"/><path d="{barrel}"/><path d="{muzzle}"/></g>'
+            f'{trig}{tip}{rail}{vents}')
+
+def raygun_v2_mainline():
+    """The dropped-O: last O of PHOTON is the heavy photon, sagging the beam."""
+    W, H = 1180, 400
+    body = [f'<g transform="translate(28 76)">{raygun2(BONE, CYAN)}</g>']
+    text = "HEAVY PHOTON"
+    s = 0.72
+    tx, ty = 350, 78
+    o_idx = 10
+    wm, wmw, pos = wordmark2(text, 12, accents={8}, accent_fill=CYAN,
+                             skip={o_idx})
+    # word (minus the fallen O) rides above the beam
+    body.append(f'<g fill="{BONE}" transform="translate({tx} {ty}) scale({s})">{wm}</g>')
+    # the fallen O: accent-filled, chunkier than its slot, hanging off the beam
+    o_inner = "".join(glyph_parts2("O", 0))
+    ox = tx + pos[o_idx] * s
+    so = 0.95
+    body.append(f'<g transform="translate({ox-7} 238) scale({so}) rotate(10 30 40)" '
+                f'fill="{CYAN}">{o_inner}</g>')
+    # beam: straight from muzzle, then sags down onto the fallen O
+    by0, by1 = 170, 194
+    bx = ox - 36
+    body.append(f'<path fill="{CYAN}" d="M320,{by0} L{bx},{by0} '
+                f'L{bx-16},{by1} L320,{by1} Z"/>')
+    body.append(f'<path fill="{CYAN}" d="M{bx},{by0} L{ox+40},232 '
+                f'L{ox+22},252 L{bx-16},{by1} Z"/>')
+    # strain ticks at the bend
+    body.append(f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square">'
+                f'<line x1="{bx-40}" y1="216" x2="{bx-56}" y2="232"/>'
+                f'<line x1="{bx-12}" y1="230" x2="{bx-22}" y2="250"/></g>')
+    svg_file("raygun-v2-mainline.svg", W, H, "".join(body), bg=INK)
+
+def raygun_v2_strike():
+    """Beam fired straight through the wordmark, slug punches out the far side."""
+    W, H = 1500, 400
+    body = []
+    # beam behind everything, cutting through mid-letter height
+    by0, by1 = 140, 164
+    body.append(f'<rect x="316" y="{by0}" width="1010" height="{by1-by0}" fill="{MAG}"/>')
+    body.append(f'<g transform="translate(24 46)">{raygun2(BONE, MAG)}</g>')
+    # wordmark OVER the beam, both O's lit
+    wm, wmw, _ = wordmark2("HEAVY PHOTON", 12, accents={8, 10}, accent_fill=MAG)
+    s = 0.94
+    body.append(f'<g transform="translate(372 110) skewX(-10) scale({s})">'
+                f'<g fill="{BONE}">{wm}</g></g>')
+    # slug punching out the far side + speed dashes
+    body.append(f'<g transform="translate(1330 122) rotate(14)">'
+                f'<rect width="64" height="64" fill="{BONE}"/>'
+                f'<rect x="16" y="16" width="32" height="32" fill="{MAG}"/></g>')
+    body.append(f'<g fill="{MAG}">'
+                f'<rect x="1424" y="142" width="26" height="10"/>'
+                f'<rect x="1460" y="156" width="16" height="8"/></g>')
+    svg_file("raygun-v2-strike.svg", W, H, "".join(body), bg=INK)
+
+def raygun_v2_sticker():
+    """Chamfered square slap: tilted gun blasting corner-ward, stacked wordmark."""
+    W, H = 760, 800
+    badge = "M64,36 L696,36 L724,64 L724,672 L696,700 L64,700 L36,672 L36,64 Z"
+    inner = "M76,54 L686,54 L706,74 L706,662 L686,682 L76,682 L56,662 L56,74 Z"
+    body = [f'<path d="{badge}" fill="{INK}" stroke="{BONE}" stroke-width="14"/>',
+            f'<path d="{inner}" fill="none" stroke="{VOLT}" stroke-width="4"/>']
+    # corner deco sparks
+    body.append(f'<g fill="{VOLT}"><rect x="112" y="118" width="12" height="36"/>'
+                f'<rect x="100" y="130" width="36" height="12"/></g>'
+                f'<rect x="164" y="176" width="10" height="10" fill="{BONE}"/>')
+    # gun tilted up-right, firing toward the corner
+    body.append(f'<g transform="translate(96 300) rotate(-18)">{raygun2(BONE, VOLT)}</g>')
+    # short hard blast + slug near the corner
+    body.append(f'<g transform="rotate(-18 96 300)">'
+                f'<rect x="392" y="390" width="150" height="26" fill="{VOLT}"/>'
+                f'</g>')
+    body.append(f'<g transform="translate(556 200) rotate(24)">'
+                f'<rect width="70" height="70" fill="{BONE}"/>'
+                f'<rect x="18" y="18" width="34" height="34" fill="{VOLT}"/></g>')
+    # stacked wordmark, justified, stencil scanline
+    t1, t2 = "HEAVY", "PHOTON"
+    target = 560
+    def just2(text, tgt):
+        gw = sum(GLYPHS2[c]["w"] for c in text)
+        return (tgt - gw) / (len(text) - 1)
+    wm1, w1, _ = wordmark2(t1, just2(t1, target), accents={1}, accent_fill=VOLT)
+    wm2, w2, _ = wordmark2(t2, just2(t2, target), accents={4}, accent_fill=VOLT)
+    body.append(f'<defs>{scanmask("sc1", target)}</defs>')
+    body.append(f'<g fill="{BONE}" mask="url(#sc1)" '
+                f'transform="translate(100 476)">{wm1}</g>')
+    body.append(f'<g fill="{BONE}" mask="url(#sc1)" '
+                f'transform="translate(100 580)">{wm2}</g>')
+    svg_file("raygun-v2-sticker.svg", W, H, "".join(body))
+
+def raygun_v2_icon():
+    """Icon-only roundel for avatars: gun + sagging blast, no type."""
+    W, H = 480, 480
+    body = [f'<circle cx="240" cy="240" r="224" fill="{INK}" '
+            f'stroke="{BONE}" stroke-width="12"/>',
+            f'<circle cx="240" cy="240" r="196" fill="none" '
+            f'stroke="{CYAN}" stroke-width="4"/>']
+    body.append(f'<g transform="translate(74 160) scale(0.78) rotate(-8 150 110)">'
+                f'{raygun2(BONE, CYAN)}</g>')
+    # short beam that immediately sags + slug
+    body.append(f'<path fill="{CYAN}" d="M300,222 L336,219 L366,266 L352,282 '
+                f'L330,242 L300,244 Z"/>')
+    body.append(f'<g transform="translate(340 268) rotate(18)">'
+                f'<rect width="52" height="52" fill="{BONE}"/>'
+                f'<rect x="13" y="13" width="26" height="26" fill="{CYAN}"/></g>')
+    svg_file("raygun-v2-icon.svg", W, H, "".join(body))
+
+raygun_v2_mainline()
+raygun_v2_strike()
+raygun_v2_sticker()
+raygun_v2_icon()
