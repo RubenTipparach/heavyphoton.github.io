@@ -501,11 +501,11 @@ BR = {
 BR["wsp"] = ((1520 - BR["wtx"]) / BR["ws"] - 360) / 5   # justify PHOTON in beam
 
 def brand_heavy(brand_fill):
-    """HEAVY stamp spanning the full gun length, cap 36 centered in the fat
-    barrel band (y76-140): 14 units of clear surface above AND below."""
+    """HEAVY stamp spanning the full gun length, cap 32 centered in the fat
+    barrel band (y76-140): 16 units of clear surface above AND below."""
     wmB, _, _ = wordmark2("HEAVY", 8)
     return (f'<g fill="{brand_fill}" '
-            f'transform="translate(36 90) scale(0.702 0.45)">{wmB}</g>')
+            f'transform="translate(36 92) scale(0.702 0.4)">{wmB}</g>')
 
 def branded_gun(fill, accent, brand_fill, notch_fill):
     """Gun with HEAVY stamped on the body (vents dropped for the brand)."""
