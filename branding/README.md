@@ -25,6 +25,17 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 | 03.5 | `raygun-v2-embossed.svg` | **Stamped Steel** — the mainline lockup embossed into a bolted gunmetal plate, cyan energy still glowing. |
 | 03.6 | `raygun-v2-branded.svg` | **Branded** — HEAVY stretched across the full gun; PHOTON in raised 3D relief on one big fat beam, first O solid bone. |
 | 03.7 | `raygun-v2-branded-steel.svg` | **Branded Steel** — the branded cut on the plate; HEAVY debossed across the gun, PHOTON in raised steel relief on the glowing beam, first O in glowing bone. |
+| 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced under the HEA, charge tick at the muzzle. |
+| 03.9 | `raygun-v2-compact-steel.svg` | **Compact Steel** — the compact cut debossed on the bolted plate. |
+
+## PNG exports
+
+Every mark is exported at 2x resolution (transparent where the artwork has
+no background) in `png/`. Regenerate them after editing any SVG with:
+
+```sh
+NODE_PATH=$(npm root -g) node export_pngs.js "$PWD"
+```
 | 03.2 | `raygun-v2-strike.svg` | **Strike** — beam fired straight through the name; both O's ride the beam, slug punches out the far side. Widescreen banner. |
 | 03.3 | `raygun-v2-sticker.svg` | **Slap** — square sticker, tilted gun, stacked stencil-scanline wordmark. Volt colorway. |
 | 03.4 | `raygun-v2-icon.svg` | **Roundel** — icon-only cut for avatars/favicons. |
