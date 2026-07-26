@@ -23,6 +23,8 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 |---|------|---------|
 | 03.1 | `raygun-v2-mainline.svg` | **Mainline** — first O of PHOTON lit cyan; the beam slams into an asteroid and ricochets off to the side, chipping a shard loose. Primary lockup. |
 | 03.5 | `raygun-v2-embossed.svg` | **Stamped Steel** — the mainline lockup embossed into a bolted gunmetal plate, cyan energy still glowing. |
+| 03.6 | `raygun-v2-branded.svg` | **Branded** — HEAVY stamped on the gun; PHOTON knocked out of one big fat beam, first O solid. |
+| 03.7 | `raygun-v2-branded-steel.svg` | **Branded Steel** — the branded cut embossed on the plate; PHOTON punched through the glowing beam, first O in glowing bone. |
 | 03.2 | `raygun-v2-strike.svg` | **Strike** — beam fired straight through the name; both O's ride the beam, slug punches out the far side. Widescreen banner. |
 | 03.3 | `raygun-v2-sticker.svg` | **Slap** — square sticker, tilted gun, stacked stencil-scanline wordmark. Volt colorway. |
 | 03.4 | `raygun-v2-icon.svg` | **Roundel** — icon-only cut for avatars/favicons. |

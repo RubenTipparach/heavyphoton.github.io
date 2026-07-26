@@ -224,8 +224,8 @@ GLYPHS2 = {
     "O": {"w": 60, "paths": ["M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 "
                               "L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 "
                               "L18,64 L16,62 L16,18 Z"]},
-    "T": {"w": 60, "polys": [[(0,0),(60,0),(60,8),(54,14),(6,14),(0,8)],
-                             [(21,14),(39,14),(39,80),(27,80),(21,74)]]},
+    "T": {"w": 60, "polys": [[(0,0),(60,0),(60,10),(52,18),(8,18),(0,10)],
+                             [(21,14),(39,14),(39,80),(27,80),(21,72)]]},
     "N": {"w": 60, "rects": [(0,0,18,80),(42,0,18,80)],
           "polys": [[(0,0),(18,0),(60,56),(60,80),(42,80),(0,26)]]},
     " ": {"w": 26},
@@ -244,12 +244,14 @@ def glyph_parts2(ch, x):
     return parts
 
 def wordmark2(text, spacing=12, accents=None, accent_fill=None,
-              offsets=None, skip=None):
-    """v2 wordmark. offsets={idx:(dx,dy,rot)} per-glyph; skip={idx,...} omits.
+              offsets=None, skip=None, kern=None):
+    """v2 wordmark. offsets={idx:(dx,dy,rot)} per-glyph; skip={idx,...} omits;
+    kern={idx: delta} adjusts the advance after that glyph.
     Returns (inner_svg, width, positions list of glyph x)."""
     accents = accents or set()
     offsets = offsets or {}
     skip = skip or set()
+    kern = kern or {}
     x = 0.0
     out = []
     pos = []
@@ -264,7 +266,7 @@ def wordmark2(text, spacing=12, accents=None, accent_fill=None,
             if rot:
                 tr += f' rotate({rot} {w2} 40)'
             out.append(f'<g transform="{tr}"{fill}>{parts}</g>')
-        x += GLYPHS2[ch]["w"] + spacing
+        x += GLYPHS2[ch]["w"] + spacing + kern.get(i, 0)
     return "".join(out), x - spacing, pos
 
 def scanmask(mid, w, y=46):
@@ -288,12 +290,12 @@ def raygun2_struct():
             '/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 '
             'L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/>')
 
-def raygun2_energy(accent):
+def raygun2_energy(accent, vents=True):
     """Gun accent details: under-rail + charge vents."""
-    vents = "".join(f'<path d="M{56+i*26},76 L{68+i*26},76 '
-                    f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3))
+    v = "".join(f'<path d="M{56+i*26},76 L{68+i*26},76 '
+                f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3)) if vents else ""
     return (f'<g fill="{accent}"><rect x="154" y="132" width="76" height="10"/>'
-            f'{vents}</g>')
+            f'{v}</g>')
 
 def raygun2(fill, accent, detail=None):
     return (f'<g fill="{fill}">{raygun2_struct()}</g>{raygun2_energy(accent)}'
@@ -478,3 +480,106 @@ raygun_v2_embossed()
 raygun_v2_strike()
 raygun_v2_sticker()
 raygun_v2_icon()
+
+# ================================================================ branded
+# HEAVY stamped on the gun body; PHOTON knocked out of one big fat beam.
+# Gun scaled up so the receiver out-masses the beam; the beam runs off the
+# right edge with a full letter-gap of clear cyan after the N; letters keep
+# ~17% cap-height margin inside the beam; tracking tightened around the T.
+BR = {
+    "W": 1520, "H": 420,
+    "gun_t": "translate(40 30) scale(1.6)",
+    "beam": "M500,180 L600,129 L1520,129 L1520,273 L600,273 L500,222 Z",
+    "wtx": 640, "wty": 147, "ws": 1.35,
+    "kern": {2: -8, 3: -8},
+}
+BR["wsp"] = ((1440 - BR["wtx"]) / BR["ws"] - 360) / 5   # justify PHOTON in beam
+
+def brand_heavy(brand_fill):
+    """HEAVY stamp for the gun body: stroked to stay optically heavy small."""
+    wmB, _, _ = wordmark2("HEAVY", 8)
+    return (f'<g fill="{brand_fill}" stroke="{brand_fill}" stroke-width="6" '
+            f'stroke-linejoin="miter" transform="translate(42 98) scale(0.28)">'
+            f'{wmB}</g>')
+
+def branded_gun(fill, accent, brand_fill, notch_fill):
+    """Gun with HEAVY stamped on the body (vents dropped for the brand)."""
+    return (f'<g transform="{BR["gun_t"]}">'
+            f'<g fill="{fill}">{raygun2_struct()}</g>'
+            f'{raygun2_energy(accent, vents=False)}'
+            f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+            f'{brand_heavy(brand_fill)}</g>')
+
+def raygun_v2_branded():
+    """Flat cut: fat cyan beam, PHOTON punched out, first O solid bone."""
+    W, H = BR["W"], BR["H"]
+    body = [f'<path fill="{CYAN}" d="{BR["beam"]}"/>']
+    wmP, _, _ = wordmark2("PHOTON", BR["wsp"], accents={2}, accent_fill=BONE,
+                          kern=BR["kern"])
+    body.append(f'<g fill="{INK}" transform="translate({BR["wtx"]} {BR["wty"]}) '
+                f'scale({BR["ws"]})">{wmP}</g>')
+    body.append(branded_gun(BONE, CYAN, INK, INK))
+    svg_file("raygun-v2-branded.svg", W, H, "".join(body), bg=INK)
+
+def raygun_v2_branded_steel():
+    """Embossed cut: glowing beam with PHOTON knocked through to the plate,
+    first O bone with a cyan glow so the photon survives the material change."""
+    W, H = BR["W"], BR["H"]
+    tx, ty, s = BR["wtx"], BR["wty"], BR["ws"]
+    wm_mask, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
+    defs = (
+        '<defs>'
+        '<linearGradient id="plate2" x1="0" y1="0" x2="0.7" y2="1">'
+        '<stop offset="0" stop-color="#2B313D"/>'
+        '<stop offset="1" stop-color="#161A23"/></linearGradient>'
+        '<linearGradient id="steel2" x1="0" y1="0" x2="0" y2="1">'
+        '<stop offset="0" stop-color="#C6CEDA"/>'
+        '<stop offset="0.55" stop-color="#96A0B0"/>'
+        '<stop offset="1" stop-color="#6C7688"/></linearGradient>'
+        '<filter id="soften2" x="-20%" y="-20%" width="140%" height="140%">'
+        '<feGaussianBlur stdDeviation="2.2"/></filter>'
+        '<filter id="glow2" x="-60%" y="-60%" width="220%" height="220%">'
+        '<feGaussianBlur stdDeviation="6"/></filter>'
+        '<mask id="pknock">'
+        f'<rect x="460" y="100" width="{W-460}" height="220" fill="#fff"/>'
+        f'<g fill="#000" transform="translate({tx} {ty}) scale({s})">{wm_mask}</g>'
+        '</mask></defs>')
+    # inner keyline breaks where the beam exits the plate (routed slot)
+    keyline = (f'M{W-22},129 L{W-22},22 L22,22 L22,{H-22} '
+               f'L{W-22},{H-22} L{W-22},273')
+    body = [defs,
+            f'<rect width="{W}" height="{H}" fill="url(#plate2)"/>',
+            f'<path d="{keyline}" fill="none" stroke="#3A4150" '
+            f'stroke-width="2"/>']
+    for bx, by in ((46, 46), (W-46, 46), (46, H-46), (W-46, H-46)):
+        body.append(f'<circle cx="{bx+2}" cy="{by+3}" r="13" fill="#04060A" '
+                    f'opacity="0.6" filter="url(#soften2)"/>'
+                    f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel2)"/>'
+                    f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
+    # fat beam (glow + crisp) with PHOTON knocked through it
+    body.append(f'<g mask="url(#pknock)">'
+                f'<path fill="{CYAN}" opacity="0.85" filter="url(#glow2)" '
+                f'd="{BR["beam"]}"/>'
+                f'<path fill="{CYAN}" d="{BR["beam"]}"/></g>')
+    # embossed gun over the beam root
+    content = f'<g transform="{BR["gun_t"]}">{raygun2_struct()}</g>'
+    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
+                f'transform="translate(6 7)">{content}</g>')
+    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{content}</g>')
+    body.append(f'<g fill="url(#steel2)">{content}</g>')
+    # HEAVY debossed into the gun body: highlight below, dark stamp on top
+    body.append(f'<g transform="{BR["gun_t"]}">'
+                f'<g transform="translate(4 4)">{brand_heavy("#D8DFEA")}</g>'
+                f'{brand_heavy("#232936")}'
+                f'<rect x="118" y="158" width="14" height="8" fill="#232936"/>'
+                f'{raygun2_energy(CYAN, vents=False)}</g>')
+    # first O: bone with a cyan halo — the photon stays the hero on steel
+    o_inner = "".join(glyph_parts2("O", 0))
+    o_t = f'translate({tx + pos[2]*s} {ty}) scale({s})'
+    body.append(f'<g fill="{CYAN}" opacity="0.9" filter="url(#glow2)">'
+                f'<g transform="{o_t}">{o_inner}</g></g>')
+    body.append(f'<g fill="{BONE}"><g transform="{o_t}">{o_inner}</g></g>')
+    svg_file("raygun-v2-branded-steel.svg", W, H, "".join(body))
+
+raygun_v2_branded()
+raygun_v2_branded_steel()
