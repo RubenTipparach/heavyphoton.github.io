@@ -299,35 +299,45 @@ def raygun2(fill, accent, detail=None):
     return (f'<g fill="{fill}">{raygun2_struct()}</g>{raygun2_energy(accent)}'
             f'<rect x="118" y="158" width="14" height="8" fill="{detail or INK}"/>')
 
-# shared layout for mainline + embossed: gun, intact wordmark (both O's lit),
-# beam sagging past the word under the weight of the slug it carries
+# shared layout for mainline + embossed: gun fires at an asteroid, the beam
+# ricochets off to the side, and a chipped shard of rock flies away
 ML = {
     "W": 1280, "H": 420, "gun": (28, 86), "tx": 352, "ty": 78, "s": 0.72,
-    "beam_main": "M320,180 L980,180 L964,206 L320,206 Z",
-    "beam_drop": "M980,180 L1096,254 L1078,274 L964,206 Z",
-    "slug": (1060, 250, 18),
-    "ticks": ((934, 226, 918, 242), (962, 240, 952, 260)),
+    "beam_main": "M320,180 L1060,180 L1060,206 L320,206 Z",
+    "beam_bounce": "M1040,186 L1180,46 L1198,64 L1058,204 Z",
+    "asteroid": ("M1048,180 L1072,132 L1118,112 L1168,128 L1196,168 "
+                 "L1188,224 L1150,262 L1094,254 L1052,222 Z"),
+    "craters": [(1102, 162, 13), (1148, 212, 16), (1086, 222, 9)],
+    "shards": ["M1030,178 L1004,162 L1024,152 Z",
+               "M1026,196 L992,192 L1026,208 Z",
+               "M1032,216 L1010,232 L1040,228 Z"],
+    "chip": "M1204,84 L1232,92 L1224,116 L1198,108 Z",
+    "chip_ticks": ((1246, 70, 1258, 58), (1252, 98, 1268, 92)),
 }
 
+def asteroid_details(crater_fill):
+    return "".join(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{crater_fill}"/>'
+                   for cx, cy, r in ML["craters"])
+
 def raygun_v2_mainline():
-    """Intact wordmark, both O's lit; beam sags carrying the heavy slug."""
+    """Beam ricochets off an asteroid; a chipped shard flies off. First O lit."""
     W, H = ML["W"], ML["H"]
     gx, gy = ML["gun"]
-    body = [f'<g transform="translate({gx} {gy})">{raygun2(BONE, CYAN)}</g>']
-    wm, wmw, pos = wordmark2("HEAVY PHOTON", 12, accents={8, 10},
-                             accent_fill=CYAN)
-    body.append(f'<g fill="{BONE}" transform="translate({ML["tx"]} {ML["ty"]}) '
-                f'scale({ML["s"]})">{wm}</g>')
-    body.append(f'<path fill="{CYAN}" d="{ML["beam_main"]}"/>')
-    body.append(f'<path fill="{CYAN}" d="{ML["beam_drop"]}"/>')
-    sx, sy, srot = ML["slug"]
-    body.append(f'<g transform="translate({sx} {sy}) rotate({srot})">'
-                f'<rect width="74" height="74" fill="{BONE}"/>'
-                f'<rect x="19" y="19" width="36" height="36" fill="{CYAN}"/></g>')
+    body = [f'<path fill="{CYAN}" d="{ML["beam_main"]}"/>',
+            f'<path fill="{CYAN}" d="{ML["beam_bounce"]}"/>',
+            f'<path fill="{BONE}" d="{ML["asteroid"]}"/>',
+            asteroid_details(INK)]
+    for sh in ML["shards"]:
+        body.append(f'<path fill="{CYAN}" d="{sh}"/>')
+    body.append(f'<path fill="{BONE}" d="{ML["chip"]}"/>')
     ticks = "".join(f'<line x1="{a}" y1="{b}" x2="{c}" y2="{d}"/>'
-                    for a, b, c, d in ML["ticks"])
+                    for a, b, c, d in ML["chip_ticks"])
     body.append(f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square">'
                 f'{ticks}</g>')
+    wm, wmw, pos = wordmark2("HEAVY PHOTON", 12, accents={8}, accent_fill=CYAN)
+    body.append(f'<g fill="{BONE}" transform="translate({ML["tx"]} {ML["ty"]}) '
+                f'scale({ML["s"]})">{wm}</g>')
+    body.append(f'<g transform="translate({gx} {gy})">{raygun2(BONE, CYAN)}</g>')
     svg_file("raygun-v2-mainline.svg", W, H, "".join(body), bg=INK)
 
 def raygun_v2_embossed():
@@ -335,7 +345,6 @@ def raygun_v2_embossed():
     W, H = ML["W"], ML["H"]
     gx, gy = ML["gun"]
     tx, ty, s = ML["tx"], ML["ty"], ML["s"]
-    sx, sy, srot = ML["slug"]
     defs = (
         '<defs>'
         '<linearGradient id="plate" x1="0" y1="0" x2="0.7" y2="1">'
@@ -360,28 +369,30 @@ def raygun_v2_embossed():
                     f'opacity="0.6" filter="url(#soften)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
+    # beams first so the asteroid's embossed edge overlaps the ricochet graze
+    beams = (f'<path d="{ML["beam_main"]}"/>'
+             f'<path d="{ML["beam_bounce"]}"/>')
+    body.append(f'<g fill="{CYAN}" opacity="0.85" filter="url(#glow)">{beams}</g>')
+    body.append(f'<g fill="{CYAN}">{beams}</g>')
     # structure content (no fills) reused across emboss layers
-    wm_s, _, pos = wordmark2("HEAVY PHOTON", 12, skip={8, 10})
+    wm_s, _, pos = wordmark2("HEAVY PHOTON", 12, skip={8})
     content = (f'<g transform="translate({gx} {gy})">{raygun2_struct()}</g>'
                f'<g transform="translate({tx} {ty}) scale({s})">{wm_s}</g>'
-               f'<g transform="translate({sx} {sy}) rotate({srot})">'
-               f'<rect width="74" height="74"/></g>')
+               f'<path d="{ML["asteroid"]}"/>'
+               f'<path d="{ML["chip"]}"/>')
     body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften)" '
                 f'transform="translate(6 7)">{content}</g>')
     body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{content}</g>')
     body.append(f'<g fill="url(#steel)">{content}</g>')
+    body.append(asteroid_details("#3A4150"))
     body.append(f'<g transform="translate({gx} {gy})">'
                 f'<rect x="118" y="158" width="14" height="8" fill="#232936"/></g>')
-    # live cyan energy: beam, O's, vents/rail, slug core, strain ticks
+    # live cyan energy: impact shards, glowing O, chip motion ticks, vents
     o_inner = "".join(glyph_parts2("O", 0))
     ticks = "".join(f'<line x1="{a}" y1="{b}" x2="{c}" y2="{d}"/>'
-                    for a, b, c, d in ML["ticks"])
-    energy = (f'<path d="{ML["beam_main"]}"/>'
-              f'<path d="{ML["beam_drop"]}"/>'
+                    for a, b, c, d in ML["chip_ticks"])
+    energy = ("".join(f'<path d="{sh}"/>' for sh in ML["shards"]) +
               f'<g transform="translate({tx+pos[8]*s} {ty}) scale({s})">{o_inner}</g>'
-              f'<g transform="translate({tx+pos[10]*s} {ty}) scale({s})">{o_inner}</g>'
-              f'<g transform="translate({sx} {sy}) rotate({srot})">'
-              f'<rect x="19" y="19" width="36" height="36"/></g>'
               f'<g stroke="{CYAN}" stroke-width="6" stroke-linecap="square" '
               f'fill="none">{ticks}</g>')
     body.append(f'<g fill="{CYAN}" opacity="0.85" filter="url(#glow)">{energy}</g>')
