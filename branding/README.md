@@ -38,6 +38,12 @@ ALL of that object's layers — shadow, highlight, face, and attached
 details like the rail or trigger notch — so scaling or moving an object
 in Inkscape carries its fx with it.
 
+Adjacent parts overlap by a few units where they meet (hidden inside the
+silhouette) so the assembled gun stays seamless, and in the steel cut each
+part's shadow/highlight copies are clipped by `<mask id="gunout">` so fx
+only render outside the gun outline. If you resize a part dramatically,
+update its twin shape inside that mask so the clipping follows.
+
 The generator also refuses to overwrite any SVG that has been re-saved
 from Inkscape (it detects the editor metadata), so hand edits are safe
 from an accidental `python3 genlogos.py`.

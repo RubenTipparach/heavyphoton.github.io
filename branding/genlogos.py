@@ -629,18 +629,20 @@ CHARGE_TICK = 'M292,98 L304,107 L292,116 Z'
 # its own <g id=...> containing ALL of that part's layers (shadow, highlight,
 # face, plus attached details like the rail or trigger notch), so scaling or
 # moving one object in an editor carries its fx copies with it.
+# Adjacent parts overlap by a few units where they meet (hidden inside the
+# silhouette) so the assembled gun reads as one solid piece with no seams.
 COMPACT_SHAPES = [
     ("fin-1",   '<rect x="2" y="66" width="7" height="104"/>'),
     ("fin-2",   '<rect x="12" y="72" width="7" height="92"/>'),
     ("fin-3",   '<rect x="22" y="78" width="7" height="80"/>'),
-    ("grip",    '<path d="M56,150 L112,150 L94,218 L40,218 Z"/>'),
+    ("grip",    '<path d="M56,146 L112,146 L94,218 L40,218 Z"/>'),
     ("body",    '<path d="M32,64 L128,64 L150,76 L150,150 L32,150 Z"/>'),
-    ("sight",   '<path d="M48,42 L112,42 L120,64 L40,64 Z"/>'),
-    ("trigger", '<rect x="112" y="150" width="30" height="12"/>'),
-    ("barrel",  '<path d="M150,76 L242,76 L242,140 L150,140 Z"/>'),
+    ("sight",   '<path d="M48,42 L112,42 L120,68 L40,68 Z"/>'),
+    ("trigger", '<rect x="112" y="146" width="30" height="16"/>'),
+    ("barrel",  '<path d="M146,76 L246,76 L246,140 L146,140 Z"/>'),
     ("muzzle",  '<path d="M242,66 L262,66 L262,82 L274,82 L274,134 '
                 'L262,134 L262,148 L242,148 Z"/>'),
-    ("tip",     '<rect x="274" y="94" width="14" height="26"/>'),
+    ("tip",     '<rect x="270" y="94" width="18" height="26"/>'),
 ]
 
 def compact_extras(name, accent, notch_fill):
@@ -717,14 +719,23 @@ def raygun_v2_compact_steel():
                     f'opacity="0.6" filter="url(#soften3)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel3)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
+    # gunout mask: fx copies render only OUTSIDE the assembled silhouette,
+    # so per-part shadows/highlights never draw seams on neighboring parts
+    silhouette = "".join(el for _, el in COMPACT_SHAPES)
+    body.insert(1, f'<mask id="gunout" maskUnits="userSpaceOnUse" '
+                   f'x="-2000" y="-2000" width="6000" height="6000">'
+                   f'<rect x="-2000" y="-2000" width="6000" height="6000" '
+                   f'fill="#fff"/>'
+                   f'<g fill="#000">{silhouette}</g></mask>')
     # per-object groups: each part stacks its own shadow/highlight/face
     objs = []
     for name, el in COMPACT_SHAPES:
         objs.append(
             f'<g id="{name}">'
+            f'<g mask="url(#gunout)">'
             f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
             f'transform="translate(6 7)">{el}</g>'
-            f'<g fill="#E8EEF7" transform="translate(-3 -3)">{el}</g>'
+            f'<g fill="#E8EEF7" transform="translate(-3 -3)">{el}</g></g>'
             f'<g fill="url(#steel3)">{el}</g>'
             f'{compact_extras(name, CYAN, "#232936")}</g>')
     # debossed words: each glyph group stacks its highlight + dark stamp
