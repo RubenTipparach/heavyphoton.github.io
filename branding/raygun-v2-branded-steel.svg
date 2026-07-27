@@ -1,1 +1,915 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 460" width="1600" height="460"><defs><linearGradient id="plate2" x1="0" y1="0" x2="0.7" y2="1"><stop offset="0" stop-color="#2B313D"/><stop offset="1" stop-color="#161A23"/></linearGradient><linearGradient id="steel2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C6CEDA"/><stop offset="0.55" stop-color="#96A0B0"/><stop offset="1" stop-color="#6C7688"/></linearGradient><filter id="soften2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="glow2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter></defs><rect width="1600" height="460" fill="url(#plate2)"/><path d="M1578,152 L1578,22 L22,22 L22,438 L1578,438 L1578,304" fill="none" stroke="#3A4150" stroke-width="2"/><circle cx="48" cy="49" r="13" fill="#04060A" opacity="0.6" filter="url(#soften2)"/><circle cx="46" cy="46" r="12" fill="url(#steel2)"/><circle cx="46" cy="46" r="5" fill="#3A4150"/><circle cx="1556" cy="49" r="13" fill="#04060A" opacity="0.6" filter="url(#soften2)"/><circle cx="1554" cy="46" r="12" fill="url(#steel2)"/><circle cx="1554" cy="46" r="5" fill="#3A4150"/><circle cx="48" cy="417" r="13" fill="#04060A" opacity="0.6" filter="url(#soften2)"/><circle cx="46" cy="414" r="12" fill="url(#steel2)"/><circle cx="46" cy="414" r="5" fill="#3A4150"/><circle cx="1556" cy="417" r="13" fill="#04060A" opacity="0.6" filter="url(#soften2)"/><circle cx="1554" cy="414" r="12" fill="url(#steel2)"/><circle cx="1554" cy="414" r="5" fill="#3A4150"/><path fill="#3EE0FF" opacity="0.85" filter="url(#glow2)" d="M600,204 L700,152 L1600,152 L1600,304 L700,304 L600,254 Z"/><path fill="#3EE0FF" d="M600,204 L700,152 L1600,152 L1600,304 L700,304 L600,254 Z"/><g fill="#04060A" opacity="0.75" filter="url(#soften2)" transform="translate(6 7)"><g transform="translate(40 20) scale(1.95)"><rect x="2" y="66" width="7" height="104"/><rect x="12" y="72" width="7" height="92"/><rect x="22" y="78" width="7" height="80"/><path d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"/><path d="M56,150 L112,150 L94,218 L40,218 Z"/><rect x="112" y="150" width="30" height="12"/><path d="M48,42 L112,42 L120,64 L40,64 Z"/><path d="M150,84 L242,84 L242,132 L150,132 Z"/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/></g></g><g fill="#E8EEF7" transform="translate(-3 -3)"><g transform="translate(40 20) scale(1.95)"><rect x="2" y="66" width="7" height="104"/><rect x="12" y="72" width="7" height="92"/><rect x="22" y="78" width="7" height="80"/><path d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"/><path d="M56,150 L112,150 L94,218 L40,218 Z"/><rect x="112" y="150" width="30" height="12"/><path d="M48,42 L112,42 L120,64 L40,64 Z"/><path d="M150,84 L242,84 L242,132 L150,132 Z"/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/></g></g><g fill="url(#steel2)"><g transform="translate(40 20) scale(1.95)"><rect x="2" y="66" width="7" height="104"/><rect x="12" y="72" width="7" height="92"/><rect x="22" y="78" width="7" height="80"/><path d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"/><path d="M56,150 L112,150 L94,218 L40,218 Z"/><rect x="112" y="150" width="30" height="12"/><path d="M48,42 L112,42 L120,64 L40,64 Z"/><path d="M150,84 L242,84 L242,132 L150,132 Z"/><path d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/></g></g><g transform="translate(40 20) scale(1.95)"><g transform="translate(4 4)"><g fill="#D8DFEA" transform="translate(36 88) scale(0.702 0.4)"><g transform="translate(0.0 0)"><rect x="18" y="34" width="24" height="14"/><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="42,0 60,0 60,68 48,80 42,80"/></g><g transform="translate(68.0 0)"><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="18,0 60,0 60,6 52,14 18,14"/><polygon points="18,33 52,33 46,47 18,47"/><polygon points="18,66 52,66 60,74 60,80 18,80"/></g><g transform="translate(136.0 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M23,0 L41,0 L64,80 L46,80 L41,62 L23,62 L18,80 L0,80 Z M32,20 L37,46 L27,46 Z"/></g><g transform="translate(208.0 0)"><polygon points="0,0 18,0 30,50 42,0 60,0 34,80 26,80"/></g><g transform="translate(276.0 0)"><polygon points="0,0 18,0 30,32 42,0 60,0 39,45 39,80 21,80 21,45"/></g></g></g><g fill="#232936" transform="translate(36 88) scale(0.702 0.4)"><g transform="translate(0.0 0)"><rect x="18" y="34" width="24" height="14"/><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="42,0 60,0 60,68 48,80 42,80"/></g><g transform="translate(68.0 0)"><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="18,0 60,0 60,6 52,14 18,14"/><polygon points="18,33 52,33 46,47 18,47"/><polygon points="18,66 52,66 60,74 60,80 18,80"/></g><g transform="translate(136.0 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M23,0 L41,0 L64,80 L46,80 L41,62 L23,62 L18,80 L0,80 Z M32,20 L37,46 L27,46 Z"/></g><g transform="translate(208.0 0)"><polygon points="0,0 18,0 30,50 42,0 60,0 34,80 26,80"/></g><g transform="translate(276.0 0)"><polygon points="0,0 18,0 30,32 42,0 60,0 39,45 39,80 21,80 21,45"/></g></g><rect x="118" y="158" width="14" height="8" fill="#232936"/><g fill="#3EE0FF"><rect x="154" y="132" width="76" height="10"/></g></g><g fill="#04060A" opacity="0.75" filter="url(#soften2)" transform="translate(6 7)"><g transform="translate(740 173) scale(1.375)"><g transform="translate(0.0 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"/><polygon points="0,12 12,0 18,0 18,80 0,80"/></g><g transform="translate(101.45454545454545 0)"><rect x="18" y="34" width="24" height="14"/><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="42,0 60,0 60,68 48,80 42,80"/></g><g transform="translate(202.9090909090909 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(296.3636363636364 0)"><polygon points="0,0 60,0 60,10 52,18 8,18 0,10"/><polygon points="21,14 39,14 39,80 27,80 21,72"/></g><g transform="translate(389.8181818181818 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(491.27272727272725 0)"><rect x="0" y="0" width="18" height="80"/><rect x="42" y="0" width="18" height="80"/><polygon points="0,0 18,0 60,56 60,80 42,80 0,26"/></g></g></g><g fill="#E8EEF7" transform="translate(-3 -3)"><g transform="translate(740 173) scale(1.375)"><g transform="translate(0.0 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"/><polygon points="0,12 12,0 18,0 18,80 0,80"/></g><g transform="translate(101.45454545454545 0)"><rect x="18" y="34" width="24" height="14"/><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="42,0 60,0 60,68 48,80 42,80"/></g><g transform="translate(202.9090909090909 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(296.3636363636364 0)"><polygon points="0,0 60,0 60,10 52,18 8,18 0,10"/><polygon points="21,14 39,14 39,80 27,80 21,72"/></g><g transform="translate(389.8181818181818 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(491.27272727272725 0)"><rect x="0" y="0" width="18" height="80"/><rect x="42" y="0" width="18" height="80"/><polygon points="0,0 18,0 60,56 60,80 42,80 0,26"/></g></g></g><g fill="url(#steel2)"><g transform="translate(740 173) scale(1.375)"><g transform="translate(0.0 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"/><polygon points="0,12 12,0 18,0 18,80 0,80"/></g><g transform="translate(101.45454545454545 0)"><rect x="18" y="34" width="24" height="14"/><polygon points="0,12 12,0 18,0 18,80 0,80"/><polygon points="42,0 60,0 60,68 48,80 42,80"/></g><g transform="translate(202.9090909090909 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(296.3636363636364 0)"><polygon points="0,0 60,0 60,10 52,18 8,18 0,10"/><polygon points="21,14 39,14 39,80 27,80 21,72"/></g><g transform="translate(389.8181818181818 0)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g><g transform="translate(491.27272727272725 0)"><rect x="0" y="0" width="18" height="80"/><rect x="42" y="0" width="18" height="80"/><polygon points="0,0 18,0 60,56 60,80 42,80 0,26"/></g></g></g><g fill="#3EE0FF" opacity="0.9" filter="url(#glow2)"><g transform="translate(1019.0 173) scale(1.375)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g></g><g fill="#F2F0E9"><g transform="translate(1019.0 173) scale(1.375)"><path fill-rule="evenodd" transform="translate(0 0)" d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"/></g></g></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1600 460"
+   width="1600"
+   height="460"
+   version="1.1"
+   id="svg88"
+   sodipodi:docname="raygun-v2-branded-steel.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview88"
+     pagecolor="#ffffff"
+     bordercolor="#cccccc"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="1"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.3575"
+     inkscape:cx="158.04196"
+     inkscape:cy="387.41259"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg88" />
+  <defs
+     id="defs6">
+    <linearGradient
+       id="plate2"
+       x1="0"
+       y1="0"
+       x2="0.7"
+       y2="1">
+      <stop
+         offset="0"
+         stop-color="#2B313D"
+         id="stop1" />
+      <stop
+         offset="1"
+         stop-color="#161A23"
+         id="stop2" />
+    </linearGradient>
+    <linearGradient
+       id="steel2"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0"
+         stop-color="#C6CEDA"
+         id="stop3" />
+      <stop
+         offset="0.55"
+         stop-color="#96A0B0"
+         id="stop4" />
+      <stop
+         offset="1"
+         stop-color="#6C7688"
+         id="stop5" />
+    </linearGradient>
+    <filter
+       id="soften2"
+       x="-0.20307693"
+       y="-0.20307693"
+       width="1.4061539"
+       height="1.4061539">
+      <feGaussianBlur
+         stdDeviation="2.2"
+         id="feGaussianBlur5" />
+    </filter>
+    <filter
+       id="glow2"
+       x="-0.17454545"
+       y="-0.13090909"
+       width="1.3490909"
+       height="1.2618182">
+      <feGaussianBlur
+         stdDeviation="6"
+         id="feGaussianBlur6" />
+    </filter>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient110"
+       x1="7.7089929"
+       y1="17.122859"
+       x2="7.7089929"
+       y2="44.104334"
+       gradientTransform="matrix(0.25943726,0,0,3.8544964,0,-14.254976)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient111"
+       x1="43.503694"
+       y1="19.860382"
+       x2="43.503694"
+       y2="45.237537"
+       gradientTransform="matrix(0.27583864,0,0,3.6253079,0,-14.254976)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient112"
+       x1="74.373574"
+       y1="23.072711"
+       x2="74.373574"
+       y2="46.73703"
+       gradientTransform="matrix(0.29580399,0,0,3.380617,0,-14.254976)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient113"
+       x1="27.318585"
+       y1="74.96728"
+       x2="27.318585"
+       y2="175.70456"
+       gradientTransform="scale(1.1713637,0.85370578)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient114"
+       x1="38.873013"
+       y1="154.34873"
+       x2="38.873013"
+       y2="224.32015"
+       gradientTransform="scale(1.0289915,0.97182532)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient115"
+       x1="70.83502"
+       y1="237.17082"
+       x2="70.83502"
+       y2="256.14449"
+       gradientTransform="scale(1.5811388,0.63245553)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient116"
+       x1="20.976177"
+       y1="80.090857"
+       x2="20.976177"
+       y2="122.04321"
+       gradientTransform="scale(1.9069252,0.52440442)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient117"
+       x1="108.34727"
+       y1="116.29273"
+       x2="108.34727"
+       y2="182.74572"
+       gradientTransform="scale(1.3844373,0.72231512)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient118"
+       x1="387.38902"
+       y1="41.229873"
+       x2="387.38902"
+       y2="92.454867"
+       gradientTransform="scale(0.62469505,1.6007811)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient119"
+       x1="373.39906"
+       y1="68.977142"
+       x2="373.39906"
+       y2="88.055926"
+       gradientTransform="scale(0.73379939,1.3627703)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient120"
+       x1="1.5689291"
+       y1="53.539705"
+       x2="1.5689291"
+       y2="277.89656"
+       gradientTransform="scale(1.2747549,0.78446454)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#steel2"
+       id="linearGradient121"
+       x1="34.437993"
+       y1="129.89752"
+       x2="34.437993"
+       y2="567.3934"
+       gradientTransform="scale(1.2747549,0.78446454)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <rect
+     width="1600"
+     height="460"
+     fill="url(#plate2)"
+     id="rect6" />
+  <path
+     d="M1578,152 L1578,22 L22,22 L22,438 L1578,438 L1578,304"
+     fill="none"
+     stroke="#3A4150"
+     stroke-width="2"
+     id="path6" />
+  <circle
+     cx="48"
+     cy="49"
+     r="13"
+     fill="#04060A"
+     opacity="0.6"
+     filter="url(#soften2)"
+     id="circle6" />
+  <circle
+     cx="46"
+     cy="46"
+     r="12"
+     fill="url(#steel2)"
+     id="circle7" />
+  <circle
+     cx="46"
+     cy="46"
+     r="5"
+     fill="#3A4150"
+     id="circle8" />
+  <circle
+     cx="1556"
+     cy="49"
+     r="13"
+     fill="#04060A"
+     opacity="0.6"
+     filter="url(#soften2)"
+     id="circle9" />
+  <circle
+     cx="1554"
+     cy="46"
+     r="12"
+     fill="url(#steel2)"
+     id="circle10" />
+  <circle
+     cx="1554"
+     cy="46"
+     r="5"
+     fill="#3A4150"
+     id="circle11" />
+  <circle
+     cx="48"
+     cy="417"
+     r="13"
+     fill="#04060A"
+     opacity="0.6"
+     filter="url(#soften2)"
+     id="circle12" />
+  <circle
+     cx="46"
+     cy="414"
+     r="12"
+     fill="url(#steel2)"
+     id="circle13" />
+  <circle
+     cx="46"
+     cy="414"
+     r="5"
+     fill="#3A4150"
+     id="circle14" />
+  <circle
+     cx="1556"
+     cy="417"
+     r="13"
+     fill="#04060A"
+     opacity="0.6"
+     filter="url(#soften2)"
+     id="circle15" />
+  <circle
+     cx="1554"
+     cy="414"
+     r="12"
+     fill="url(#steel2)"
+     id="circle16" />
+  <circle
+     cx="1554"
+     cy="414"
+     r="5"
+     fill="#3A4150"
+     id="circle17" />
+  <path
+     fill="#3EE0FF"
+     opacity="0.85"
+     filter="url(#glow2)"
+     d="M600,204 L700,152 L1600,152 L1600,304 L700,304 L600,254 Z"
+     id="path17" />
+  <path
+     fill="#3EE0FF"
+     d="M600,204 L700,152 L1600,152 L1600,304 L700,304 L600,254 Z"
+     id="path18" />
+  <g
+     fill="#04060A"
+     opacity="0.75"
+     filter="url(#soften2)"
+     transform="translate(6 7)"
+     id="g25">
+    <g
+       transform="translate(40 20) scale(1.95)"
+       id="g24">
+      <rect
+         x="2"
+         y="52.103642"
+         width="7"
+         height="104"
+         id="rect18" />
+      <rect
+         x="12"
+         y="58.103642"
+         width="7"
+         height="92"
+         id="rect19" />
+      <rect
+         x="22"
+         y="64.103638"
+         width="7"
+         height="80"
+         id="rect20" />
+      <path
+         d="M32,64 L128,64 L150,84 L150,150 L32,150 Z"
+         id="path20" />
+      <path
+         d="M56,150 L112,150 L94,218 L40,218 Z"
+         id="path21" />
+      <rect
+         x="112"
+         y="150"
+         width="30"
+         height="12"
+         id="rect21" />
+      <path
+         d="M48,42 L112,42 L120,64 L40,64 Z"
+         id="path22" />
+      <path
+         d="M150,84 L242,84 L242,132 L150,132 Z"
+         id="path23" />
+      <path
+         d="M242,66 L262,66 L262,84 L274,84 L274,130 L262,130 L262,148 L242,148 Z"
+         id="path24" />
+      <rect
+         x="274"
+         y="94"
+         width="14"
+         height="26"
+         id="rect24" />
+    </g>
+  </g>
+  <g
+     fill="#e8eef7"
+     transform="translate(-3,-3)"
+     id="g32"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <g
+       transform="matrix(1.95,0,0,1.95,40,20)"
+       id="g31">
+      <rect
+         x="2"
+         y="51.745026"
+         width="7"
+         height="104"
+         id="rect25" />
+      <rect
+         x="12"
+         y="57.745026"
+         width="7"
+         height="92"
+         id="rect26" />
+      <rect
+         x="22"
+         y="63.745026"
+         width="7"
+         height="80"
+         id="rect27" />
+      <path
+         d="m 32,64 h 96 l 22,20 v 66 H 32 Z"
+         id="path27" />
+      <path
+         d="m 56,150 h 56 L 94,218 H 40 Z"
+         id="path28" />
+      <rect
+         x="112"
+         y="150"
+         width="30"
+         height="12"
+         id="rect28" />
+      <path
+         d="m 48,42 h 64 l 8,22 H 40 Z"
+         id="path29" />
+      <path
+         d="m 150,84 h 92 v 48 h -92 z"
+         id="path30" />
+      <path
+         d="m 242,66 h 20 v 18 h 12 v 46 h -12 v 18 h -20 z"
+         id="path31" />
+      <rect
+         x="274"
+         y="94"
+         width="14"
+         height="26"
+         id="rect31" />
+    </g>
+  </g>
+  <g
+     fill="url(#steel2)"
+     id="g39"
+     style="display:inline;fill:url(#linearGradient121)"
+     transform="translate(-2.7972028,-2.7972028)"
+     sodipodi:insensitive="true">
+    <g
+       transform="matrix(1.95,0,0,1.95,40,20)"
+       id="g38"
+       style="fill:url(#linearGradient120)">
+      <rect
+         x="2"
+         y="51.745026"
+         width="7"
+         height="104"
+         id="rect32"
+         style="display:inline;fill:url(#linearGradient110)" />
+      <rect
+         x="12"
+         y="57.745026"
+         width="7"
+         height="92"
+         id="rect33"
+         style="display:inline;fill:url(#linearGradient111)" />
+      <rect
+         x="22"
+         y="63.745026"
+         width="7"
+         height="80"
+         id="rect34"
+         style="display:inline;fill:url(#linearGradient112)" />
+      <path
+         d="m 32,64 h 96 l 22,20 v 66 H 32 Z"
+         id="path34"
+         style="fill:url(#linearGradient113)" />
+      <path
+         d="m 56,150 h 56 L 94,218 H 40 Z"
+         id="path35"
+         style="fill:url(#linearGradient114)" />
+      <rect
+         x="112"
+         y="150"
+         width="30"
+         height="12"
+         id="rect35"
+         style="fill:url(#linearGradient115)" />
+      <path
+         d="m 48,42 h 64 l 8,22 H 40 Z"
+         id="path36"
+         style="fill:url(#linearGradient116)" />
+      <path
+         d="m 150,84 h 92 v 48 h -92 z"
+         id="path37"
+         style="fill:url(#linearGradient117)" />
+      <path
+         d="m 242,66 h 20 v 18 h 12 v 46 h -12 v 18 h -20 z"
+         id="path38"
+         style="fill:url(#linearGradient118)" />
+      <rect
+         x="274"
+         y="94"
+         width="14"
+         height="26"
+         id="rect38"
+         style="fill:url(#linearGradient119)" />
+    </g>
+    <rect
+       x="118"
+       y="158"
+       width="14"
+       height="8"
+       fill="#232936"
+       id="rect58"
+       transform="matrix(1.95,0,0,1.95,40,20)" />
+  </g>
+  <g
+     transform="matrix(1.8757884,0,0,1.95,48.07576,21.518582)"
+     id="g60"
+     inkscape:label="HEAVY-text">
+    <g
+       transform="translate(4,4)"
+       id="g49">
+      <g
+         fill="#d8dfea"
+         transform="matrix(0.702,0,0,0.4,36,88)"
+         id="g48">
+        <g
+           id="g40">
+          <rect
+             x="18"
+             y="34"
+             width="24"
+             height="14"
+             id="rect39" />
+          <polygon
+             points="12,0 18,0 18,80 0,80 0,12 "
+             id="polygon39" />
+          <polygon
+             points="60,0 60,68 48,80 42,80 42,0 "
+             id="polygon40" />
+        </g>
+        <g
+           transform="translate(68)"
+           id="g44">
+          <polygon
+             points="12,0 18,0 18,80 0,80 0,12 "
+             id="polygon41" />
+          <polygon
+             points="60,0 60,6 52,14 18,14 18,0 "
+             id="polygon42" />
+          <polygon
+             points="46,47 18,47 18,33 52,33 "
+             id="polygon43" />
+          <polygon
+             points="52,66 60,74 60,80 18,80 18,66 "
+             id="polygon44" />
+        </g>
+        <g
+           transform="translate(136)"
+           id="g45">
+          <path
+             fill-rule="evenodd"
+             d="M 23,0 H 41 L 64,80 H 46 L 41,62 H 23 L 18,80 H 0 Z m 9,20 5,26 H 27 Z"
+             id="path44" />
+        </g>
+        <g
+           transform="translate(208)"
+           id="g46">
+          <polygon
+             points="26,80 0,0 18,0 30,50 42,0 60,0 34,80 "
+             id="polygon45" />
+        </g>
+        <g
+           transform="translate(276)"
+           id="g47">
+          <polygon
+             points="39,80 21,80 21,45 0,0 18,0 30,32 42,0 60,0 39,45 "
+             id="polygon46" />
+        </g>
+      </g>
+    </g>
+    <g
+       fill="#232936"
+       transform="matrix(0.702,0,0,0.4,36,88)"
+       id="g58">
+      <g
+         id="g50">
+        <rect
+           x="18"
+           y="34"
+           width="24"
+           height="14"
+           id="rect49" />
+        <polygon
+           points="12,0 18,0 18,80 0,80 0,12 "
+           id="polygon49" />
+        <polygon
+           points="60,0 60,68 48,80 42,80 42,0 "
+           id="polygon50" />
+      </g>
+      <g
+         transform="translate(68)"
+         id="g54">
+        <polygon
+           points="12,0 18,0 18,80 0,80 0,12 "
+           id="polygon51" />
+        <polygon
+           points="60,0 60,6 52,14 18,14 18,0 "
+           id="polygon52" />
+        <polygon
+           points="46,47 18,47 18,33 52,33 "
+           id="polygon53" />
+        <polygon
+           points="52,66 60,74 60,80 18,80 18,66 "
+           id="polygon54" />
+      </g>
+      <g
+         transform="translate(136)"
+         id="g55">
+        <path
+           fill-rule="evenodd"
+           d="M 23,0 H 41 L 64,80 H 46 L 41,62 H 23 L 18,80 H 0 Z m 9,20 5,26 H 27 Z"
+           id="path54" />
+      </g>
+      <g
+         transform="translate(208)"
+         id="g56">
+        <polygon
+           points="26,80 0,0 18,0 30,50 42,0 60,0 34,80 "
+           id="polygon55" />
+      </g>
+      <g
+         transform="translate(276)"
+         id="g57">
+        <polygon
+           points="39,80 21,80 21,45 0,0 18,0 30,32 42,0 60,0 39,45 "
+           id="polygon56" />
+      </g>
+    </g>
+  </g>
+  <g
+     fill="#3ee0ff"
+     id="g59"
+     transform="matrix(1.95,0,0,1.95,40,20)">
+    <rect
+       x="154"
+       y="132"
+       width="76"
+       height="10"
+       id="rect59" />
+  </g>
+  <g
+     fill="#04060A"
+     opacity="0.75"
+     filter="url(#soften2)"
+     transform="translate(6 7)"
+     id="g68">
+    <g
+       transform="translate(740 173) scale(1.375)"
+       id="g67">
+      <g
+         transform="translate(0.0 0)"
+         id="g61">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"
+           id="path60" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon60" />
+      </g>
+      <g
+         transform="translate(101.45454545454545 0)"
+         id="g62">
+        <rect
+           x="18"
+           y="34"
+           width="24"
+           height="14"
+           id="rect61" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon61" />
+        <polygon
+           points="42,0 60,0 60,68 48,80 42,80"
+           id="polygon62" />
+      </g>
+      <g
+         transform="translate(202.9090909090909 0)"
+         id="g63">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path62" />
+      </g>
+      <g
+         transform="translate(296.3636363636364 0)"
+         id="g64">
+        <polygon
+           points="0,0 60,0 60,10 52,18 8,18 0,10"
+           id="polygon63" />
+        <polygon
+           points="21,14 39,14 39,80 27,80 21,72"
+           id="polygon64" />
+      </g>
+      <g
+         transform="translate(389.8181818181818 0)"
+         id="g65">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path64" />
+      </g>
+      <g
+         transform="translate(491.27272727272725 0)"
+         id="g66">
+        <rect
+           x="0"
+           y="0"
+           width="18"
+           height="80"
+           id="rect65" />
+        <rect
+           x="42"
+           y="0"
+           width="18"
+           height="80"
+           id="rect66" />
+        <polygon
+           points="0,0 18,0 60,56 60,80 42,80 0,26"
+           id="polygon66" />
+      </g>
+    </g>
+  </g>
+  <g
+     fill="#E8EEF7"
+     transform="translate(-3 -3)"
+     id="g76">
+    <g
+       transform="translate(740 173) scale(1.375)"
+       id="g75">
+      <g
+         transform="translate(0.0 0)"
+         id="g69">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"
+           id="path68" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon68" />
+      </g>
+      <g
+         transform="translate(101.45454545454545 0)"
+         id="g70">
+        <rect
+           x="18"
+           y="34"
+           width="24"
+           height="14"
+           id="rect69" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon69" />
+        <polygon
+           points="42,0 60,0 60,68 48,80 42,80"
+           id="polygon70" />
+      </g>
+      <g
+         transform="translate(202.9090909090909 0)"
+         id="g71">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path70" />
+      </g>
+      <g
+         transform="translate(296.3636363636364 0)"
+         id="g72">
+        <polygon
+           points="0,0 60,0 60,10 52,18 8,18 0,10"
+           id="polygon71" />
+        <polygon
+           points="21,14 39,14 39,80 27,80 21,72"
+           id="polygon72" />
+      </g>
+      <g
+         transform="translate(389.8181818181818 0)"
+         id="g73">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path72" />
+      </g>
+      <g
+         transform="translate(491.27272727272725 0)"
+         id="g74">
+        <rect
+           x="0"
+           y="0"
+           width="18"
+           height="80"
+           id="rect73" />
+        <rect
+           x="42"
+           y="0"
+           width="18"
+           height="80"
+           id="rect74" />
+        <polygon
+           points="0,0 18,0 60,56 60,80 42,80 0,26"
+           id="polygon74" />
+      </g>
+    </g>
+  </g>
+  <g
+     fill="url(#steel2)"
+     id="g84">
+    <g
+       transform="translate(740 173) scale(1.375)"
+       id="g83">
+      <g
+         transform="translate(0.0 0)"
+         id="g77">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M18,0 L48,0 L60,12 L60,36 L48,48 L18,48 L18,34 L42,34 L46,30 L46,18 L42,14 L18,14 Z"
+           id="path76" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon76" />
+      </g>
+      <g
+         transform="translate(101.45454545454545 0)"
+         id="g78">
+        <rect
+           x="18"
+           y="34"
+           width="24"
+           height="14"
+           id="rect77" />
+        <polygon
+           points="0,12 12,0 18,0 18,80 0,80"
+           id="polygon77" />
+        <polygon
+           points="42,0 60,0 60,68 48,80 42,80"
+           id="polygon78" />
+      </g>
+      <g
+         transform="translate(202.9090909090909 0)"
+         id="g79">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path78" />
+      </g>
+      <g
+         transform="translate(296.3636363636364 0)"
+         id="g80">
+        <polygon
+           points="0,0 60,0 60,10 52,18 8,18 0,10"
+           id="polygon79" />
+        <polygon
+           points="21,14 39,14 39,80 27,80 21,72"
+           id="polygon80" />
+      </g>
+      <g
+         transform="translate(389.8181818181818 0)"
+         id="g81">
+        <path
+           fill-rule="evenodd"
+           transform="translate(0 0)"
+           d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+           id="path80" />
+      </g>
+      <g
+         transform="translate(491.27272727272725 0)"
+         id="g82">
+        <rect
+           x="0"
+           y="0"
+           width="18"
+           height="80"
+           id="rect81" />
+        <rect
+           x="42"
+           y="0"
+           width="18"
+           height="80"
+           id="rect82" />
+        <polygon
+           points="0,0 18,0 60,56 60,80 42,80 0,26"
+           id="polygon82" />
+      </g>
+    </g>
+  </g>
+  <g
+     fill="#3EE0FF"
+     opacity="0.9"
+     filter="url(#glow2)"
+     id="g86">
+    <g
+       transform="translate(1019.0 173) scale(1.375)"
+       id="g85">
+      <path
+         fill-rule="evenodd"
+         transform="translate(0 0)"
+         d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+         id="path84" />
+    </g>
+  </g>
+  <g
+     fill="#F2F0E9"
+     id="g88">
+    <g
+       transform="translate(1019.0 173) scale(1.375)"
+       id="g87">
+      <path
+         fill-rule="evenodd"
+         transform="translate(0 0)"
+         d="M12,0 L48,0 L60,12 L60,68 L48,80 L12,80 L0,68 L0,12 Z M18,16 L42,16 L44,18 L44,62 L42,64 L18,64 L16,62 L16,18 Z"
+         id="path86" />
+    </g>
+  </g>
+</svg>
