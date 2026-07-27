@@ -25,7 +25,7 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 | 03.5 | `raygun-v2-embossed.svg` | **Stamped Steel** — the mainline lockup embossed into a bolted gunmetal plate, cyan energy still glowing. |
 | 03.6 | `raygun-v2-branded.svg` | **Branded** — HEAVY stretched across the full gun; PHOTON in raised 3D relief on one big fat beam, first O solid bone. |
 | 03.7 | `raygun-v2-branded-steel.svg` | **Branded Steel** — the branded cut on the plate; HEAVY debossed across the gun, PHOTON in raised steel relief on the glowing beam, first O in glowing bone. |
-| 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced under the HEA, charge tick at the muzzle. |
+| 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced tucked under the HEA, charge tick at the muzzle. |
 | 03.9 | `raygun-v2-compact-steel.svg` | **Compact Steel** — the compact cut debossed on the bolted plate. |
 
 ## Iteration archive
@@ -35,7 +35,11 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 
 - `*-iter1-preshelf.*` — the branded and compact cuts as they were before
   the gun grew its extended lower shelf (compact had PHOTON tucked small
-  under the HEA; branded had the pre-shelf gun profile).
+  under the HEA; branded had the pre-shelf gun profile). The compact
+  mainline was later reverted to this design.
+- `compact-*-iter2-shelf.*` — the retired shelf experiment for the compact
+  cut (PHOTON stretched along a widened gun underside). The branded beam
+  cuts kept the shelf; the compact went back to iter1.
 
 ## PNG exports
 
