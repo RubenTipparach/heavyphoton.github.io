@@ -283,9 +283,12 @@ def raygun2_struct(fat=False):
     brand stamp fits across the gun with clear margins."""
     bt, bb = (76, 140) if fat else (84, 132)     # barrel top/bottom
     lt, lb = (82, 134) if fat else (84, 130)     # muzzle inner lips
+    # fat gun grows a lower shelf under the barrel: the gun's underside runs
+    # flat to x232, giving the small PHOTON tag a full-width surface
+    shelf = '<path d="M150,128 L232,128 L232,150 L150,150 Z"/>' if fat else ""
     fins = "".join(f'<rect x="{2+i*10}" y="{66+i*6}" width="7" height="{104-i*12}"/>'
                    for i in range(3))
-    return (fins +
+    return (fins + shelf +
             f'<path d="M32,64 L128,64 L150,{bt} L150,150 L32,150 Z"'
             '/><path d="M56,150 L112,150 L94,218 L40,218 Z"'
             '/><rect x="112" y="150" width="30" height="12"'
@@ -294,12 +297,12 @@ def raygun2_struct(fat=False):
             f'/><path d="M242,66 L262,66 L262,{lt} L274,{lt} L274,{lb} L262,{lb} '
             'L262,148 L242,148 Z"/><rect x="274" y="94" width="14" height="26"/>')
 
-def raygun2_energy(accent, vents=True, rail_y=132):
+def raygun2_energy(accent, vents=True, rail_y=132, rail=True):
     """Gun accent details: under-rail + charge vents."""
     v = "".join(f'<path d="M{56+i*26},76 L{68+i*26},76 '
                 f'L{62+i*26},100 L{50+i*26},100 Z"/>' for i in range(3)) if vents else ""
-    return (f'<g fill="{accent}"><rect x="154" y="{rail_y}" width="76" height="10"/>'
-            f'{v}</g>')
+    r = (f'<rect x="154" y="{rail_y}" width="76" height="10"/>') if rail else ""
+    return f'<g fill="{accent}">{r}{v}</g>'
 
 def raygun2(fill, accent, detail=None):
     return (f'<g fill="{fill}">{raygun2_struct()}</g>{raygun2_energy(accent)}'
@@ -505,13 +508,13 @@ def brand_heavy(brand_fill):
     barrel band (y76-140): 16 units of clear surface above AND below."""
     wmB, _, _ = wordmark2("HEAVY", 8)
     return (f'<g fill="{brand_fill}" '
-            f'transform="translate(36 92) scale(0.702 0.4)">{wmB}</g>')
+            f'transform="translate(36 88) scale(0.702 0.4)">{wmB}</g>')
 
 def branded_gun(fill, accent, brand_fill, notch_fill):
     """Gun with HEAVY stamped on the body (vents dropped for the brand)."""
     return (f'<g transform="{BR["gun_t"]}">'
             f'<g fill="{fill}">{raygun2_struct(fat=True)}</g>'
-            f'{raygun2_energy(accent, vents=False, rail_y=144)}'
+            f'{raygun2_energy(accent, vents=False, rail_y=134)}'
             f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
             f'{brand_heavy(brand_fill)}</g>')
 
@@ -606,10 +609,11 @@ raygun_v2_branded_steel()
 CP = {"gun_t": "translate(50 4) scale(1.85)", "W": 700, "H": 460}
 
 def brand_photon_small(fill, accent):
-    """Small tracked-out PHOTON under HEA: cap 14, ends before the rail."""
-    wmS, _, _ = wordmark2("PHOTON", 58.3, accents={2}, accent_fill=accent)
+    """Small tracked-out PHOTON along the extended lower shelf: cap 18,
+    spanning x36-214 with clear surface above and below."""
+    wmS, _, _ = wordmark2("PHOTON", 86.2, accents={2}, accent_fill=accent)
     return (f'<g fill="{fill}" '
-            f'transform="translate(36 130) scale(0.175)">{wmS}</g>')
+            f'transform="translate(36 126) scale(0.225)">{wmS}</g>')
 
 CHARGE_TICK = 'M292,98 L304,107 L292,116 Z'
 
@@ -617,7 +621,7 @@ def raygun_v2_compact():
     W, H = CP["W"], CP["H"]
     body = [f'<g transform="{CP["gun_t"]}">'
             f'<g fill="{BONE}">{raygun2_struct(fat=True)}</g>'
-            f'{raygun2_energy(CYAN, vents=False, rail_y=144)}'
+            f'{raygun2_energy(CYAN, vents=False, rail=False)}'
             f'<rect x="118" y="158" width="14" height="8" fill="{INK}"/>'
             f'{brand_heavy(INK)}'
             f'{brand_photon_small(INK, CYAN)}'
@@ -658,7 +662,7 @@ def raygun_v2_compact_steel():
                 f'{brand_heavy("#232936")}'
                 f'{brand_photon_small("#232936", CYAN)}'
                 f'<rect x="118" y="158" width="14" height="8" fill="#232936"/>'
-                f'{raygun2_energy(CYAN, vents=False, rail_y=144)}'
+                f'{raygun2_energy(CYAN, vents=False, rail=False)}'
                 f'<path d="{CHARGE_TICK}" fill="{CYAN}"/></g>')
     svg_file("raygun-v2-compact-steel.svg", W, H, "".join(body))
 
