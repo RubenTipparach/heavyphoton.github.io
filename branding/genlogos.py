@@ -527,32 +527,57 @@ def branded_gun(fill, accent, brand_fill, notch_fill):
             f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
             f'{brand_heavy(brand_fill)}</g>')
 
+# The branded cuts share the compact's per-object structure: every part of
+# the gun (plus the shelf), the beam, and every letter is its own named
+# group stacking all of that object's layers, so editor tweaks to one
+# object carry its fx along. Shapes are welded (hidden overlaps) and steel
+# shadows are masked to outside the silhouette - see README "Editing".
+BRANDED_SHELF = ("shelf", '<path d="M146,128 L232,128 L232,150 L146,150 Z"/>')
+
+def branded_shapes():
+    shapes = list(COMPACT_SHAPES)
+    return shapes[:5] + [BRANDED_SHELF] + shapes[5:]
+
+def branded_extras(name, accent, notch_fill):
+    """Details that belong inside a specific object's group (branded cuts:
+    the rail lives on the shelf, and there is no muzzle charge tick)."""
+    if name == "trigger":
+        return f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+    if name == "shelf":
+        return f'<rect x="154" y="134" width="76" height="10" fill="{accent}"/>'
+    return ""
+
 def raygun_v2_branded():
     """Flat cut: fat cyan beam; PHOTON raised in 3D relief on the beam,
-    first O solid bone."""
+    first O solid bone. Per-object groups throughout."""
     W, H = BR["W"], BR["H"]
-    body = [f'<path fill="{CYAN}" d="{BR["beam"]}"/>']
-    wmP, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
-    L = (f'<g transform="translate({BR["wtx"]} {BR["wty"]}) '
-         f'scale({BR["ws"]})">{wmP}</g>')
-    # flat-style emboss: deep-cyan cast shadow, pale rim light, dark face
-    body.append(f'<g fill="#063C50" transform="translate(7 8)">{L}</g>')
-    body.append(f'<g fill="#B9F4FF" transform="translate(-3 -3)">{L}</g>')
-    body.append(f'<g fill="{INK}">{L}</g>')
-    # first O face in bone (shares the shadow/highlight above)
-    o_inner = "".join(glyph_parts2("O", 0))
-    o_t = (f'translate({BR["wtx"] + pos[2]*BR["ws"]} {BR["wty"]}) '
-           f'scale({BR["ws"]})')
-    body.append(f'<g fill="{BONE}"><g transform="{o_t}">{o_inner}</g></g>')
-    body.append(branded_gun(BONE, CYAN, INK, INK))
+    s = BR["ws"]
+    body = [f'<g id="beam"><path fill="{CYAN}" d="{BR["beam"]}"/></g>']
+    # relief offsets are authored in glyph units so they scale with a glyph
+    photon = wordmark2_grouped(
+        "PHOTON", BR["wsp"], accents={2}, accent_fill=BONE, kern=BR["kern"],
+        prefix="photon",
+        layers=(("#063C50", (7 / s, 8 / s)),
+                ("#B9F4FF", (-3 / s, -3 / s)),
+                (INK, (0, 0))))
+    body.append(f'<g id="word-photon" transform="translate({BR["wtx"]} '
+                f'{BR["wty"]}) scale({s})">{photon}</g>')
+    objs = []
+    for name, el in branded_shapes():
+        objs.append(f'<g id="{name}"><g fill="{BONE}">{el}</g>'
+                    f'{branded_extras(name, CYAN, INK)}</g>')
+    heavy = wordmark2_grouped("HEAVY", 8, prefix="heavy")
+    objs.append(f'<g id="word-heavy" fill="{INK}" '
+                f'transform="translate(36 88) scale(0.702 0.4)">{heavy}</g>')
+    body.append(f'<g id="gun" transform="{BR["gun_t"]}">{"".join(objs)}</g>')
     svg_file("raygun-v2-branded.svg", W, H, "".join(body), bg=INK)
 
 def raygun_v2_branded_steel():
     """Embossed cut: PHOTON in raised steel relief riding the glowing beam,
-    first O bone with a cyan glow so the photon stays the hero."""
+    first O bone with a cyan halo. Per-object groups throughout; gun part
+    shadows are masked to render only outside the silhouette."""
     W, H = BR["W"], BR["H"]
     tx, ty, s = BR["wtx"], BR["wty"], BR["ws"]
-    wmP, _, pos = wordmark2("PHOTON", BR["wsp"], kern=BR["kern"])
     defs = (
         '<defs>'
         '<linearGradient id="plate2" x1="0" y1="0" x2="0.7" y2="1">'
@@ -564,10 +589,13 @@ def raygun_v2_branded_steel():
         '<stop offset="1" stop-color="#6C7688"/></linearGradient>'
         '<filter id="soften2" x="-20%" y="-20%" width="140%" height="140%">'
         '<feGaussianBlur stdDeviation="2.2"/></filter>'
+        '<filter id="soften2s" x="-20%" y="-20%" width="140%" height="140%">'
+        f'<feGaussianBlur stdDeviation="{2.2 / s:.2f}"/></filter>'
         '<filter id="glow2" x="-60%" y="-60%" width="220%" height="220%">'
         '<feGaussianBlur stdDeviation="6"/></filter>'
+        '<filter id="glow2s" x="-60%" y="-60%" width="220%" height="220%">'
+        f'<feGaussianBlur stdDeviation="{6 / s:.2f}"/></filter>'
         '</defs>')
-    # inner keyline breaks where the beam exits the plate (routed slot)
     keyline = (f'M{W-22},{BR["by0"]} L{W-22},22 L22,22 L22,{H-22} '
                f'L{W-22},{H-22} L{W-22},{BR["by1"]}')
     body = [defs,
@@ -579,38 +607,48 @@ def raygun_v2_branded_steel():
                     f'opacity="0.6" filter="url(#soften2)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel2)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
-    # fat beam (glow + crisp)
-    body.append(f'<path fill="{CYAN}" opacity="0.85" filter="url(#glow2)" '
+    # beam: glow + crisp stacked in one group
+    body.append(f'<g id="beam">'
+                f'<path fill="{CYAN}" opacity="0.85" filter="url(#glow2)" '
                 f'd="{BR["beam"]}"/>'
-                f'<path fill="{CYAN}" d="{BR["beam"]}"/>')
-    # embossed gun over the beam root
-    content = f'<g transform="{BR["gun_t"]}">{raygun2_struct()}</g>'
-    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
-                f'transform="translate(6 7)">{content}</g>')
-    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{content}</g>')
-    body.append(f'<g fill="url(#steel2)">{content}</g>')
-    # HEAVY debossed into the gun body: highlight below, dark stamp on top
-    body.append(f'<g transform="{BR["gun_t"]}">'
-                f'<g transform="translate(4 4)">{brand_heavy("#D8DFEA")}</g>'
-                f'{brand_heavy("#232936")}'
-                f'<rect x="118" y="158" width="14" height="8" fill="#232936"/>'
-                f'{raygun2_energy(CYAN, vents=False)}</g>')
-    # PHOTON in raised steel relief on the beam
-    L = f'<g transform="translate({tx} {ty}) scale({s})">{wmP}</g>'
-    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
-                f'transform="translate(6 7)">{L}</g>')
-    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{L}</g>')
-    body.append(f'<g fill="url(#steel2)">{L}</g>')
-    # first O: bone face with a cyan halo — the photon stays the hero on steel
-    o_inner = "".join(glyph_parts2("O", 0))
-    o_t = f'translate({tx + pos[2]*s} {ty}) scale({s})'
-    body.append(f'<g fill="{CYAN}" opacity="0.9" filter="url(#glow2)">'
-                f'<g transform="{o_t}">{o_inner}</g></g>')
-    body.append(f'<g fill="{BONE}"><g transform="{o_t}">{o_inner}</g></g>')
+                f'<path fill="{CYAN}" d="{BR["beam"]}"/></g>')
+    # PHOTON steel relief: per-glyph shadow/highlight/face; the O swaps in
+    # its own stack ending in a cyan halo + bone face
+    steel_layers = (
+        ("#04060A", (6 / s, 7 / s), ' opacity="0.75" filter="url(#soften2s)"'),
+        ("#E8EEF7", (-3 / s, -3 / s)),
+        ("url(#steel2)", (0, 0)))
+    o_layers = steel_layers[:2] + (
+        (CYAN, (0, 0), ' opacity="0.9" filter="url(#glow2s)"'),
+        (BONE, (0, 0)))
+    photon = wordmark2_grouped(
+        "PHOTON", BR["wsp"], accents={2}, kern=BR["kern"], prefix="photon",
+        layers=steel_layers, accent_layers=o_layers)
+    body.append(f'<g id="word-photon" transform="translate({tx} {ty}) '
+                f'scale({s})">{photon}</g>')
+    # gunout mask: gun-part fx render only outside the assembled silhouette
+    silhouette = "".join(el for _, el in branded_shapes())
+    body.append(f'<mask id="gunout2" maskUnits="userSpaceOnUse" '
+                f'x="-2000" y="-2000" width="6000" height="6000">'
+                f'<rect x="-2000" y="-2000" width="6000" height="6000" '
+                f'fill="#fff"/>'
+                f'<g fill="#000">{silhouette}</g></mask>')
+    objs = []
+    for name, el in branded_shapes():
+        objs.append(
+            f'<g id="{name}">'
+            f'<g mask="url(#gunout2)" fill="#04060A" opacity="0.75" '
+            f'filter="url(#soften2)" transform="translate(6 7)">{el}</g>'
+            f'<g fill="url(#steel2)">{el}</g>'
+            f'{branded_extras(name, CYAN, "#232936")}</g>')
+    heavy = wordmark2_grouped(
+        "HEAVY", 8, prefix="heavy",
+        layers=(("#D8DFEA", (5.7, 10)), ("#232936", (0, 0))))
+    objs.append(f'<g id="word-heavy" '
+                f'transform="translate(36 88) scale(0.702 0.4)">{heavy}</g>')
+    body.append(f'<g id="gun" transform="{BR["gun_t"]}">{"".join(objs)}</g>')
     svg_file("raygun-v2-branded-steel.svg", W, H, "".join(body))
 
-raygun_v2_branded()
-raygun_v2_branded_steel()
 
 # ================================================================ compact
 # Gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced
@@ -656,10 +694,13 @@ def compact_extras(name, accent, notch_fill):
     return ""
 
 def wordmark2_grouped(text, spacing=12, accents=None, accent_fill=None,
-                      layers=(("", (0, 0)),), kern=None, prefix="g"):
+                      layers=(("", (0, 0)),), kern=None, prefix="g",
+                      accent_layers=None):
     """Per-glyph groups; each glyph group stacks one copy per layer
-    (fill, (dx,dy)) bottom-to-top, so a glyph's fx move with the glyph.
-    Accent glyphs swap the TOP layer's fill for accent_fill."""
+    (fill, (dx,dy)[, extra_attrs]) bottom-to-top, so a glyph's fx move
+    with the glyph. Accent glyphs either swap the TOP layer's fill for
+    accent_fill, or (if accent_layers is given) use that layer stack
+    entirely - e.g. the glowing O gets its own halo + bone face."""
     accents = accents or set()
     kern = kern or {}
     x = 0.0
@@ -667,14 +708,19 @@ def wordmark2_grouped(text, spacing=12, accents=None, accent_fill=None,
     for i, ch in enumerate(text):
         if ch != " ":
             parts = "".join(glyph_parts2(ch, 0))
+            use = layers
+            if i in accents and accent_layers:
+                use = accent_layers
             copies = []
-            for li, (fill, (dx, dy)) in enumerate(layers):
-                f = fill
-                if i in accents and accent_fill and li == len(layers) - 1:
-                    f = accent_fill
-                attr = f' fill="{f}"' if f else ""
+            for li, layer in enumerate(use):
+                fill, (dx, dy) = layer[0], layer[1]
+                extra = layer[2] if len(layer) > 2 else ""
+                if (i in accents and not accent_layers and accent_fill
+                        and li == len(use) - 1):
+                    fill = accent_fill
+                attr = f' fill="{fill}"' if fill else ""
                 tr = f' transform="translate({dx} {dy})"' if (dx or dy) else ""
-                copies.append(f'<g{attr}{tr}>{parts}</g>')
+                copies.append(f'<g{attr}{tr}{extra}>{parts}</g>')
             out.append(f'<g id="{prefix}-{ch.lower()}{i}" '
                        f'transform="translate({x} 0)">{"".join(copies)}</g>')
         x += GLYPHS2[ch]["w"] + spacing + kern.get(i, 0)
@@ -754,3 +800,5 @@ def raygun_v2_compact_steel():
 
 raygun_v2_compact()
 raygun_v2_compact_steel()
+raygun_v2_branded()
+raygun_v2_branded_steel()

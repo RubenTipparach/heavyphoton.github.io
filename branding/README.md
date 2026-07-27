@@ -28,25 +28,35 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 | 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced tucked under the HEA, charge tick at the muzzle. |
 | 03.9 | `raygun-v2-compact-steel.svg` | **Compact Steel** — the compact cut debossed on the bolted plate. |
 
-## Editing the compact cuts
+## Editing the compact and branded cuts
 
-`raygun-v2-compact.svg` and `raygun-v2-compact-steel.svg` are structured
-for hand-editing: every part of the gun is its own named group (`fin-1`,
-`grip`, `body`, `barrel`, `muzzle`, `tip`, `sight`, `trigger`, and one
-group per letter under `word-heavy` / `word-photon`). Each group stacks
-ALL of that object's layers — shadow, highlight, face, and attached
-details like the rail or trigger notch — so scaling or moving an object
-in Inkscape carries its fx with it.
+`raygun-v2-compact[-steel].svg` and `raygun-v2-branded[-steel].svg` are
+structured for hand-editing: every object is its own named group, and each
+group stacks ALL of that object's layers — shadow, face, and attached
+details — so scaling or moving an object in Inkscape carries its fx with it.
+
+Group names:
+
+- Gun parts: `fin-1/2/3`, `grip`, `body`, `sight`, `trigger`, `barrel`,
+  `muzzle`, `tip` (plus `shelf` on the branded cuts — the cyan rail lives
+  inside it; on compact the rail lives inside `barrel`, the trigger notch
+  inside `trigger`, the muzzle charge tick inside `tip`).
+- `beam` (branded cuts): the glow copy and the crisp beam stacked together.
+- Words: `word-heavy` and `word-photon` contain one group per letter
+  (`heavy-h0`, `photon-o2`, ...), each stacking that letter's relief
+  layers; the first O of PHOTON carries its own halo + bone face stack.
 
 Adjacent parts overlap by a few units where they meet (hidden inside the
-silhouette) so the assembled gun stays seamless, and in the steel cut each
-part's shadow/highlight copies are clipped by `<mask id="gunout">` so fx
-only render outside the gun outline. If you resize a part dramatically,
-update its twin shape inside that mask so the clipping follows.
+silhouette) so the assembled gun stays seamless, and in the steel cuts
+each part's shadow copy is clipped by `<mask id="gunout">` /
+`<mask id="gunout2">` so fx only render outside the gun outline. If you
+resize a part dramatically, update its twin shape inside that mask so the
+clipping follows.
 
 The generator also refuses to overwrite any SVG that has been re-saved
 from Inkscape (it detects the editor metadata), so hand edits are safe
-from an accidental `python3 genlogos.py`.
+from an accidental `python3 genlogos.py` — delete the file first if you
+genuinely want it regenerated.
 
 ## Iteration archive
 
