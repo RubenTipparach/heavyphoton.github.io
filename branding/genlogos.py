@@ -637,8 +637,9 @@ def raygun_v2_branded_steel():
     for name, el in branded_shapes():
         objs.append(
             f'<g id="{name}">'
-            f'<g mask="url(#gunout2)" fill="#04060A" opacity="0.75" '
-            f'filter="url(#soften2)" transform="translate(6 7)">{el}</g>'
+            f'<g mask="url(#gunout2)">'
+            f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
+            f'transform="translate(6 7)">{el}</g></g>'
             f'<g fill="url(#steel2)">{el}</g>'
             f'{branded_extras(name, CYAN, "#232936")}</g>')
     heavy = wordmark2_grouped(
@@ -780,8 +781,9 @@ def raygun_v2_compact_steel():
     for name, el in COMPACT_SHAPES:
         objs.append(
             f'<g id="{name}">'
-            f'<g mask="url(#gunout)" fill="#04060A" opacity="0.75" '
-            f'filter="url(#soften3)" transform="translate(6 7)">{el}</g>'
+            f'<g mask="url(#gunout)">'
+            f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
+            f'transform="translate(6 7)">{el}</g></g>'
             f'<g fill="url(#steel3)">{el}</g>'
             f'{compact_extras(name, CYAN, "#232936")}</g>')
     # debossed words: each glyph group stacks its highlight + dark stamp
