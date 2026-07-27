@@ -28,6 +28,15 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 | 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced under the HEA, charge tick at the muzzle. |
 | 03.9 | `raygun-v2-compact-steel.svg` | **Compact Steel** — the compact cut debossed on the bolted plate. |
 
+## Iteration archive
+
+`iterations/` preserves earlier design states as standalone SVG + PNG
+(the main files above always hold the latest cut):
+
+- `*-iter1-preshelf.*` — the branded and compact cuts as they were before
+  the gun grew its extended lower shelf (compact had PHOTON tucked small
+  under the HEA; branded had the pre-shelf gun profile).
+
 ## PNG exports
 
 Every mark is exported at 2x resolution (transparent where the artwork has
