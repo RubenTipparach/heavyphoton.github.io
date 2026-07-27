@@ -727,15 +727,15 @@ def raygun_v2_compact_steel():
                    f'<rect x="-2000" y="-2000" width="6000" height="6000" '
                    f'fill="#fff"/>'
                    f'<g fill="#000">{silhouette}</g></mask>')
-    # per-object groups: each part stacks its own shadow/highlight/face
+    # per-object groups: each part stacks its own shadow + face (no white
+    # rim-light copies - the gradient, drop shadow, and letter deboss carry
+    # the depth without light bleeding out around the silhouette)
     objs = []
     for name, el in COMPACT_SHAPES:
         objs.append(
             f'<g id="{name}">'
-            f'<g mask="url(#gunout)">'
-            f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
-            f'transform="translate(6 7)">{el}</g>'
-            f'<g fill="#E8EEF7" transform="translate(-3 -3)">{el}</g></g>'
+            f'<g mask="url(#gunout)" fill="#04060A" opacity="0.75" '
+            f'filter="url(#soften3)" transform="translate(6 7)">{el}</g>'
             f'<g fill="url(#steel3)">{el}</g>'
             f'{compact_extras(name, CYAN, "#232936")}</g>')
     # debossed words: each glyph group stacks its highlight + dark stamp
