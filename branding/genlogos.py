@@ -71,10 +71,18 @@ def justify_spacing(text, target_w):
     return (target_w - glyph_w) / (len(text) - 1)
 
 def svg_file(name, w, h, body, bg=None):
+    path = os.path.join(OUT, name)
+    # never clobber a file that was hand-edited in Inkscape; delete it first
+    # if you really want to regenerate it from here
+    if os.path.exists(path):
+        with open(path) as f:
+            if "inkscape" in f.read(4096):
+                print("SKIP", name, "(hand-edited in Inkscape)")
+                return
     bgrect = f'<rect width="{w}" height="{h}" fill="{bg}"/>' if bg else ""
     doc = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" '
            f'width="{w}" height="{h}">{bgrect}{body}</svg>')
-    with open(os.path.join(OUT, name), "w") as f:
+    with open(path, "w") as f:
         f.write(doc)
     print("wrote", name)
 
@@ -617,15 +625,73 @@ def brand_photon_small(fill, accent):
 
 CHARGE_TICK = 'M292,98 L304,107 L292,116 Z'
 
+# The compact cuts are structured for hand-editing: every part of the gun is
+# its own <g id=...> containing ALL of that part's layers (shadow, highlight,
+# face, plus attached details like the rail or trigger notch), so scaling or
+# moving one object in an editor carries its fx copies with it.
+COMPACT_SHAPES = [
+    ("fin-1",   '<rect x="2" y="66" width="7" height="104"/>'),
+    ("fin-2",   '<rect x="12" y="72" width="7" height="92"/>'),
+    ("fin-3",   '<rect x="22" y="78" width="7" height="80"/>'),
+    ("grip",    '<path d="M56,150 L112,150 L94,218 L40,218 Z"/>'),
+    ("body",    '<path d="M32,64 L128,64 L150,76 L150,150 L32,150 Z"/>'),
+    ("sight",   '<path d="M48,42 L112,42 L120,64 L40,64 Z"/>'),
+    ("trigger", '<rect x="112" y="150" width="30" height="12"/>'),
+    ("barrel",  '<path d="M150,76 L242,76 L242,140 L150,140 Z"/>'),
+    ("muzzle",  '<path d="M242,66 L262,66 L262,82 L274,82 L274,134 '
+                'L262,134 L262,148 L242,148 Z"/>'),
+    ("tip",     '<rect x="274" y="94" width="14" height="26"/>'),
+]
+
+def compact_extras(name, accent, notch_fill):
+    """Details that belong inside a specific object's group."""
+    if name == "trigger":
+        return f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+    if name == "barrel":
+        return f'<rect x="154" y="144" width="76" height="10" fill="{accent}"/>'
+    if name == "tip":
+        return f'<path d="{CHARGE_TICK}" fill="{accent}"/>'
+    return ""
+
+def wordmark2_grouped(text, spacing=12, accents=None, accent_fill=None,
+                      layers=(("", (0, 0)),), kern=None, prefix="g"):
+    """Per-glyph groups; each glyph group stacks one copy per layer
+    (fill, (dx,dy)) bottom-to-top, so a glyph's fx move with the glyph.
+    Accent glyphs swap the TOP layer's fill for accent_fill."""
+    accents = accents or set()
+    kern = kern or {}
+    x = 0.0
+    out = []
+    for i, ch in enumerate(text):
+        if ch != " ":
+            parts = "".join(glyph_parts2(ch, 0))
+            copies = []
+            for li, (fill, (dx, dy)) in enumerate(layers):
+                f = fill
+                if i in accents and accent_fill and li == len(layers) - 1:
+                    f = accent_fill
+                attr = f' fill="{f}"' if f else ""
+                tr = f' transform="translate({dx} {dy})"' if (dx or dy) else ""
+                copies.append(f'<g{attr}{tr}>{parts}</g>')
+            out.append(f'<g id="{prefix}-{ch.lower()}{i}" '
+                       f'transform="translate({x} 0)">{"".join(copies)}</g>')
+        x += GLYPHS2[ch]["w"] + spacing + kern.get(i, 0)
+    return "".join(out)
+
 def raygun_v2_compact():
     W, H = CP["W"], CP["H"]
-    body = [f'<g transform="{CP["gun_t"]}">'
-            f'<g fill="{BONE}">{raygun2_struct(fat=True, shelf=False)}</g>'
-            f'{raygun2_energy(CYAN, vents=False, rail_y=144)}'
-            f'<rect x="118" y="158" width="14" height="8" fill="{INK}"/>'
-            f'{brand_heavy(INK, 92)}'
-            f'{brand_photon_small(INK, CYAN)}'
-            f'<path d="{CHARGE_TICK}" fill="{CYAN}"/></g>']
+    objs = []
+    for name, el in COMPACT_SHAPES:
+        objs.append(f'<g id="{name}"><g fill="{BONE}">{el}</g>'
+                    f'{compact_extras(name, CYAN, INK)}</g>')
+    heavy = wordmark2_grouped("HEAVY", 8, prefix="heavy")
+    photon = wordmark2_grouped("PHOTON", 58.3, accents={2}, accent_fill=CYAN,
+                               prefix="photon")
+    objs.append(f'<g id="word-heavy" fill="{INK}" '
+                f'transform="translate(36 92) scale(0.702 0.4)">{heavy}</g>')
+    objs.append(f'<g id="word-photon" fill="{INK}" '
+                f'transform="translate(36 130) scale(0.175)">{photon}</g>')
+    body = [f'<g id="gun" transform="{CP["gun_t"]}">{"".join(objs)}</g>']
     svg_file("raygun-v2-compact.svg", W, H, "".join(body), bg=INK)
 
 def raygun_v2_compact_steel():
@@ -651,20 +717,28 @@ def raygun_v2_compact_steel():
                     f'opacity="0.6" filter="url(#soften3)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="12" fill="url(#steel3)"/>'
                     f'<circle cx="{bx}" cy="{by}" r="5" fill="#3A4150"/>')
-    content = (f'<g transform="{CP["gun_t"]}">'
-               f'{raygun2_struct(fat=True, shelf=False)}</g>')
-    body.append(f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
-                f'transform="translate(6 7)">{content}</g>')
-    body.append(f'<g fill="#E8EEF7" transform="translate(-3 -3)">{content}</g>')
-    body.append(f'<g fill="url(#steel3)">{content}</g>')
-    body.append(f'<g transform="{CP["gun_t"]}">'
-                f'<g transform="translate(3 3)">{brand_heavy("#D8DFEA", 92)}'
-                f'{brand_photon_small("#D8DFEA", "#D8DFEA")}</g>'
-                f'{brand_heavy("#232936", 92)}'
-                f'{brand_photon_small("#232936", CYAN)}'
-                f'<rect x="118" y="158" width="14" height="8" fill="#232936"/>'
-                f'{raygun2_energy(CYAN, vents=False, rail_y=144)}'
-                f'<path d="{CHARGE_TICK}" fill="{CYAN}"/></g>')
+    # per-object groups: each part stacks its own shadow/highlight/face
+    objs = []
+    for name, el in COMPACT_SHAPES:
+        objs.append(
+            f'<g id="{name}">'
+            f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
+            f'transform="translate(6 7)">{el}</g>'
+            f'<g fill="#E8EEF7" transform="translate(-3 -3)">{el}</g>'
+            f'<g fill="url(#steel3)">{el}</g>'
+            f'{compact_extras(name, CYAN, "#232936")}</g>')
+    # debossed words: each glyph group stacks its highlight + dark stamp
+    heavy = wordmark2_grouped(
+        "HEAVY", 8, prefix="heavy",
+        layers=(("#D8DFEA", (4.3, 7.5)), ("#232936", (0, 0))))
+    photon = wordmark2_grouped(
+        "PHOTON", 58.3, accents={2}, accent_fill=CYAN, prefix="photon",
+        layers=(("#D8DFEA", (17, 17)), ("#232936", (0, 0))))
+    objs.append(f'<g id="word-heavy" '
+                f'transform="translate(36 92) scale(0.702 0.4)">{heavy}</g>')
+    objs.append(f'<g id="word-photon" '
+                f'transform="translate(36 130) scale(0.175)">{photon}</g>')
+    body.append(f'<g id="gun" transform="{CP["gun_t"]}">{"".join(objs)}</g>')
     svg_file("raygun-v2-compact-steel.svg", W, H, "".join(body))
 
 raygun_v2_compact()

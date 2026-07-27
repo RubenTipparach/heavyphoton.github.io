@@ -28,6 +28,20 @@ blade-cut terminals, pointed A/V), accent-lit letters, and no GAMES line:
 | 03.8 | `raygun-v2-compact.svg` | **Compact** — gun-only lockup: HEAVY across the gun, PHOTON small and letterspaced tucked under the HEA, charge tick at the muzzle. |
 | 03.9 | `raygun-v2-compact-steel.svg` | **Compact Steel** — the compact cut debossed on the bolted plate. |
 
+## Editing the compact cuts
+
+`raygun-v2-compact.svg` and `raygun-v2-compact-steel.svg` are structured
+for hand-editing: every part of the gun is its own named group (`fin-1`,
+`grip`, `body`, `barrel`, `muzzle`, `tip`, `sight`, `trigger`, and one
+group per letter under `word-heavy` / `word-photon`). Each group stacks
+ALL of that object's layers — shadow, highlight, face, and attached
+details like the rail or trigger notch — so scaling or moving an object
+in Inkscape carries its fx with it.
+
+The generator also refuses to overwrite any SVG that has been re-saved
+from Inkscape (it detects the editor metadata), so hand edits are safe
+from an accidental `python3 genlogos.py`.
+
 ## Iteration archive
 
 `iterations/` preserves earlier design states as standalone SVG + PNG
