@@ -50,10 +50,11 @@ NAME = "RUBEN TIPPARACH"
 EMAIL = "ruben.tipparach@gmail.com"
 SITE = "heavyphoton.com"
 
-# Framing of the 375x121 native capture. The window is wide enough to keep
-# both habitat modules, both engine plumes and the central hub; the sky above
-# is grown to make up the card's aspect ratio (see grow_sky).
-ART_WIN_X, ART_WIN_W = 105, 258
+# Framing. Left as None the card frames itself around whatever structure it
+# finds in the capture (see framed_art), which is what you want after dropping
+# in a new screenshot. Set them to hand-place the window in native pixels.
+ART_WIN_X: int | None = None
+ART_WIN_W: int | None = None
 
 
 # --------------------------------------------------------------------------
@@ -99,13 +100,54 @@ def grow_sky(art: np.ndarray, rows: int, seed: int = 3) -> np.ndarray:
     return np.vstack([ext, art])
 
 
+def structure_span(art: np.ndarray) -> tuple[int, int]:
+    """Horizontal extent of the station, ignoring sky and planet.
+
+    Matches the hull's own colours — the lavender and grey plating, the truss
+    yellow, the stripe red — so the framing tracks the ship rather than the
+    planet's limb drifting through the bottom of the shot.
+    """
+    r, g, b = art[..., 0].astype(int), art[..., 1].astype(int), art[..., 2].astype(int)
+    hull = (((abs(r - 131) < 45) & (abs(g - 118) < 45) & (abs(b - 156) < 45))
+            | ((abs(r - 194) < 40) & (abs(g - 195) < 40) & (abs(b - 199) < 40))
+            | ((r > 200) & (g > 140) & (b < 90))
+            | ((r > 200) & (g < 80) & (b < 120)))
+    # a column counts only if a real depth of it is hull, so the planet's
+    # sand and cloud tones can't drag the span out to the frame edges
+    cols = np.where(hull.sum(axis=0) >= max(4, round(art.shape[0] * 0.12)))[0]
+    return (int(cols.min()), int(cols.max())) if len(cols) else (0, art.shape[1] - 1)
+
+
 def framed_art() -> Image.Image:
-    """The capture, re-framed to the card's bleed aspect at native scale."""
+    """The capture, re-framed to the card's bleed aspect at native scale.
+
+    A capture at least as wide as the card gets a straight cover-crop centred
+    on the ship. A letterboxed one — like the current 3.10:1 grab — has the
+    sky above it grown instead, so the frame reaches the card's aspect without
+    cropping the structure away sideways.
+    """
     art = np.asarray(C.load_art_native(ART))
-    want_h = int(round(ART_WIN_W / (C.BLEED_W_IN / C.BLEED_H_IN)))
+    card_aspect = C.BLEED_W_IN / C.BLEED_H_IN
+
+    win_w = ART_WIN_W
+    if win_w is None:
+        lo, hi = structure_span(art)
+        margin = max(4, round((hi - lo) * 0.06))
+        win_w = min(art.shape[1], max(hi - lo + 1 + 2 * margin,
+                                      int(round(art.shape[0] * card_aspect))))
+
+    want_h = int(round(win_w / card_aspect))
     art = grow_sky(art, want_h - art.shape[0])
-    win = art[:, ART_WIN_X:ART_WIN_X + ART_WIN_W]
-    return Image.fromarray(win, "RGB")
+    if art.shape[0] > want_h:                      # already wide enough to crop
+        top = (art.shape[0] - want_h) // 2
+        art = art[top:top + want_h]
+
+    win_x = ART_WIN_X
+    if win_x is None:
+        lo, hi = structure_span(art)
+        win_x = int(round((lo + hi) / 2 - win_w / 2))
+    win_x = max(0, min(win_x, art.shape[1] - win_w))
+    return Image.fromarray(art[:, win_x:win_x + win_w], "RGB")
 
 
 # --------------------------------------------------------------------------

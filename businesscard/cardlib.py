@@ -76,20 +76,48 @@ def contrast(a, b) -> float:
 
 
 # --- game art -------------------------------------------------------------
-ART_BLOCK = 4  # the capture is a 375x121 render upscaled 4x
+def detect_block(src: np.ndarray, max_block: int = 8) -> int:
+    """Recover the nearest-neighbour upscale factor of a pixel-art capture.
+
+    The game renders small and the screenshot is enlarged, so hard edges only
+    ever land on a lattice. Scoring how much of the edge energy sits on each
+    candidate lattice recovers the factor; lossy compression blurs the signal
+    but does not move it. Returns 1 when nothing beats the noise floor, which
+    is the right answer for an already-native capture.
+    """
+    best, best_score = 1, 1.0
+    for axis in (0, 1):
+        d = np.abs(np.diff(src.astype(int), axis=axis))
+        sig = d.sum(axis=(1, 2) if axis == 0 else (0, 2)).astype(float)
+        if not sig.any():
+            continue
+        idx = np.arange(len(sig))
+        for p in range(2, max_block + 1):
+            if len(sig) < p * 4:
+                continue
+            on = sig[idx % p == p - 1]
+            off = sig[idx % p != p - 1]
+            if not len(on) or not off.mean():
+                continue
+            score = on.mean() / off.mean()
+            if score > best_score * 1.02:
+                best, best_score = p, score
+    return best
 
 
 def load_art_native(path: str) -> Image.Image:
-    """Undo the 4x nearest-neighbour upscale + webp noise in the capture.
+    """Recover a capture's native pixel grid and flatten its palette.
 
-    Returns the game's native 375x121 pixel-art frame with clean flat colours.
+    Screenshots arrive upscaled and compression-ringed. Collapsing each block
+    to its median throws the ringing away and gets back the pixels the game
+    actually drew, so the card can enlarge them again without mush.
     """
     src = np.asarray(Image.open(path).convert("RGB")).astype(np.uint8)
+    block = detect_block(src)
     h, w, _ = src.shape
-    nh, nw = h // ART_BLOCK, w // ART_BLOCK
-    src = src[: nh * ART_BLOCK, : nw * ART_BLOCK]
-    # median over each 4x4 block rejects the webp ringing around hard edges
-    blocks = src.reshape(nh, ART_BLOCK, nw, ART_BLOCK, 3).transpose(0, 2, 1, 3, 4)
+    nh, nw = h // block, w // block
+    src = src[: nh * block, : nw * block]
+    blocks = src.reshape(nh, block, nw, block, 3).transpose(0, 2, 1, 3, 4)
     native = np.median(blocks.reshape(nh, nw, -1, 3), axis=2).astype(np.uint8)
     img = Image.fromarray(native, "RGB")
     # snap the remaining near-duplicates onto a tight flat palette
@@ -128,13 +156,19 @@ def trim_alpha(img: Image.Image) -> Image.Image:
     return img.crop(box) if box else img
 
 
-def logo_at_height(name: str, target_h: int, oversample: int = 3) -> Image.Image:
-    """Ink-trimmed logo scaled so its visible ink is exactly `target_h` tall."""
+def logo_at_height(name: str, target_h: int) -> Image.Image:
+    """Ink-trimmed logo whose visible ink is exactly `target_h` tall.
+
+    Rasterised straight from the vector at final size — resampling a bigger
+    render would only put ringing back onto edges the renderer already
+    antialiased correctly.
+    """
     probe = trim_alpha(render_svg(name, 1200))
     aspect = probe.width / probe.height
     want_w = int(round(target_h * aspect))
-    big = trim_alpha(render_svg(name, int(want_w * oversample)))
-    return big.resize((want_w, target_h), Image.LANCZOS)
+    out = trim_alpha(render_svg(name, want_w))
+    return out if out.height == target_h else out.resize((want_w, target_h),
+                                                         Image.LANCZOS)
 
 
 # --- drawing helpers ------------------------------------------------------

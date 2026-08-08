@@ -168,18 +168,25 @@
         pointer-events: none; /* Ensure content is also click-through */
       }
 
-      /* Raygun logo lockup on the landing screen */
+      /* Raygun logo lockup on the landing screen.
+         The glow sits on this wrapper rather than on the image: a CSS filter
+         region is only the border box plus 10%, so a wide blur on a short
+         element gets cut off into a visible rectangle. The padding gives the
+         blur somewhere to fall off, and the negative margin gives the layout
+         space back. */
       .home-mark {
-        margin-bottom: 1rem;
+        padding: 4.5rem 4.5rem 3rem;
+        margin: -4.5rem -4.5rem -2rem;
+        filter: drop-shadow(0 0 26px rgba(62, 224, 255, 0.4))
+                drop-shadow(0 0 54px rgba(62, 224, 255, 0.2))
+                drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
       }
 
       .home-logo {
         display: block;
         width: min(660px, 78vw);
         height: auto;
-        margin: 0 auto 0.5rem;
-        filter: drop-shadow(0 0 28px rgba(62, 224, 255, 0.35))
-                drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+        margin: 0 auto;
         animation: fadeInUp 1s ease-out;
       }
 
@@ -287,7 +294,16 @@
         display: none;
       }
 
+      /* same filter-region trick as .home-mark */
+      .preloader-mark {
+        padding: 4rem;
+        margin: -4rem;
+        filter: drop-shadow(0 0 24px rgba(62, 224, 255, 0.32))
+                drop-shadow(0 0 50px rgba(62, 224, 255, 0.16));
+      }
+
       .preloader-logo {
+        display: block;
         width: min(420px, 62vw);
         height: auto;
         opacity: 0.9;
@@ -1006,7 +1022,9 @@
   <body>
     <!-- Black boot screen; main.ts swaps in body.ready once the scene renders -->
     <div id="preloader">
-      <img class="preloader-logo" src="./branding/heavy-photon-branded.svg" alt="Heavy Photon" width="1563" height="356" />
+      <div class="preloader-mark">
+        <img class="preloader-logo" src="./branding/heavy-photon-branded.svg" alt="Heavy Photon" width="1563" height="356" />
+      </div>
       <div class="preloader-bar"><span></span></div>
     </div>
 
