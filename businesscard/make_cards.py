@@ -40,7 +40,10 @@ P8_WHITE = (255, 241, 232)
 BRAND_CYAN = C.CYAN            # #3EE0FF, the logo's ion cyan
 BONE = C.BONE
 
-LOGO = "raygun-v2-mainline.svg"
+# The two final lockups — see CLAUDE.md. Branded is the wide primary cut and
+# carries the card; compact is the small-space cut and sits inside the QR.
+LOGO_BRANDED = "raygun-v2-branded.svg"
+LOGO_COMPACT = "raygun-v2-compact.svg"
 
 QR_URL = "https://heavyphoton.com/#home"
 NAME = "RUBEN TIPPARACH"
@@ -106,15 +109,21 @@ def framed_art() -> Image.Image:
 
 
 # --------------------------------------------------------------------------
-# FRONT — full-bleed game art with a translucent black bar and the logo
+# FRONT — the game art, full bleed, nothing on top of it.
+#
+# The branding all lives on the back, so the front is left as one clean frame.
+# `make_front(bar=True)` renders the earlier treatment — a translucent black
+# bar carrying the lockup — for comparison.
 # --------------------------------------------------------------------------
 BAR_VISIBLE_IN = 0.40          # bar height measured up from the trim line
 BAR_ALPHA = 212                # /255 — art stays faintly visible through it
 FEATHER = 90                   # soft ramp above the bar so it doesn't hard-cut
 
 
-def make_front() -> Image.Image:
+def make_front(bar: bool = False) -> Image.Image:
     card = framed_art().resize((CANVAS_W, CANVAS_H), Image.NEAREST)
+    if not bar:
+        return card
 
     bar_top = TRIM[3] - px(BAR_VISIBLE_IN)
 
@@ -134,7 +143,7 @@ def make_front() -> Image.Image:
     # logo, bottom-left, inside the safe margin and optically centred in the
     # part of the bar that survives trimming
     logo_h = px(0.25)
-    logo = C.logo_at_height(LOGO, logo_h)
+    logo = C.logo_at_height(LOGO_BRANDED, logo_h)
     pad = 44
     halo = Image.new("RGBA", (logo.width + 2 * pad, logo.height + 2 * pad),
                      (0, 0, 0, 0))
@@ -202,17 +211,20 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
                                    x1 - 2 * box, y1 - 2 * box, box // 2),
                   fill=P8_DARKBLUE)
 
-    # raygun roundel in the middle; error-correction level H covers the loss
-    icon_m = 7
-    icon_px = icon_m * box
+    # the compact lockup in the middle; error-correction level H covers the
+    # modules it costs (~5% of the symbol's area). The mark is bone-on-ink, so
+    # it sits on its own dark tile with a light gap holding it off the data.
+    mark = C.logo_at_height(LOGO_COMPACT, 4 * box)
     cx = size // 2
-    half = icon_px // 2 + box // 2
-    d.polygon(C.chamfer_points(cx - half, cx - half, cx + half, cx + half,
-                               box), fill=P8_WHITE)
-    icon = C.trim_alpha(C.render_svg("raygun-v2-icon.svg", icon_px * 3,
-                                     strip_bg=False))
-    icon = icon.resize((icon_px, icon_px), Image.LANCZOS)
-    paste(img, icon.convert("RGBA"), (cx - icon_px // 2, cx - icon_px // 2))
+    hw, hh = mark.width // 2, mark.height // 2
+    d.polygon(C.chamfer_points(cx - hw - box, cx - hh - box,
+                               cx + hw + box, cx + hh + box, box // 2),
+              fill=P8_WHITE)
+    pad = box // 2
+    d.polygon(C.chamfer_points(cx - hw - pad, cx - hh - pad,
+                               cx + hw + pad, cx + hh + pad, box // 3),
+              fill=C.INK)
+    paste(img, mark, (cx - hw, cx - hh))
 
     for name, col in (("black", P8_BLACK), ("dark blue", P8_DARKBLUE)):
         ratio = C.contrast(col, P8_WHITE)
@@ -268,7 +280,7 @@ def make_back() -> Image.Image:
     # ---- contact block, left --------------------------------------------
     x = SAFE[0]
     logo_h = px(0.185)
-    logo = C.logo_at_height(LOGO, logo_h)
+    logo = C.logo_at_height(LOGO_BRANDED, logo_h)
     name_f = font("Tektur-Medium.ttf", 92)
     lab_f = font("Jura-Medium.ttf", 34)
     val_f = font("GeistMono-Regular.ttf", 50)
@@ -333,6 +345,7 @@ def verify(back: Image.Image) -> None:
 def main() -> None:
     os.makedirs(OUT, exist_ok=True)
     front, back = make_front(), make_back()
+    front_bar = make_front(bar=True)
     verify(back)
 
     dpi = (C.DPI, C.DPI)
@@ -352,6 +365,8 @@ def main() -> None:
     C.guides(front).save(os.path.join(OUT, "preview-front-guides.png"))
     C.guides(back).save(os.path.join(OUT, "preview-back-guides.png"))
     C.trimmed(front).save(os.path.join(OUT, "preview-front-trimmed.png"))
+    front_bar.save(os.path.join(OUT, "alt-front-bar-bleed-600dpi.png"), dpi=dpi)
+    C.trimmed(front_bar).save(os.path.join(OUT, "preview-front-bar-trimmed.png"))
     C.trimmed(back).save(os.path.join(OUT, "preview-back-trimmed.png"))
     mockup(front, back).save(os.path.join(OUT, "preview-both.png"))
     print("wrote", len(os.listdir(OUT)), "files to", OUT)

@@ -1,8 +1,14 @@
 # Heavy Photon — business card
 
-Two-sided US business card. Front is a full-bleed TENEBRIS frame with the
-raygun lockup on a translucent black bar; back is black with a QR to
-`https://heavyphoton.com/#home` and contact details.
+Two-sided US business card. Front is a full-bleed TENEBRIS frame and nothing
+else; back is black and carries all the branding — the `raygun-v2-branded`
+lockup, contact details, and a QR to `https://heavyphoton.com/#home` with the
+`raygun-v2-compact` cut in its centre. (See `../CLAUDE.md` for which lockups
+are final.)
+
+`make_cards.py` also writes `alt-front-bar-*` — the earlier front treatment,
+with a translucent black bar carrying the lockup along the bottom — in case
+that one is wanted instead.
 
 Everything in `out/` is generated. Rebuild with:
 
@@ -34,6 +40,7 @@ past the trim line, so a cutter drifting up to 1/8 in never exposes paper.
 | `front-bleed-600dpi.png`, `back-bleed-600dpi.png` | press rasters |
 | `front-bleed-300dpi.png`, `back-bleed-300dpi.png` | 300 dpi equivalents |
 | `preview-front-trimmed.png`, `preview-back-trimmed.png` | what the cut card looks like |
+| `alt-front-bar-bleed-600dpi.png`, `preview-front-bar-trimmed.png` | alternate front: black bar + lockup |
 | `preview-front-guides.png`, `preview-back-guides.png` | bleed / trim / safe proof |
 | `preview-both.png` | both sides side by side |
 
@@ -55,9 +62,9 @@ that would otherwise have to crop about a fifth of the structure away.
 ## QR code
 
 Styled from the capture's own PICO-8 palette: chamfered modules washing from
-ink black into the art's deep space blue, chamfered finder rings with a
-navy pupil, and the raygun roundel in the middle carried by error-correction
-level H.
+ink black into the art's deep space blue, chamfered finder rings with a navy
+pupil, and the compact lockup on a dark tile in the middle, carried by
+error-correction level H.
 
 Scan reliability is enforced, not assumed. `make_cards.py` asserts every dark
 module colour holds at least 7:1 contrast against the plate, and `verify()`
