@@ -11,6 +11,48 @@ if (!container) {
 const underwaterScene = new UnderwaterScene(container);
 underwaterScene.start();
 
+// Boot sequence: hold the black #preloader until the scene is actually
+// painting and our own images have decoded, then cross-fade the site in.
+//
+// Deliberately not waiting on `window.load`: the Steam wishlist iframe is
+// injected before load fires, so a slow store.steampowered.com would pin the
+// visitor to a black screen. A hard timeout backs the whole thing up.
+(function runBootSequence() {
+  const MIN_BLACK_MS = 500;
+  const MAX_WAIT_MS = 6000;
+  const started = performance.now();
+  let done = false;
+
+  const reveal = () => {
+    if (done) return;
+    done = true;
+    const wait = Math.max(0, MIN_BLACK_MS - (performance.now() - started));
+    window.setTimeout(() => {
+      document.body.classList.add('ready');
+      // drop the overlay out of the tree once its fade has finished
+      window.setTimeout(() => document.body.classList.add('booted'), 1000);
+    }, wait);
+  };
+
+  // two rendered frames means the WebGL scene is genuinely on screen
+  const framesPainted = new Promise<void>(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+  const domReady = new Promise<void>(resolve => {
+    if (document.readyState !== 'loading') resolve();
+    else document.addEventListener('DOMContentLoaded', () => resolve(), { once: true });
+  });
+
+  const imagesDecoded = domReady.then(() => {
+    const imgs = Array.from(document.querySelectorAll<HTMLImageElement>('img'));
+    return Promise.all(imgs.map(img => img.decode().catch(() => undefined)));
+  });
+
+  Promise.all([framesPainted, imagesDecoded]).then(reveal);
+  window.setTimeout(reveal, MAX_WAIT_MS);
+})();
+
 const underwaterAudio = new UnderwaterAudio();
 
 // Initialize Scene Manager for handling astronautics transitions

@@ -2,3 +2,4 @@ work/node_modules/
 .claude/
 .history/
 work/.vite/deps/
+__pycache__/
