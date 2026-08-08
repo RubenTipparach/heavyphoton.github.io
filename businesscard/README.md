@@ -53,16 +53,16 @@ median and snaps the result back to a flat palette, so the card prints as
 crisp pixel art instead of mush. It is then scaled up with nearest-neighbour
 only — never a smoothing filter.
 
-The whole capture goes on the card. It spans the card's width, the planet
-runs off the bottom bleed, and the height is made up with starfield matched
-to the capture's own star density (`sky_band`). The ship's pixels are never
-cropped into, repeated or synthesised. The one seam in this capture — the
-right habitat module running off the top of the *file* — is dimmed into
-space over its last rows (`fade_offframe_top`), which only darkens existing
-pixels. A wider grab with the whole station in frame makes that fade
-unnecessary: drop it into `source/` and re-run, and the framing adapts by
-itself. `ART_WIN_X` / `ART_WIN_W` in `make_cards.py` hand-place a crop
-window if you ever want one.
+The whole capture goes on the card, vertically centred. It spans the card's
+width, the height is made up with starfield above (`sky_band`, matched to the
+capture's own star density) and plain black below — no stars under the planet
+horizon. The ship's pixels are never cropped into, repeated or synthesised;
+where content runs off the file's top or bottom edge, its last rows are
+dimmed into black (`fade_offframe`), which only darkens existing pixels, so
+neither boundary prints as a hard cut line. A wider grab with the whole
+station in frame makes the top fade unnecessary: drop it into `source/` and
+re-run, and the framing adapts by itself. `ART_WIN_X` / `ART_WIN_W` in
+`make_cards.py` hand-place a crop window if you ever want one.
 
 ## QR code
 

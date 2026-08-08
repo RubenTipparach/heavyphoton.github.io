@@ -91,27 +91,27 @@ def sky_band(art: np.ndarray, rows: int, seed: int = 3) -> np.ndarray:
     return band
 
 
-def fade_offframe_top(art: np.ndarray, depth: int = 12) -> np.ndarray:
-    """Darken the top rows of columns whose structure runs off the capture's
-    top edge, so the file's hard boundary dissolves into space instead of
-    printing as a floating cut line. Only ever dims pixels that exist —
+def fade_offframe(art: np.ndarray, edge: str, depth: int = 12) -> np.ndarray:
+    """Darken the last rows of columns whose content runs off the capture's
+    top or bottom edge, so the file's hard boundary dissolves into space
+    instead of printing as a cut line. Only ever dims pixels that exist —
     nothing is drawn, moved or repeated."""
-    art = art.copy()
+    flip = edge == "bottom"
+    art = art[::-1].copy() if flip else art.copy()
     runs_off = art[0].astype(int).sum(axis=1) >= 40
-    if not runs_off.any():
-        return art
-    # widen the mask a little either side and roll it off smoothly so the
-    # faded columns don't meet the unfaded ones at a vertical seam
-    w = art.shape[1]
-    lateral = np.zeros(w)
-    lateral[runs_off] = 1.0
-    k = 7
-    kernel = np.hanning(2 * k + 3)[1:-1]
-    lateral = np.convolve(lateral, kernel / kernel.sum(), mode="same").clip(0, 1)
-    vertical = np.linspace(0.0, 1.0, depth) ** 1.4          # 0 at the cut edge
-    weight = 1.0 - (1.0 - vertical[:, None]) * lateral[None, :]
-    art[:depth] = (art[:depth].astype(float) * weight[..., None]).astype(np.uint8)
-    return art
+    if runs_off.any():
+        # widen the mask a little either side and roll it off smoothly so the
+        # faded columns don't meet the unfaded ones at a vertical seam
+        w = art.shape[1]
+        lateral = np.zeros(w)
+        lateral[runs_off] = 1.0
+        k = 7
+        kernel = np.hanning(2 * k + 3)[1:-1]
+        lateral = np.convolve(lateral, kernel / kernel.sum(), mode="same").clip(0, 1)
+        vertical = np.linspace(0.0, 1.0, depth) ** 1.4      # 0 at the cut edge
+        weight = 1.0 - (1.0 - vertical[:, None]) * lateral[None, :]
+        art[:depth] = (art[:depth].astype(float) * weight[..., None]).astype(np.uint8)
+    return art[::-1] if flip else art
 
 
 def structure_span(art: np.ndarray) -> tuple[int, int]:
@@ -158,9 +158,13 @@ def framed_art() -> Image.Image:
     h, w = art.shape[:2]
     want_h = int(round(w / card_aspect))
     if want_h >= h:
-        # letterbox vertically: whole width, sky above, planet off the bottom
-        art = fade_offframe_top(art)
-        framed = np.vstack([sky_band(art, want_h - h), art])
+        # letterbox vertically, capture centred: starfield above, plain black
+        # below (no stars under the planet horizon), both cut edges dissolved
+        art = fade_offframe(art, "top")
+        art = fade_offframe(art, "bottom")
+        pad_top = (want_h - h) // 2
+        below = np.zeros((want_h - h - pad_top, w, 3), dtype=np.uint8)
+        framed = np.vstack([sky_band(art, pad_top), art, below])
     else:
         # capture is taller than the card: letterbox horizontally instead
         want_w = int(round(h * card_aspect))
