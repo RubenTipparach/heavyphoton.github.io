@@ -46,18 +46,23 @@ past the trim line, so a cutter drifting up to 1/8 in never exposes paper.
 
 ## How the art is handled
 
-`source/tenebris-station.webp` is a 4× upscale of a 375 × 121 native frame,
-with webp ringing on every hard edge. `cardlib.load_art_native` takes the
-median of each 4 × 4 block to recover the native frame and snaps it back to a
-flat palette, so the card prints as crisp pixel art instead of mush. It is
-then scaled up with nearest-neighbour only — never a smoothing filter.
+`source/tenebris-station.webp` is an upscaled screenshot with webp ringing on
+every hard edge. `cardlib.detect_block` recovers the upscale factor (4× for
+this capture, 375 × 121 native), `load_art_native` collapses each block to its
+median and snaps the result back to a flat palette, so the card prints as
+crisp pixel art instead of mush. It is then scaled up with nearest-neighbour
+only — never a smoothing filter.
 
-The capture is 3.10:1 and the card is 1.67:1, so the frame is widened rather
-than cropped hard: `grow_sky` adds native pixel rows above the capture,
-extending the starfield at its measured density and continuing the habitat
-modules straight up (they are vertically banded, so they read as running out
-of frame). That keeps both modules, both engine plumes and the hub on a card
-that would otherwise have to crop about a fifth of the structure away.
+The whole capture goes on the card. It spans the card's width, the planet
+runs off the bottom bleed, and the height is made up with starfield matched
+to the capture's own star density (`sky_band`). The ship's pixels are never
+cropped into, repeated or synthesised. The one seam in this capture — the
+right habitat module running off the top of the *file* — is dimmed into
+space over its last rows (`fade_offframe_top`), which only darkens existing
+pixels. A wider grab with the whole station in frame makes that fade
+unnecessary: drop it into `source/` and re-run, and the framing adapts by
+itself. `ART_WIN_X` / `ART_WIN_W` in `make_cards.py` hand-place a crop
+window if you ever want one.
 
 ## QR code
 
