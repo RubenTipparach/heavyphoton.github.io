@@ -60,44 +60,58 @@ ART_WIN_W: int | None = None
 # --------------------------------------------------------------------------
 # game art framing
 # --------------------------------------------------------------------------
-def grow_sky(art: np.ndarray, rows: int, seed: int = 3) -> np.ndarray:
-    """Grow the frame upward by `rows` native pixels.
-
-    Columns that open on empty space get more starfield, matched to the
-    density and colours of the capture's own sky. Columns occupied by a
-    structure continue that structure straight up — the habitat modules are
-    vertically banded, so they simply read as running out of frame.
-    """
+def sky_band(art: np.ndarray, rows: int, seed: int = 3) -> np.ndarray:
+    """A band of empty sky `rows` native pixels tall, star density and colours
+    matched to the capture's own sky. Starfield only — the ship's pixels are
+    never extended, repeated or invented."""
+    w = art.shape[1]
+    band = np.zeros((max(rows, 0), w, 3), dtype=np.uint8)
     if rows <= 0:
-        return art
-    h, w, _ = art.shape
-    top = art[0]
-    lum = top.astype(int).sum(axis=1)
-    is_sky = lum < 40
+        return band
 
-    ext = np.repeat(top[None, :, :], rows, axis=0).copy()
-    ext[:, is_sky, :] = 0
-
-    # measure the capture's own star density, then reproduce it
+    # measure the capture's own star density above the first content row
     first = np.array([np.argmax(art[:, x].sum(axis=1) >= 40) if
-                      (art[:, x].sum(axis=1) >= 40).any() else h
+                      (art[:, x].sum(axis=1) >= 40).any() else art.shape[0]
                       for x in range(w)])
     sky_px = stars = 0
     star_cols: list[tuple[int, int, int]] = []
     for x in range(w):
-        band = art[: first[x], x]
-        sky_px += len(band)
-        lit = band[band.sum(axis=1) >= 40]
+        col = art[: first[x], x]
+        sky_px += len(col)
+        lit = col[col.sum(axis=1) >= 40]
         stars += len(lit)
         star_cols.extend(map(tuple, lit.tolist()))
     density = stars / max(sky_px, 1)
     rng = random.Random(seed)
     if star_cols:
-        cells = [(y, x) for y in range(rows) for x in range(w) if is_sky[x]]
+        cells = [(y, x) for y in range(rows) for x in range(w)]
         for y, x in rng.sample(cells, min(len(cells),
                                           int(round(len(cells) * density)))):
-            ext[y, x] = star_cols[rng.randrange(len(star_cols))]
-    return np.vstack([ext, art])
+            band[y, x] = star_cols[rng.randrange(len(star_cols))]
+    return band
+
+
+def fade_offframe_top(art: np.ndarray, depth: int = 12) -> np.ndarray:
+    """Darken the top rows of columns whose structure runs off the capture's
+    top edge, so the file's hard boundary dissolves into space instead of
+    printing as a floating cut line. Only ever dims pixels that exist —
+    nothing is drawn, moved or repeated."""
+    art = art.copy()
+    runs_off = art[0].astype(int).sum(axis=1) >= 40
+    if not runs_off.any():
+        return art
+    # widen the mask a little either side and roll it off smoothly so the
+    # faded columns don't meet the unfaded ones at a vertical seam
+    w = art.shape[1]
+    lateral = np.zeros(w)
+    lateral[runs_off] = 1.0
+    k = 7
+    kernel = np.hanning(2 * k + 3)[1:-1]
+    lateral = np.convolve(lateral, kernel / kernel.sum(), mode="same").clip(0, 1)
+    vertical = np.linspace(0.0, 1.0, depth) ** 1.4          # 0 at the cut edge
+    weight = 1.0 - (1.0 - vertical[:, None]) * lateral[None, :]
+    art[:depth] = (art[:depth].astype(float) * weight[..., None]).astype(np.uint8)
+    return art
 
 
 def structure_span(art: np.ndarray) -> tuple[int, int]:
@@ -119,35 +133,42 @@ def structure_span(art: np.ndarray) -> tuple[int, int]:
 
 
 def framed_art() -> Image.Image:
-    """The capture, re-framed to the card's bleed aspect at native scale.
+    """The whole capture on the card's bleed aspect, at native scale.
 
-    A capture at least as wide as the card gets a straight cover-crop centred
-    on the ship. A letterboxed one — like the current 3.10:1 grab — has the
-    sky above it grown instead, so the frame reaches the card's aspect without
-    cropping the structure away sideways.
+    The image is never cropped into and the ship's pixels are never repeated
+    or synthesised. The full frame spans the card's width, the planet runs off
+    the bottom bleed, and the height is made up with pure starfield above. A
+    capture that is already wider than the card's aspect gets the same
+    centring with the extra width letterboxed by starfield instead.
+
+    ART_WIN_X / ART_WIN_W hand-place a crop window and override all of this.
     """
     art = np.asarray(C.load_art_native(ART))
     card_aspect = C.BLEED_W_IN / C.BLEED_H_IN
 
-    win_w = ART_WIN_W
-    if win_w is None:
-        lo, hi = structure_span(art)
-        margin = max(4, round((hi - lo) * 0.06))
-        win_w = min(art.shape[1], max(hi - lo + 1 + 2 * margin,
-                                      int(round(art.shape[0] * card_aspect))))
+    if ART_WIN_W is not None:                     # manual override: crop mode
+        win_w = ART_WIN_W
+        want_h = int(round(win_w / card_aspect))
+        pad = np.vstack([sky_band(art, want_h - art.shape[0]), art]) \
+            if want_h > art.shape[0] else art
+        x0 = ART_WIN_X if ART_WIN_X is not None else (pad.shape[1] - win_w) // 2
+        x0 = max(0, min(x0, pad.shape[1] - win_w))
+        return Image.fromarray(pad[-want_h:, x0:x0 + win_w], "RGB")
 
-    want_h = int(round(win_w / card_aspect))
-    art = grow_sky(art, want_h - art.shape[0])
-    if art.shape[0] > want_h:                      # already wide enough to crop
-        top = (art.shape[0] - want_h) // 2
-        art = art[top:top + want_h]
-
-    win_x = ART_WIN_X
-    if win_x is None:
-        lo, hi = structure_span(art)
-        win_x = int(round((lo + hi) / 2 - win_w / 2))
-    win_x = max(0, min(win_x, art.shape[1] - win_w))
-    return Image.fromarray(art[:, win_x:win_x + win_w], "RGB")
+    h, w = art.shape[:2]
+    want_h = int(round(w / card_aspect))
+    if want_h >= h:
+        # letterbox vertically: whole width, sky above, planet off the bottom
+        art = fade_offframe_top(art)
+        framed = np.vstack([sky_band(art, want_h - h), art])
+    else:
+        # capture is taller than the card: letterbox horizontally instead
+        want_w = int(round(h * card_aspect))
+        side = (want_w - w)
+        left = sky_band(art, h, seed=5).transpose(1, 0, 2)[: side // 2].transpose(1, 0, 2)
+        right = sky_band(art, h, seed=7).transpose(1, 0, 2)[: side - side // 2].transpose(1, 0, 2)
+        framed = np.hstack([left, art, right])
+    return Image.fromarray(framed, "RGB")
 
 
 # --------------------------------------------------------------------------

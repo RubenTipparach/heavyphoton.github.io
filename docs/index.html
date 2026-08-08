@@ -166,6 +166,12 @@
         border: none;
         padding: 0;
         pointer-events: none; /* Ensure content is also click-through */
+        /* the shared .panel-content is a rounded scroll container
+           (overflow-y: auto + border-radius), which clips the logo's glow
+           into a hard-edged rounded box. The home panel never scrolls, so
+           let the glow escape. */
+        overflow: visible;
+        max-height: none;
       }
 
       /* Raygun logo lockup on the landing screen.
@@ -175,10 +181,10 @@
          blur somewhere to fall off, and the negative margin gives the layout
          space back. */
       .home-mark {
-        padding: 4.5rem 4.5rem 3rem;
-        margin: -4.5rem -4.5rem -2rem;
-        filter: drop-shadow(0 0 26px rgba(62, 224, 255, 0.4))
-                drop-shadow(0 0 54px rgba(62, 224, 255, 0.2))
+        padding: 6rem;
+        margin: -6rem -6rem -5rem;
+        filter: drop-shadow(0 0 24px rgba(62, 224, 255, 0.4))
+                drop-shadow(0 0 48px rgba(62, 224, 255, 0.2))
                 drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
       }
 
@@ -296,10 +302,10 @@
 
       /* same filter-region trick as .home-mark */
       .preloader-mark {
-        padding: 4rem;
-        margin: -4rem;
-        filter: drop-shadow(0 0 24px rgba(62, 224, 255, 0.32))
-                drop-shadow(0 0 50px rgba(62, 224, 255, 0.16));
+        padding: 6rem;
+        margin: -6rem;
+        filter: drop-shadow(0 0 22px rgba(62, 224, 255, 0.32))
+                drop-shadow(0 0 44px rgba(62, 224, 255, 0.16));
       }
 
       .preloader-logo {
@@ -1050,9 +1056,11 @@
           <img class="home-logo" src="./branding/heavy-photon-branded.svg" alt="Heavy Photon" width="1563" height="356" />
         </h1>
         <!-- <p class="home-subtitle">Dive into the depths of creativity</p> -->
-        <div class="steam-widget" style="margin-top: 2rem; pointer-events: auto; animation: fadeInUp 1s ease-out 0.6s both;">
+        <!-- position/z-index keep these above the logo glow, which paints late
+             because the filter promotes .home-mark to its own stacking layer -->
+        <div class="steam-widget" style="margin-top: 2rem; pointer-events: auto; animation: fadeInUp 1s ease-out 0.6s both; position: relative; z-index: 1;">
         </div>
-        <div style="pointer-events: auto; animation: fadeInUp 1s ease-out 0.8s both;">
+        <div style="pointer-events: auto; animation: fadeInUp 1s ease-out 0.8s both; position: relative; z-index: 1;">
           <a
             class="discord-widget"
             href="https://discord.gg/bwbvZScKS7"
