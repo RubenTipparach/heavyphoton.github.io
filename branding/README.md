@@ -1,5 +1,13 @@
 # Heavy Photon — Logo Concepts
 
+> **Final picks:** `raygun-v2-branded.svg` (primary, wide) and
+> `raygun-v2-compact.svg` (small spaces). Everything else on this page is
+> exploration, kept for reference — see `../CLAUDE.md`. The "Primary lockup"
+> note against `raygun-v2-mainline.svg` below predates that decision.
+>
+> Transparent, tight-cropped cuts for the web are generated into
+> `../work/public/branding/` by `python3 export_web_svg.py`.
+
 Three original logo directions for Heavy Photon Games. Everything is hand-built
 vector — a custom blocky display alphabet (no fonts, pure paths) shared across
 all three lockups, so the brand stays consistent whichever direction wins.
