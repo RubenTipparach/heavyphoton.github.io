@@ -40,10 +40,8 @@ P8_WHITE = (255, 241, 232)
 BRAND_CYAN = C.CYAN            # #3EE0FF, the logo's ion cyan
 BONE = C.BONE
 
-# The two final lockups — see CLAUDE.md. Branded is the wide primary cut and
-# carries the card; compact is the small-space cut and sits inside the QR.
+# The wide primary lockup carries the card — see CLAUDE.md.
 LOGO_BRANDED = "raygun-v2-branded.svg"
-LOGO_COMPACT = "raygun-v2-compact.svg"
 
 QR_URL = "https://heavyphoton.com/#home"
 NAME = "RUBEN TIPPARACH"
@@ -277,21 +275,6 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
         d.polygon(C.chamfer_points(x0 + 2 * box, y0 + 2 * box,
                                    x1 - 2 * box, y1 - 2 * box, box // 2),
                   fill=P8_DARKBLUE)
-
-    # the compact lockup in the middle; error-correction level H covers the
-    # modules it costs (~5% of the symbol's area). The mark is bone-on-ink, so
-    # it sits on its own dark tile with a light gap holding it off the data.
-    mark = C.logo_at_height(LOGO_COMPACT, 4 * box)
-    cx = size // 2
-    hw, hh = mark.width // 2, mark.height // 2
-    d.polygon(C.chamfer_points(cx - hw - box, cx - hh - box,
-                               cx + hw + box, cx + hh + box, box // 2),
-              fill=P8_WHITE)
-    pad = box // 2
-    d.polygon(C.chamfer_points(cx - hw - pad, cx - hh - pad,
-                               cx + hw + pad, cx + hh + pad, box // 3),
-              fill=C.INK)
-    paste(img, mark, (cx - hw, cx - hh))
 
     for name, col in (("black", P8_BLACK), ("dark blue", P8_DARKBLUE)):
         ratio = C.contrast(col, P8_WHITE)
