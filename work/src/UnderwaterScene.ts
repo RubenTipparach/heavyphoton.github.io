@@ -7,6 +7,14 @@ interface Particle {
   originalY: number;
 }
 
+/** Marine snow, as one point cloud rather than 500 little spheres. */
+interface Snow {
+  points: THREE.Points;
+  positions: Float32Array;
+  velocity: Float32Array;
+  seed: Float32Array;
+}
+
 interface Fish {
   group: THREE.Group;
   velocity: THREE.Vector3;
@@ -19,13 +27,6 @@ interface Fish {
   fleeTarget: Fish | null;
   chaseTarget: Fish | null;
   glowingUntil: number; // timestamp when glow effect ends
-}
-
-interface SeaPlant {
-  mesh: THREE.Mesh;
-  group: THREE.Group;
-  phase: number;
-  speed: number;
 }
 
 interface LocationPoint {
@@ -47,11 +48,10 @@ export class UnderwaterScene {
   private mouse: THREE.Vector2;
 
   private particles: Particle[] = [];
+  private snow!: Snow;
   private fish: Fish[] = [];
-  private seaPlants: SeaPlant[] = [];
   private rng = Reef.makeRng(20260809);
   private mats = new Reef.MaterialCache();
-  private anemones: Reef.Anemone[] = [];
   private jellies: Reef.Jelly[] = [];
   private schools: Reef.School[] = [];
   private reefClock = 0;
@@ -303,35 +303,32 @@ export class UnderwaterScene {
   }
 
   private createParticles(): void {
-    const particleGeometry = new THREE.SphereGeometry(0.05, 5, 4);
-    const particleMaterial = new THREE.MeshBasicMaterial({
-      color: 0xaaddff,
-      transparent: true,
-      opacity: 0.6,
-    });
+    // Drifting motes were 500 separate sphere meshes, so 500 draw calls for
+    // specks a couple of pixels across. One Points cloud draws the lot.
+    const COUNT = 500;
+    const positions = new Float32Array(COUNT * 3);
+    const velocity = new Float32Array(COUNT * 3);
+    const seed = new Float32Array(COUNT);
 
-    for (let i = 0; i < 500; i++) {
-      // one shared material: the clone gave every mote its own draw call and
-      // nothing ever varied per particle
-      const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-      particle.position.set(
-        (Math.random() - 0.5) * 80,
-        Math.random() * 40 - 5,
-        (Math.random() - 0.5) * 80
-      );
-
-      this.particles.push({
-        mesh: particle,
-        velocity: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.02,
-          Math.random() * 0.01 + 0.005,
-          (Math.random() - 0.5) * 0.02
-        ),
-        originalY: particle.position.y,
-      });
-
-      this.scene.add(particle);
+    for (let i = 0; i < COUNT; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 80;
+      positions[i * 3 + 1] = Math.random() * 40 - 5;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+      velocity[i * 3] = (Math.random() - 0.5) * 0.02;
+      velocity[i * 3 + 1] = Math.random() * 0.01 + 0.005;
+      velocity[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+      seed[i] = positions[i * 3 + 1];
     }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({
+      color: 0xaaddff, size: 0.12, sizeAttenuation: true,
+      transparent: true, opacity: 0.55, depthWrite: false,
+    }));
+    points.frustumCulled = false;
+    this.scene.add(points);
+    this.snow = { points, positions, velocity, seed };
   }
 
   private createBubbles(): void {
@@ -348,7 +345,7 @@ export class UnderwaterScene {
 
     for (let i = 0; i < 100; i++) {
       const scale = Math.random() * 0.8 + 0.2;
-      const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial.clone());
+      const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
       bubble.scale.setScalar(scale);
       bubble.position.set(
         (Math.random() - 0.5) * 60,
@@ -595,77 +592,103 @@ export class UnderwaterScene {
   // Sample terrain height at a given x, z position
   // Uses the same formula as createSeaFloor for consistency
   private createCorals(): void {
-    // Reef heads cluster; bare sand between them is what makes them read.
-    const heads = 7;
+    // Four species, three prototypes each, all instanced. Reef heads cluster;
+    // the bare sand between them is what makes them read as reef.
+    const species: { protos: THREE.BufferGeometry[]; colours: number[]; sway: number }[] = [
+      { protos: Array.from({ length: 3 }, () => Reef.toPrototype(Reef.buildBranchingCoral(this.rng, this.mats))),
+        colours: Reef.REEF.coral, sway: 0.035 },
+      { protos: Array.from({ length: 3 }, () => Reef.toPrototype(Reef.buildBrainCoral(this.rng, this.mats))),
+        colours: Reef.REEF.coral, sway: 0 },
+      { protos: Array.from({ length: 3 }, () => Reef.toPrototype(Reef.buildSeaFan(this.rng, this.mats))),
+        colours: Reef.REEF.fan, sway: 0.09 },
+      { protos: Array.from({ length: 2 }, () => Reef.toPrototype(Reef.buildTubeSponge(this.rng, this.mats))),
+        colours: Reef.REEF.sponge, sway: 0.03 },
+    ];
+    const picks: Reef.Placement[][] = species.map(() => []);
+
+    const heads = 8;
     for (let h = 0; h < heads; h++) {
       const ha = (h / heads) * Math.PI * 2 + this.rng() * 0.8;
       const hd = 12 + this.rng() * 26;
       const hx = Math.cos(ha) * hd;
       const hz = Math.sin(ha) * hd;
-      const members = 5 + Math.floor(this.rng() * 6);
+      const members = 9 + Math.floor(this.rng() * 9);
 
       for (let i = 0; i < members; i++) {
         const r = this.rng();
-        const raw =
-          r < 0.44 ? Reef.buildBranchingCoral(this.rng, this.mats)
-          : r < 0.68 ? Reef.buildBrainCoral(this.rng, this.mats)
-          : r < 0.86 ? Reef.buildSeaFan(this.rng, this.mats)
-          : Reef.buildTubeSponge(this.rng, this.mats);
-        const coral = Reef.flattenProp(raw);
-        coral.userData.reef = 'coral';
+        const k = r < 0.44 ? 0 : r < 0.68 ? 1 : r < 0.86 ? 2 : 3;
         const sa = this.rng() * Math.PI * 2;
         const sd = Math.sqrt(this.rng()) * 5.5;
-        Reef.seat(coral, hx + Math.cos(sa) * sd, hz + Math.sin(sa) * sd, {
-          sink: 0.12, slope: 0.55, spin: this.rng() * Math.PI * 2,
+        const sp = species[k];
+        picks[k].push({
+          x: hx + Math.cos(sa) * sd, z: hz + Math.sin(sa) * sd,
+          scale: 0.75 + this.rng() * 0.7, spin: this.rng() * Math.PI * 2,
+          slope: 0.55, sink: 0.12,
+          colour: new THREE.Color(sp.colours[Math.floor(this.rng() * sp.colours.length)]),
+          sway: [this.rng() * Math.PI * 2, 0.35 + this.rng() * 0.3, sp.sway],
         });
-        this.scene.add(coral);
       }
     }
+
+    species.forEach((sp, k) => {
+      for (const mesh of Reef.buildPlantField(sp.protos, picks[k], { roughness: 0.86 })) {
+        mesh.userData.reef = 'coral';
+        this.scene.add(mesh);
+      }
+    });
   }
 
   private createSeaPlants(): void {
-    // Kelp stands, thickest away from the reef heads.
-    for (let i = 0; i < 46; i++) {
-      const kelp = Reef.buildKelp(this.rng, this.mats);
-      kelp.group = Reef.flattenProp(kelp.group);
-      kelp.group.userData.reef = 'kelp';
+    // A handful of prototypes, instanced. Variety comes from per-instance
+    // scale, spin and colour rather than a unique mesh per plant, and the sway
+    // runs in the vertex shader so none of this touches the CPU per frame.
+    const kelpProtos = Array.from({ length: 5 }, () =>
+      Reef.toPrototype(Reef.buildKelp(this.rng, this.mats).group));
+    const grassProtos = Array.from({ length: 4 }, () =>
+      Reef.toPrototype(Reef.buildSeagrass(this.rng, this.mats)));
+
+    const kelp: Reef.Placement[] = [];
+    for (let i = 0; i < 58; i++) {
       const a = this.rng() * Math.PI * 2;
-      const d = 8 + Math.sqrt(this.rng()) * 40;
-      Reef.seat(kelp.group, Math.cos(a) * d, Math.sin(a) * d, {
-        sink: 0.15, slope: 0.4, spin: this.rng() * Math.PI * 2,
+      const d = 8 + Math.sqrt(this.rng()) * 42;
+      kelp.push({
+        x: Math.cos(a) * d, z: Math.sin(a) * d,
+        scale: 0.7 + this.rng() * 0.8, spin: this.rng() * Math.PI * 2,
+        slope: 0.4, sink: 0.15,
+        colour: new THREE.Color(Reef.REEF.kelp[Math.floor(this.rng() * Reef.REEF.kelp.length)]),
+        sway: [this.rng() * Math.PI * 2, 0.5 + this.rng() * 0.5, 0.22 + this.rng() * 0.16],
       });
-      this.seaPlants.push({
-        mesh: kelp.group.children[0] as THREE.Mesh,
-        group: kelp.group,
-        phase: kelp.phase,
-        speed: kelp.speed,
-      });
-      this.scene.add(kelp.group);
     }
 
-    // Seagrass meadows — a few dense patches rather than an even sprinkle.
-    for (let m = 0; m < 9; m++) {
+    const grass: Reef.Placement[] = [];
+    for (let m = 0; m < 11; m++) {
       const ma = this.rng() * Math.PI * 2;
       const md = 10 + this.rng() * 34;
       const mx = Math.cos(ma) * md;
       const mz = Math.sin(ma) * md;
-      const tufts = 14 + Math.floor(this.rng() * 16);
+      const tufts = 26 + Math.floor(this.rng() * 22);
       for (let i = 0; i < tufts; i++) {
-        const tuft = Reef.flattenProp(Reef.buildSeagrass(this.rng, this.mats));
-        tuft.userData.reef = 'grass';
         const a = this.rng() * Math.PI * 2;
-        const d = Math.sqrt(this.rng()) * 4.5;
-        Reef.seat(tuft, mx + Math.cos(a) * d, mz + Math.sin(a) * d, {
-          sink: 0.08, slope: 0.75, spin: this.rng() * Math.PI * 2,
+        const d = Math.sqrt(this.rng()) * 5;
+        const x = mx + Math.cos(a) * d;
+        const z = mz + Math.sin(a) * d;
+        grass.push({
+          x, z,
+          scale: 0.75 + this.rng() * 0.7, spin: this.rng() * Math.PI * 2,
+          slope: 0.75, sink: 0.08,
+          colour: new THREE.Color(Reef.REEF.grass[Math.floor(this.rng() * Reef.REEF.grass.length)]),
+          sway: [this.rng() * Math.PI * 2, 0.9 + this.rng() * 0.8, 0.1 + this.rng() * 0.1],
         });
-        this.seaPlants.push({
-          mesh: tuft.children[0] as THREE.Mesh,
-          group: tuft,
-          phase: this.rng() * Math.PI * 2,
-          speed: 0.9 + this.rng() * 0.8,
-        });
-        this.scene.add(tuft);
       }
+    }
+
+    for (const mesh of Reef.buildPlantField(kelpProtos, kelp, { roughness: 0.92 })) {
+      mesh.userData.reef = 'kelp';
+      this.scene.add(mesh);
+    }
+    for (const mesh of Reef.buildPlantField(grassProtos, grass, { roughness: 0.92 })) {
+      mesh.userData.reef = 'grass';
+      this.scene.add(mesh);
     }
   }
 
@@ -712,33 +735,52 @@ export class UnderwaterScene {
   }
 
   private createReefLife(): void {
-    // Anemones and urchins tuck against the reef; starfish sit on open sand.
-    for (let i = 0; i < 34; i++) {
-      const a = this.rng() * Math.PI * 2;
-      const d = 6 + Math.sqrt(this.rng()) * 40;
-      const x = Math.cos(a) * d, z = Math.sin(a) * d;
-      const anem = Reef.buildAnemone(this.rng, this.mats);
-      anem.mesh = Reef.flattenProp(anem.mesh);
-      anem.mesh.userData.reef = 'anemone';
-      Reef.seat(anem.mesh, x, z, { sink: 0.05, slope: 0.85, spin: this.rng() * Math.PI * 2 });
-      this.anemones.push(anem);
-      this.scene.add(anem.mesh);
+    const scatter = (n: number, near: number, far: number): { x: number; z: number }[] =>
+      Array.from({ length: n }, () => {
+        const a = this.rng() * Math.PI * 2;
+        const d = near + Math.sqrt(this.rng()) * far;
+        return { x: Math.cos(a) * d, z: Math.sin(a) * d };
+      });
+
+    // Anemones breathe on the same vertex-shader sway the plants use — the
+    // tips move, the foot stays planted.
+    const anemoneProtos = Array.from({ length: 3 }, () =>
+      Reef.toPrototype(Reef.buildAnemone(this.rng, this.mats).mesh));
+    const anemones: Reef.Placement[] = scatter(52, 6, 40).map(({ x, z }) => ({
+      x, z, scale: 0.8 + this.rng() * 0.8, spin: this.rng() * Math.PI * 2,
+      slope: 0.85, sink: 0.05,
+      colour: new THREE.Color(Reef.REEF.anemone[Math.floor(this.rng() * Reef.REEF.anemone.length)]),
+      sway: [this.rng() * Math.PI * 2, 1.1 + this.rng() * 0.7, 0.055 + this.rng() * 0.04] as [number, number, number],
+    }));
+    for (const mesh of Reef.buildPlantField(anemoneProtos, anemones, { roughness: 0.72 })) {
+      mesh.userData.reef = 'anemone';
+      this.scene.add(mesh);
     }
-    for (let i = 0; i < 40; i++) {
-      const a = this.rng() * Math.PI * 2;
-      const d = 5 + Math.sqrt(this.rng()) * 42;
-      const urchin = Reef.flattenProp(Reef.buildUrchin(this.rng, this.mats));
-      urchin.userData.reef = 'urchin';
-      Reef.seat(urchin, Math.cos(a) * d, Math.sin(a) * d, { sink: 0.1, slope: 0.9 });
-      this.scene.add(urchin);
+
+    // Urchins and starfish are rigid: same instancing path, zero amplitude.
+    const urchinProtos = Array.from({ length: 2 }, () =>
+      Reef.toPrototype(Reef.buildUrchin(this.rng, this.mats)));
+    const urchins: Reef.Placement[] = scatter(64, 5, 42).map(({ x, z }) => ({
+      x, z, scale: 0.8 + this.rng() * 0.7, spin: this.rng() * Math.PI * 2,
+      slope: 0.9, sink: 0.1,
+      colour: new THREE.Color(Reef.REEF.urchin),
+      sway: [0, 0, 0] as [number, number, number],
+    }));
+    for (const mesh of Reef.buildPlantField(urchinProtos, urchins, { roughness: 0.6 })) {
+      mesh.userData.reef = 'urchin';
+      this.scene.add(mesh);
     }
-    for (let i = 0; i < 22; i++) {
-      const a = this.rng() * Math.PI * 2;
-      const d = 6 + Math.sqrt(this.rng()) * 42;
-      const star = Reef.flattenProp(Reef.buildStarfish(this.rng, this.mats));
-      star.userData.reef = 'starfish';
-      Reef.seat(star, Math.cos(a) * d, Math.sin(a) * d, { sink: 0.02, slope: 1, spin: this.rng() * Math.PI * 2 });
-      this.scene.add(star);
+
+    const starProtos = [Reef.toPrototype(Reef.buildStarfish(this.rng, this.mats))];
+    const stars: Reef.Placement[] = scatter(30, 6, 42).map(({ x, z }) => ({
+      x, z, scale: 0.8 + this.rng() * 0.7, spin: this.rng() * Math.PI * 2,
+      slope: 1, sink: 0.02,
+      colour: new THREE.Color(Reef.REEF.star[Math.floor(this.rng() * Reef.REEF.star.length)]),
+      sway: [0, 0, 0] as [number, number, number],
+    }));
+    for (const mesh of Reef.buildPlantField(starProtos, stars, { roughness: 0.8 })) {
+      mesh.userData.reef = 'starfish';
+      this.scene.add(mesh);
     }
 
     for (let i = 0; i < 7; i++) {
@@ -762,10 +804,6 @@ export class UnderwaterScene {
   private updateReefLife(delta: number): void {
     this.reefClock += delta;
     const t = this.reefClock;
-    for (const a of this.anemones) {
-      const s = 1 + Math.sin(t * 1.1 + a.phase) * 0.07;
-      a.mesh.scale.set(s, 1 / s, s);
-    }
     for (const j of this.jellies) {
       const pulse = Math.sin(t * j.speed * 2.4 + j.phase);
       j.group.scale.set(1 + pulse * 0.11, 1 - pulse * 0.16, 1 + pulse * 0.11);
@@ -940,18 +978,25 @@ export class UnderwaterScene {
   }
 
   private updateParticles(): void {
+    const { positions, velocity, seed } = this.snow;
+    const t = this.clock.elapsedTime;
+    for (let i = 0; i < seed.length; i++) {
+      const o = i * 3;
+      positions[o] += velocity[o] + Math.sin(t + seed[i]) * 0.002;
+      positions[o + 1] += velocity[o + 1];
+      positions[o + 2] += velocity[o + 2];
+      if (positions[o + 1] > 35) positions[o + 1] = -5;
+      if (positions[o] > 40) positions[o] = -40;
+      else if (positions[o] < -40) positions[o] = 40;
+      if (positions[o + 2] > 40) positions[o + 2] = -40;
+      else if (positions[o + 2] < -40) positions[o + 2] = 40;
+    }
+    this.snow.points.geometry.attributes.position.needsUpdate = true;
+
+    // bubbles are still individual bodies, but they share one material now
     for (const particle of this.particles) {
       particle.mesh.position.add(particle.velocity);
-
-      if (particle.mesh.position.y > 35) {
-        particle.mesh.position.y = -5;
-      }
-      if (particle.mesh.position.x > 40) particle.mesh.position.x = -40;
-      if (particle.mesh.position.x < -40) particle.mesh.position.x = 40;
-      if (particle.mesh.position.z > 40) particle.mesh.position.z = -40;
-      if (particle.mesh.position.z < -40) particle.mesh.position.z = 40;
-
-      particle.mesh.position.x += Math.sin(this.clock.elapsedTime + particle.originalY) * 0.002;
+      if (particle.mesh.position.y > 35) particle.mesh.position.y = -5;
     }
   }
 
@@ -1197,16 +1242,6 @@ export class UnderwaterScene {
     }
   }
 
-  private updateSeaPlants(): void {
-    for (const plant of this.seaPlants) {
-      // Animate each blade in the group
-      for (const child of plant.group.children) {
-        const sway = Math.sin(this.clock.elapsedTime * plant.speed + plant.phase) * 0.15;
-        child.rotation.x = sway;
-        child.rotation.z = Math.cos(this.clock.elapsedTime * plant.speed * 0.7 + plant.phase) * 0.08;
-      }
-    }
-  }
 
   private updateGodRays(): void {
     for (let i = 0; i < this.godRays.length; i++) {
@@ -1309,7 +1344,7 @@ export class UnderwaterScene {
 
     this.updateParticles();
     this.updateFish(delta);
-    this.updateSeaPlants();
+    Reef.swayTime.value = this.clock.elapsedTime;
     this.updateReefLife(delta);
     this.updateGodRays();
     this.updateCaustics();

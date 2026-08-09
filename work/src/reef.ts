@@ -94,8 +94,8 @@ export const REEF = {
   rockWarm: 0x6a6558,
   coral: [0xff6b6b, 0xff8e72, 0xf7b267, 0xe17055, 0xd63031, 0xc44569, 0xf19066],
   fan: [0xd6336c, 0xe8590c, 0xf06595, 0xd9480f],
-  kelp: [0x2f7d4f, 0x3f8f5c, 0x2e6b53, 0x46a06a, 0x27604a],
-  grass: [0x4f8f5f, 0x5da06a, 0x3f7d52],
+  kelp: [0x5aa877, 0x6cbb86, 0x4f9b70, 0x77c894, 0x63a97f],
+  grass: [0x6aa87a, 0x7bb98a, 0x5b9b6c],
   anemone: [0xff8fa3, 0xffb3c1, 0xc77dff, 0x9d7bff, 0x80ffdb],
   sponge: [0xe8a87c, 0xc38d9e, 0xd88c9a],
   urchin: 0x2b2233,
@@ -374,15 +374,22 @@ export function buildKelp(rng: () => number, mats: MaterialCache): Kelp {
     stalk.rotation.y = rng() * Math.PI * 2;
     stalk.castShadow = true;
 
-    const blades = 5 + Math.floor(rng() * 5);
+    const blades = 9 + Math.floor(rng() * 6);
     for (let b = 0; b < blades; b++) {
-      const t = 0.25 + (b / blades) * 0.7;
-      const bl = 0.5 + rng() * 0.85;
-      const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.16, bl, 1, 3), bladeMat);
+      const t = 0.18 + (b / blades) * 0.78 + (rng() - 0.5) * 0.05;
+      const bl = 0.32 + rng() * 0.5;
+      const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.1, bl, 1, 3), bladeMat);
+      // droop the blade along its length instead of leaving it a flat plank
+      const bp = blade.geometry.attributes.position;
+      for (let v = 0; v < bp.count; v++) {
+        const u = (bp.getY(v) + bl / 2) / bl;
+        bp.setZ(v, bp.getZ(v) - u * u * bl * 0.35);
+      }
       blade.geometry.translate(0, bl / 2, 0);
+      blade.geometry.computeVertexNormals();
       blade.position.set(Math.sin(t * Math.PI * 0.75) * t * lean * 2.2, t * h, 0);
-      blade.rotation.y = b * 2.4 + rng();
-      blade.rotation.z = 0.9 + rng() * 0.5;
+      blade.rotation.y = b * 2.399 + rng() * 0.6;
+      blade.rotation.z = 1.15 + rng() * 0.35;
       stalk.add(blade);
     }
     group.add(stalk);
@@ -606,4 +613,156 @@ export function updateSchool(s: School, t: number): void {
     s.mesh.setMatrixAt(i, m.compose(p, q, scl));
   }
   s.mesh.instanceMatrix.needsUpdate = true;
+}
+
+// --- instanced, GPU-animated plant fields ----------------------------------
+/**
+ * One clock for every swaying thing in the scene. Sway is computed in the
+ * vertex shader from a per-vertex bend weight and a per-instance
+ * (phase, speed, amplitude), so a meadow of 200 tufts costs one draw call and
+ * zero per-frame CPU work.
+ */
+export const swayTime = { value: 0 };
+
+/**
+ * Bake "how much does this vertex move" into the geometry. 0 at the root,
+ * rising toward the tip, so plants bend from the base like they are anchored.
+ */
+export function addBendWeight(geo: THREE.BufferGeometry, exponent = 1.7): THREE.BufferGeometry {
+  const pos = geo.attributes.position;
+  let maxY = 0;
+  for (let i = 0; i < pos.count; i++) maxY = Math.max(maxY, pos.getY(i));
+  const bend = new Float32Array(pos.count);
+  for (let i = 0; i < pos.count; i++) {
+    bend[i] = maxY > 1e-6 ? Math.pow(Math.max(pos.getY(i), 0) / maxY, exponent) : 0;
+  }
+  geo.setAttribute('aBend', new THREE.BufferAttribute(bend, 1));
+  return geo;
+}
+
+const SWAY_ATTRS = `
+attribute vec3 iSway;   // phase, speed, amplitude
+attribute float aBend;  // 0 at the root, 1 at the tip
+uniform float uTime;
+`;
+
+const SWAY_BODY = `
+  float swayT = uTime * iSway.y + iSway.x;
+  float swayA = aBend * iSway.z;
+  transformed.x += sin(swayT) * swayA;
+  transformed.z += cos(swayT * 0.73 + 1.3) * swayA * 0.65;
+  // a little vertical give so tips do not stretch as they lean
+  transformed.y -= (1.0 - cos(sin(swayT) * swayA * 0.6)) * aBend * 0.35;
+`;
+
+function injectSway(shader: { vertexShader: string; uniforms: any }): void {
+  shader.uniforms.uTime = swayTime;
+  shader.vertexShader = SWAY_ATTRS + shader.vertexShader;
+  shader.vertexShader = shader.vertexShader.replace(
+    '#include <begin_vertex>',
+    '#include <begin_vertex>\n' + SWAY_BODY,
+  );
+}
+
+/** A lit material that sways, plus the matching depth material so the shadow
+ *  it casts sways with it instead of standing still. */
+export function makeSwayMaterial(opts: { side?: THREE.Side; roughness?: number } = {}) {
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,          // per-instance colour supplies the hue
+    roughness: opts.roughness ?? 0.9,
+    metalness: 0,
+    side: opts.side ?? THREE.DoubleSide,
+    flatShading: true,
+  });
+  material.onBeforeCompile = injectSway;
+  material.customProgramCacheKey = () => 'reef-sway';
+
+  const depthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+  depthMaterial.onBeforeCompile = injectSway;
+  depthMaterial.customProgramCacheKey = () => 'reef-sway-depth';
+
+  return { material, depthMaterial };
+}
+
+export interface Placement {
+  x: number; z: number;
+  scale: number; spin: number; slope: number; sink: number;
+  colour: THREE.Color;
+  sway: [number, number, number];   // phase, speed, amplitude
+}
+
+/**
+ * Seat one instance without building an Object3D for it: rotate and scale the
+ * prototype's bounding box the same way the instance will be, then drop it
+ * until its lowest point meets the sand.
+ */
+function seatMatrix(protoBox: THREE.Box3, p: Placement): THREE.Matrix4 {
+  const spinQ = new THREE.Quaternion().setFromAxisAngle(UP, p.spin);
+  const q = new THREE.Quaternion();
+  if (p.slope > 0) {
+    const tilt = new THREE.Quaternion().setFromUnitVectors(UP, terrainNormal(p.x, p.z));
+    if (p.slope < 1) tilt.slerp(new THREE.Quaternion(), 1 - p.slope);
+    q.copy(tilt).multiply(spinQ);
+  } else {
+    q.copy(spinQ);
+  }
+  const scale = new THREE.Vector3(p.scale, p.scale, p.scale);
+  const rs = new THREE.Matrix4().compose(new THREE.Vector3(), q, scale);
+  const base = protoBox.clone().applyMatrix4(rs).min.y;
+  return new THREE.Matrix4().compose(
+    new THREE.Vector3(p.x, terrainHeight(p.x, p.z) - base - p.sink, p.z), q, scale,
+  );
+}
+
+/**
+ * Build one InstancedMesh per prototype and spread the placements across them.
+ * Variety comes from having a handful of prototypes plus per-instance scale,
+ * spin and colour — not from a unique mesh per plant.
+ */
+export function buildPlantField(
+  prototypes: THREE.BufferGeometry[],
+  placements: Placement[],
+  opts: { side?: THREE.Side; roughness?: number; castShadow?: boolean } = {},
+): THREE.InstancedMesh[] {
+  const { material, depthMaterial } = makeSwayMaterial(opts);
+  const buckets: Placement[][] = prototypes.map(() => []);
+  placements.forEach((p, i) => buckets[i % prototypes.length].push(p));
+
+  const out: THREE.InstancedMesh[] = [];
+  prototypes.forEach((geo, gi) => {
+    const group = buckets[gi];
+    if (!group.length) return;
+    geo.computeBoundingBox();
+    const box = geo.boundingBox!;
+
+    const mesh = new THREE.InstancedMesh(geo, material, group.length);
+    const sway = new Float32Array(group.length * 3);
+    group.forEach((p, i) => {
+      mesh.setMatrixAt(i, seatMatrix(box, p));
+      mesh.setColorAt(i, p.colour);
+      sway.set(p.sway, i * 3);
+    });
+    geo.setAttribute('iSway', new THREE.InstancedBufferAttribute(sway, 3));
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.castShadow = opts.castShadow ?? true;
+    mesh.receiveShadow = true;
+    mesh.customDepthMaterial = depthMaterial;
+    // the sway moves verts outside the baked bounds; skip the stale test
+    mesh.frustumCulled = false;
+    out.push(mesh);
+  });
+  return out;
+}
+
+/** Merge a built prop down to one geometry, ready to be a prototype. */
+export function toPrototype(source: THREE.Object3D): THREE.BufferGeometry {
+  const flat = flattenProp(source);
+  const geos: THREE.BufferGeometry[] = [];
+  flat.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) geos.push(m.geometry.clone());
+  });
+  const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos, false)!;
+  return addBendWeight(merged);
 }
