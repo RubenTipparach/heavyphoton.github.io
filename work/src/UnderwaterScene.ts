@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as Reef from './reef';
 
 interface Particle {
   mesh: THREE.Mesh;
@@ -48,6 +49,12 @@ export class UnderwaterScene {
   private particles: Particle[] = [];
   private fish: Fish[] = [];
   private seaPlants: SeaPlant[] = [];
+  private rng = Reef.makeRng(20260809);
+  private mats = new Reef.MaterialCache();
+  private anemones: Reef.Anemone[] = [];
+  private jellies: Reef.Jelly[] = [];
+  private schools: Reef.School[] = [];
+  private reefClock = 0;
   private causticPlanes: THREE.Mesh[] = [];
   private godRays: THREE.Mesh[] = [];
 
@@ -84,9 +91,6 @@ export class UnderwaterScene {
   private readonly FLEE_DISTANCE = 12;
   private readonly EAT_DISTANCE = 1.5;
 
-  // Floor settings for terrain sampling
-  private readonly FLOOR_BASE_Y = -5;
-
   constructor(container: HTMLElement) {
     this.clock = new THREE.Clock();
     this.raycaster = new THREE.Raycaster();
@@ -94,8 +98,8 @@ export class UnderwaterScene {
 
     // Scene setup
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x001a33);
-    this.scene.fog = new THREE.FogExp2(0x001a33, 0.015);
+    this.scene.background = new THREE.Color(0x0a3550);
+    this.scene.fog = new THREE.FogExp2(0x0d3f5e, 0.0115);
 
     // Camera setup - start at home position looking into the scene
     this.camera = new THREE.PerspectiveCamera(
@@ -116,6 +120,8 @@ export class UnderwaterScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
     container.appendChild(this.renderer.domElement);
 
     this.setupLighting();
@@ -128,6 +134,7 @@ export class UnderwaterScene {
     this.createCaustics();
     this.createRocks();
     this.createBubbles();
+    this.createReefLife();
     this.createLocationPoints();
 
     this.setupMouseControls();
@@ -139,10 +146,12 @@ export class UnderwaterScene {
   }
 
   private setupLighting(): void {
-    this.ambientLight = new THREE.AmbientLight(0x1a4a6e, 0.4);
+    // Water this shallow scatters a lot of light back up; the old ambient was
+    // so dim the coral palette never showed.
+    this.ambientLight = new THREE.AmbientLight(0x2f6f96, 1.05);
     this.scene.add(this.ambientLight);
 
-    this.sunLight = new THREE.DirectionalLight(0x88ccff, 1.2);
+    this.sunLight = new THREE.DirectionalLight(0xbfe8ff, 2.1);
     this.sunLight.position.set(10, 50, 10);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
@@ -155,15 +164,19 @@ export class UnderwaterScene {
     this.sunLight.shadow.camera.bottom = -50;
     this.scene.add(this.sunLight);
 
-    const fillLight = new THREE.DirectionalLight(0x4488aa, 0.3);
+    const fillLight = new THREE.DirectionalLight(0x4d9dbf, 0.75);
     fillLight.position.set(-10, 20, -10);
     this.scene.add(fillLight);
 
-    const glowLight1 = new THREE.PointLight(0x00ffaa, 0.5, 30);
+    // bounce off the sand, so props are not silhouettes from below
+    const bounce = new THREE.HemisphereLight(0x86c6d8, 0x54604f, 0.55);
+    this.scene.add(bounce);
+
+    const glowLight1 = new THREE.PointLight(0x00ffaa, 0.7, 30);
     glowLight1.position.set(-15, 2, -10);
     this.scene.add(glowLight1);
 
-    const glowLight2 = new THREE.PointLight(0x4488ff, 0.5, 30);
+    const glowLight2 = new THREE.PointLight(0x4488ff, 0.7, 30);
     glowLight2.position.set(15, 3, -15);
     this.scene.add(glowLight2);
   }
@@ -286,31 +299,11 @@ export class UnderwaterScene {
   }
 
   private createSeaFloor(): void {
-    const floorGeometry = new THREE.PlaneGeometry(200, 200, 100, 100);
-    const positions = floorGeometry.attributes.position;
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
-      const z = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2 + Math.random() * 0.5;
-      positions.setZ(i, z);
-    }
-    floorGeometry.computeVertexNormals();
-
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x3d5c5c,
-      roughness: 0.9,
-      metalness: 0.1,
-    });
-
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -5;
-    floor.receiveShadow = true;
-    this.scene.add(floor);
+    this.scene.add(Reef.buildSeafloor());
   }
 
   private createParticles(): void {
-    const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+    const particleGeometry = new THREE.SphereGeometry(0.05, 5, 4);
     const particleMaterial = new THREE.MeshBasicMaterial({
       color: 0xaaddff,
       transparent: true,
@@ -318,7 +311,9 @@ export class UnderwaterScene {
     });
 
     for (let i = 0; i < 500; i++) {
-      const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+      // one shared material: the clone gave every mote its own draw call and
+      // nothing ever varied per particle
+      const particle = new THREE.Mesh(particleGeometry, particleMaterial);
       particle.position.set(
         (Math.random() - 0.5) * 80,
         Math.random() * 40 - 5,
@@ -599,142 +594,79 @@ export class UnderwaterScene {
 
   // Sample terrain height at a given x, z position
   // Uses the same formula as createSeaFloor for consistency
-  private getTerrainHeight(x: number, z: number): number {
-    // Match the terrain generation formula from createSeaFloor
-    // Note: in the floor geometry, x and y (in plane coords) map to world x and z
-    const terrainOffset = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2;
-    return this.FLOOR_BASE_Y + terrainOffset;
-  }
-
   private createCorals(): void {
-    const coralColors = [0xff6b6b, 0xff8e72, 0xffc6c6, 0xe17055, 0xd63031];
+    // Reef heads cluster; bare sand between them is what makes them read.
+    const heads = 7;
+    for (let h = 0; h < heads; h++) {
+      const ha = (h / heads) * Math.PI * 2 + this.rng() * 0.8;
+      const hd = 12 + this.rng() * 26;
+      const hx = Math.cos(ha) * hd;
+      const hz = Math.sin(ha) * hd;
+      const members = 5 + Math.floor(this.rng() * 6);
 
-    for (let i = 0; i < 30; i++) {
-      const coral = this.createCoral(coralColors[Math.floor(Math.random() * coralColors.length)]);
-
-      // Random x, z position
-      const x = (Math.random() - 0.5) * 60;
-      const z = (Math.random() - 0.5) * 60 - 5;
-
-      // Sample terrain height and place coral slightly under the surface
-      const terrainY = this.getTerrainHeight(x, z);
-      const coralY = terrainY - 0.1;
-
-      coral.position.set(x, coralY, z);
-      coral.rotation.y = Math.random() * Math.PI * 2;
-      this.scene.add(coral);
-    }
-  }
-
-  private createCoral(color: number): THREE.Group {
-    const group = new THREE.Group();
-    const branchCount = 3 + Math.floor(Math.random() * 5);
-
-    for (let i = 0; i < branchCount; i++) {
-      const height = 1 + Math.random() * 3;
-      const geometry = new THREE.CylinderGeometry(0.05, 0.2, height, 8);
-
-      // Translate geometry so bottom is at y=0
-      geometry.translate(0, height / 2, 0);
-
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        roughness: 0.8,
-        metalness: 0.1,
-      });
-
-      const branch = new THREE.Mesh(geometry, material);
-      // Small offset from center, but grounded at y=0
-      branch.position.x = (Math.random() - 0.5) * 0.5;
-      branch.position.z = (Math.random() - 0.5) * 0.5;
-      branch.rotation.x = (Math.random() - 0.5) * 0.3;
-      branch.rotation.z = (Math.random() - 0.5) * 0.3;
-      branch.castShadow = true;
-
-      if (Math.random() > 0.5) {
-        const subHeight = height * 0.5;
-        const subGeometry = new THREE.CylinderGeometry(0.02, 0.08, subHeight, 6);
-        subGeometry.translate(0, subHeight / 2, 0);
-        const subBranch = new THREE.Mesh(subGeometry, material);
-        subBranch.position.y = height * 0.5;
-        subBranch.position.x = 0.2;
-        subBranch.rotation.z = 0.5;
-        branch.add(subBranch);
+      for (let i = 0; i < members; i++) {
+        const r = this.rng();
+        const raw =
+          r < 0.44 ? Reef.buildBranchingCoral(this.rng, this.mats)
+          : r < 0.68 ? Reef.buildBrainCoral(this.rng, this.mats)
+          : r < 0.86 ? Reef.buildSeaFan(this.rng, this.mats)
+          : Reef.buildTubeSponge(this.rng, this.mats);
+        const coral = Reef.flattenProp(raw);
+        coral.userData.reef = 'coral';
+        const sa = this.rng() * Math.PI * 2;
+        const sd = Math.sqrt(this.rng()) * 5.5;
+        Reef.seat(coral, hx + Math.cos(sa) * sd, hz + Math.sin(sa) * sd, {
+          sink: 0.12, slope: 0.55, spin: this.rng() * Math.PI * 2,
+        });
+        this.scene.add(coral);
       }
-
-      group.add(branch);
     }
-
-    return group;
   }
 
   private createSeaPlants(): void {
-    const plantColors = [0x228b22, 0x2e8b57, 0x3cb371, 0x20b2aa, 0x008b8b];
-
-    for (let i = 0; i < 50; i++) {
-      const plant = this.createSeaPlant(plantColors[Math.floor(Math.random() * plantColors.length)]);
-
-      // Random x, z position
-      const x = (Math.random() - 0.5) * 70;
-      const z = (Math.random() - 0.5) * 70;
-
-      // Sample terrain height and place plant slightly under the surface
-      const terrainY = this.getTerrainHeight(x, z);
-      const plantY = terrainY - 0.1; // Slightly under terrain surface
-
-      plant.group.position.set(x, plantY, z);
-
-      this.seaPlants.push(plant);
-      this.scene.add(plant.group);
-    }
-  }
-
-  private createSeaPlant(color: number): SeaPlant {
-    const group = new THREE.Group();
-    const height = 2 + Math.random() * 4;
-
-    // Create multiple blades for fuller kelp
-    const bladeCount = 2 + Math.floor(Math.random() * 3);
-
-    for (let b = 0; b < bladeCount; b++) {
-      const bladeHeight = height * (0.7 + Math.random() * 0.3);
-      const geometry = new THREE.CylinderGeometry(0.02, 0.06, bladeHeight, 6, 12);
-
-      // Translate geometry so bottom is at y=0
-      geometry.translate(0, bladeHeight / 2, 0);
-
-      const positions = geometry.attributes.position;
-      for (let i = 0; i < positions.count; i++) {
-        const y = positions.getY(i);
-        // Curve increases toward the top
-        const curveAmount = (y / bladeHeight) * 0.4;
-        const curve = Math.sin((y / bladeHeight) * Math.PI * 0.8) * curveAmount;
-        positions.setX(i, positions.getX(i) + curve);
-      }
-      geometry.computeVertexNormals();
-
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        roughness: 0.9,
-        metalness: 0.0,
-        side: THREE.DoubleSide,
+    // Kelp stands, thickest away from the reef heads.
+    for (let i = 0; i < 46; i++) {
+      const kelp = Reef.buildKelp(this.rng, this.mats);
+      kelp.group = Reef.flattenProp(kelp.group);
+      kelp.group.userData.reef = 'kelp';
+      const a = this.rng() * Math.PI * 2;
+      const d = 8 + Math.sqrt(this.rng()) * 40;
+      Reef.seat(kelp.group, Math.cos(a) * d, Math.sin(a) * d, {
+        sink: 0.15, slope: 0.4, spin: this.rng() * Math.PI * 2,
       });
-
-      const blade = new THREE.Mesh(geometry, material);
-      blade.position.x = (Math.random() - 0.5) * 0.15;
-      blade.position.z = (Math.random() - 0.5) * 0.15;
-      blade.rotation.y = Math.random() * Math.PI * 2;
-      blade.castShadow = true;
-
-      group.add(blade);
+      this.seaPlants.push({
+        mesh: kelp.group.children[0] as THREE.Mesh,
+        group: kelp.group,
+        phase: kelp.phase,
+        speed: kelp.speed,
+      });
+      this.scene.add(kelp.group);
     }
 
-    return {
-      mesh: group.children[0] as THREE.Mesh, // Keep reference for animation
-      group: group,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.5 + Math.random() * 1,
-    };
+    // Seagrass meadows — a few dense patches rather than an even sprinkle.
+    for (let m = 0; m < 9; m++) {
+      const ma = this.rng() * Math.PI * 2;
+      const md = 10 + this.rng() * 34;
+      const mx = Math.cos(ma) * md;
+      const mz = Math.sin(ma) * md;
+      const tufts = 14 + Math.floor(this.rng() * 16);
+      for (let i = 0; i < tufts; i++) {
+        const tuft = Reef.flattenProp(Reef.buildSeagrass(this.rng, this.mats));
+        tuft.userData.reef = 'grass';
+        const a = this.rng() * Math.PI * 2;
+        const d = Math.sqrt(this.rng()) * 4.5;
+        Reef.seat(tuft, mx + Math.cos(a) * d, mz + Math.sin(a) * d, {
+          sink: 0.08, slope: 0.75, spin: this.rng() * Math.PI * 2,
+        });
+        this.seaPlants.push({
+          mesh: tuft.children[0] as THREE.Mesh,
+          group: tuft,
+          phase: this.rng() * Math.PI * 2,
+          speed: 0.9 + this.rng() * 0.8,
+        });
+        this.scene.add(tuft);
+      }
+    }
   }
 
   private createGodRays(): void {
@@ -779,60 +711,94 @@ export class UnderwaterScene {
     this.scene.add(causticPlane);
   }
 
-  private createRocks(): void {
-    for (let i = 0; i < 20; i++) {
-      const rock = this.createRock();
-      const rockHeight = rock.userData.height as number;
-      rock.position.set(
-        (Math.random() - 0.5) * 80,
-        -5 + rockHeight / 2, // Sit on the floor
-        (Math.random() - 0.5) * 80
-      );
-      rock.rotation.y = Math.random() * Math.PI * 2;
-      this.scene.add(rock);
+  private createReefLife(): void {
+    // Anemones and urchins tuck against the reef; starfish sit on open sand.
+    for (let i = 0; i < 34; i++) {
+      const a = this.rng() * Math.PI * 2;
+      const d = 6 + Math.sqrt(this.rng()) * 40;
+      const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      const anem = Reef.buildAnemone(this.rng, this.mats);
+      anem.mesh = Reef.flattenProp(anem.mesh);
+      anem.mesh.userData.reef = 'anemone';
+      Reef.seat(anem.mesh, x, z, { sink: 0.05, slope: 0.85, spin: this.rng() * Math.PI * 2 });
+      this.anemones.push(anem);
+      this.scene.add(anem.mesh);
+    }
+    for (let i = 0; i < 40; i++) {
+      const a = this.rng() * Math.PI * 2;
+      const d = 5 + Math.sqrt(this.rng()) * 42;
+      const urchin = Reef.flattenProp(Reef.buildUrchin(this.rng, this.mats));
+      urchin.userData.reef = 'urchin';
+      Reef.seat(urchin, Math.cos(a) * d, Math.sin(a) * d, { sink: 0.1, slope: 0.9 });
+      this.scene.add(urchin);
+    }
+    for (let i = 0; i < 22; i++) {
+      const a = this.rng() * Math.PI * 2;
+      const d = 6 + Math.sqrt(this.rng()) * 42;
+      const star = Reef.flattenProp(Reef.buildStarfish(this.rng, this.mats));
+      star.userData.reef = 'starfish';
+      Reef.seat(star, Math.cos(a) * d, Math.sin(a) * d, { sink: 0.02, slope: 1, spin: this.rng() * Math.PI * 2 });
+      this.scene.add(star);
+    }
+
+    for (let i = 0; i < 7; i++) {
+      const jelly = Reef.buildJellyfish(this.rng);
+      const a = this.rng() * Math.PI * 2;
+      const d = Math.sqrt(this.rng()) * 34;
+      jelly.group.position.set(Math.cos(a) * d, 2 + this.rng() * 9, Math.sin(a) * d);
+      jelly.group.userData.reef = 'jelly';
+      this.jellies.push(jelly);
+      this.scene.add(jelly.group);
+    }
+
+    const schoolColours = [0xffd166, 0x8ecae6, 0xffb4a2, 0x90e0ef];
+    for (let i = 0; i < 4; i++) {
+      const school = Reef.buildSchool(this.rng, 34 + Math.floor(this.rng() * 26), schoolColours[i]);
+      this.schools.push(school);
+      this.scene.add(school.mesh);
     }
   }
 
-  private createRock(): THREE.Mesh {
-    const baseSize = 0.8 + Math.random() * 1.5;
-    const heightScale = 0.4 + Math.random() * 0.3; // Flatter rocks
-
-    // Use icosahedron for smoother rock shape
-    const geometry = new THREE.IcosahedronGeometry(baseSize, 1);
-
-    // Apply consistent scaling first
-    geometry.scale(1, heightScale, 1);
-
-    // Then add controlled noise to each vertex
-    const positions = geometry.attributes.position;
-    const noiseScale = 0.15;
-
-    // Use seeded random for consistent distortion per vertex
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
-      const z = positions.getZ(i);
-
-      // Add small consistent noise
-      positions.setX(i, x + (Math.sin(i * 1.3) * noiseScale));
-      positions.setY(i, y + (Math.cos(i * 2.1) * noiseScale * 0.5));
-      positions.setZ(i, z + (Math.sin(i * 0.7) * noiseScale));
+  private updateReefLife(delta: number): void {
+    this.reefClock += delta;
+    const t = this.reefClock;
+    for (const a of this.anemones) {
+      const s = 1 + Math.sin(t * 1.1 + a.phase) * 0.07;
+      a.mesh.scale.set(s, 1 / s, s);
     }
+    for (const j of this.jellies) {
+      const pulse = Math.sin(t * j.speed * 2.4 + j.phase);
+      j.group.scale.set(1 + pulse * 0.11, 1 - pulse * 0.16, 1 + pulse * 0.11);
+      j.group.position.y += (pulse > 0 ? 0.006 : -0.002) * j.speed;
+      j.group.position.add(j.drift);
+      if (j.group.position.y > 13) j.group.position.y = 2;
+      if (j.group.position.length() > 46) j.drift.negate();
+    }
+    for (const s of this.schools) Reef.updateSchool(s, t);
+  }
 
-    geometry.computeVertexNormals();
-
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x4a5568,
-      roughness: 0.95,
-      metalness: 0.05,
-    });
-
-    const rock = new THREE.Mesh(geometry, material);
-    rock.castShadow = true;
-    rock.receiveShadow = true;
-    rock.userData.height = baseSize * heightScale * 2;
-
-    return rock;
+  private createRocks(): void {
+    // Boulders, then a rubble field of smaller stones around them.
+    for (let i = 0; i < 26; i++) {
+      const rock = Reef.buildRock(this.rng, this.mats);
+      rock.userData.reef = 'rock';
+      const a = this.rng() * Math.PI * 2;
+      const d = Math.sqrt(this.rng()) * 44;
+      Reef.seat(rock, Math.cos(a) * d, Math.sin(a) * d, {
+        sink: 0.22 + this.rng() * 0.3,   // settled into the sand, not balanced on it
+        slope: 0.7,
+        spin: this.rng() * Math.PI * 2,
+      });
+      this.scene.add(rock);
+    }
+    this.scene.add(Reef.buildScatter(this.rng, this.mats, {
+      count: 260, radius: 52, geometry: new THREE.IcosahedronGeometry(0.22, 0),
+      color: Reef.REEF.rock, minScale: 0.5, maxScale: 1.9, sink: 0.4,
+    }));
+    this.scene.add(Reef.buildScatter(this.rng, this.mats, {
+      count: 120, radius: 48, geometry: new THREE.DodecahedronGeometry(0.13, 0),
+      color: Reef.REEF.rockWarm, minScale: 0.4, maxScale: 1.2, sink: 0.45,
+    }));
   }
 
   private setupMouseControls(): void {
@@ -1223,9 +1189,11 @@ export class UnderwaterScene {
       fish.targetDirection.y = -0.3;
       fish.group.position.y = 18;
     }
-    if (fish.group.position.y < -2) {
-      fish.targetDirection.y = 0.3;
-      fish.group.position.y = -2;
+    const floorY = Reef.terrainHeight(fish.group.position.x, fish.group.position.z);
+    const minY = floorY + (fish.isPredator ? 1.1 : 0.65);
+    if (fish.group.position.y < minY) {
+      fish.velocity.y = Math.abs(fish.velocity.y);
+      fish.group.position.y = minY;
     }
   }
 
@@ -1342,6 +1310,7 @@ export class UnderwaterScene {
     this.updateParticles();
     this.updateFish(delta);
     this.updateSeaPlants();
+    this.updateReefLife(delta);
     this.updateGodRays();
     this.updateCaustics();
     this.updateLocationMarkers();
