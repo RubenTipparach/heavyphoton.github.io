@@ -334,11 +334,6 @@ def make_back() -> Image.Image:
     d.polygon(C.chamfer_points(qx0 - 6, qy0 - 6, qx1 + 6, qy0 + plate + 6, 20),
               fill=P8_WHITE + (255,))
     card.paste(qr, (qx0, qy0))
-    for (sx, sy, col) in ((qx0 - fr, qy0 - fr, P8_RED),
-                          (qx1 + fr - 32, qy0 - fr, BRAND_CYAN),
-                          (qx0 - fr, qy0 + plate + fr - 32, BRAND_CYAN),
-                          (qx1 + fr - 32, qy0 + plate + fr - 32, P8_RED)):
-        d.polygon(C.chamfer_points(sx, sy, sx + 32, sy + 32, 10), fill=col + (255,))
 
     cw = C.text_width(d, cap, cap_f, tracking=4)
     C.text_tracked(d, (qx0 + (plate - cw) / 2, qy0 + plate + cap_gap), cap,

@@ -166,33 +166,19 @@
         border: none;
         padding: 0;
         pointer-events: none; /* Ensure content is also click-through */
-        /* the shared .panel-content is a rounded scroll container
-           (overflow-y: auto + border-radius), which clips the logo's glow
-           into a hard-edged rounded box. The home panel never scrolls, so
-           let the glow escape. */
-        overflow: visible;
-        max-height: none;
       }
 
-      /* Raygun logo lockup on the landing screen.
-         The glow sits on this wrapper rather than on the image: a CSS filter
-         region is only the border box plus 10%, so a wide blur on a short
-         element gets cut off into a visible rectangle. The padding gives the
-         blur somewhere to fall off, and the negative margin gives the layout
-         space back. */
-      .home-mark {
-        padding: 6rem;
-        margin: -6rem -6rem -5rem;
-        filter: drop-shadow(0 0 24px rgba(62, 224, 255, 0.4))
-                drop-shadow(0 0 48px rgba(62, 224, 255, 0.2))
-                drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
-      }
-
-      .home-logo {
-        display: block;
-        width: min(660px, 78vw);
-        height: auto;
-        margin: 0 auto;
+      .home-title {
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 200;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #88ccff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: none;
         animation: fadeInUp 1s ease-out;
       }
 
@@ -300,7 +286,8 @@
         display: none;
       }
 
-      /* same filter-region trick as .home-mark */
+      /* padded wrapper so the glow blur has room to fall off before the
+         CSS filter region (border box + 10%) cuts it */
       .preloader-mark {
         padding: 6rem;
         margin: -6rem;
@@ -1052,15 +1039,11 @@
     <!-- Home Panel -->
     <div id="panel-home" class="panel active">
       <div class="panel-content">
-        <h1 class="home-mark">
-          <img class="home-logo" src="./branding/heavy-photon-branded.svg" alt="Heavy Photon" width="1563" height="356" />
-        </h1>
+        <h1 class="home-title">Heavy Photon</h1>
         <!-- <p class="home-subtitle">Dive into the depths of creativity</p> -->
-        <!-- position/z-index keep these above the logo glow, which paints late
-             because the filter promotes .home-mark to its own stacking layer -->
-        <div class="steam-widget" style="margin-top: 2rem; pointer-events: auto; animation: fadeInUp 1s ease-out 0.6s both; position: relative; z-index: 1;">
+        <div class="steam-widget" style="margin-top: 2rem; pointer-events: auto; animation: fadeInUp 1s ease-out 0.6s both;">
         </div>
-        <div style="pointer-events: auto; animation: fadeInUp 1s ease-out 0.8s both; position: relative; z-index: 1;">
+        <div style="pointer-events: auto; animation: fadeInUp 1s ease-out 0.8s both;">
           <a
             class="discord-widget"
             href="https://discord.gg/bwbvZScKS7"
