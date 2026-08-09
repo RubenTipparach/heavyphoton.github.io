@@ -17,6 +17,7 @@ interface Snow {
 
 interface Fish {
   group: THREE.Group;
+  rig: Reef.FishRig;
   velocity: THREE.Vector3;
   targetDirection: THREE.Vector3;
   changeTimer: number;
@@ -380,7 +381,9 @@ export class UnderwaterScene {
   }
 
   private spawnFish(isPredator: boolean, offScreen: boolean = false): void {
-    const fish = this.createSingleFish(isPredator);
+    const fish = Reef.buildFish(this.rng, isPredator);
+    fish.group.scale.setScalar(0.85 + this.rng() * 0.35);
+    fish.group.userData = { isPredator, fishContainer: fish.group };
 
     let x: number, y: number, z: number;
 
@@ -412,6 +415,7 @@ export class UnderwaterScene {
 
     const fishData: Fish = {
       group: fish.group,
+      rig: fish,
       velocity: direction.multiplyScalar(speed * (0.8 + Math.random() * 0.4)),
       targetDirection: direction.clone(),
       changeTimer: Math.random() * 5,
@@ -426,167 +430,6 @@ export class UnderwaterScene {
 
     this.fish.push(fishData);
     this.scene.add(fish.group);
-  }
-
-  private createSingleFish(isPredator: boolean): { group: THREE.Group } {
-    const group = new THREE.Group();
-
-    // Create a container that we'll rotate to align with lookAt
-    const fishContainer = new THREE.Group();
-
-    // Predators: dark, menacing colors. Prey: bright, colorful
-    const predatorColors = [0x2d3436, 0x636e72, 0x4a0e0e, 0x1e3d59, 0x0d0d0d];
-    const preyColors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da, 0x74b9ff];
-
-    const colors = isPredator ? predatorColors : preyColors;
-    const fishColor = colors[Math.floor(Math.random() * colors.length)];
-
-    const bodyMaterial = new THREE.MeshStandardMaterial({
-      color: fishColor,
-      roughness: isPredator ? 0.6 : 0.3,
-      metalness: isPredator ? 0.2 : 0.5,
-    });
-
-    // Fish body - ellipsoid shape (main body)
-    const bodyLength = isPredator ? 1.5 : 0.8;
-    const bodyHeight = isPredator ? 0.5 : 0.3;
-    const bodyWidth = isPredator ? 0.4 : 0.25;
-    const bodyGeometry = new THREE.SphereGeometry(1, 16, 12);
-    bodyGeometry.scale(bodyLength / 2, bodyHeight / 2, bodyWidth / 2);
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.castShadow = true;
-    fishContainer.add(body);
-
-    // Head - pointed cone at the front (merged with body smoothly)
-    const headLength = isPredator ? 0.6 : 0.35;
-    const headGeometry = new THREE.ConeGeometry(bodyHeight / 2.2, headLength, 12);
-    headGeometry.rotateX(-Math.PI / 2); // Point forward (+Z)
-    const head = new THREE.Mesh(headGeometry, bodyMaterial);
-    head.position.z = bodyLength / 2.5;
-    head.castShadow = true;
-    fishContainer.add(head);
-
-    // Tail fin - V-shaped at the back
-    const tailFinGeometry = new THREE.ConeGeometry(
-      isPredator ? 0.45 : 0.28,
-      isPredator ? 0.7 : 0.45,
-      4
-    );
-    tailFinGeometry.rotateX(Math.PI / 2); // Point backward (-Z)
-    tailFinGeometry.rotateZ(Math.PI / 4); // Diamond shape
-    const tailFin = new THREE.Mesh(tailFinGeometry, bodyMaterial);
-    tailFin.position.z = -bodyLength / 2 - (isPredator ? 0.25 : 0.15);
-    tailFin.castShadow = true;
-    fishContainer.add(tailFin);
-
-    // Tail connector (narrow part before tail)
-    const tailConnectorGeometry = new THREE.CylinderGeometry(
-      isPredator ? 0.06 : 0.04,
-      isPredator ? 0.12 : 0.08,
-      isPredator ? 0.3 : 0.2,
-      8
-    );
-    tailConnectorGeometry.rotateX(Math.PI / 2);
-    const tailConnector = new THREE.Mesh(tailConnectorGeometry, bodyMaterial);
-    tailConnector.position.z = -bodyLength / 2;
-    fishContainer.add(tailConnector);
-
-    // Eyes - on the sides of the head
-    const eyeGeometry = new THREE.SphereGeometry(isPredator ? 0.08 : 0.045, 8, 8);
-    const eyeMaterial = new THREE.MeshBasicMaterial({
-      color: isPredator ? 0xff0000 : 0x111111
-    });
-    const eyePupilGeometry = new THREE.SphereGeometry(isPredator ? 0.04 : 0.025, 8, 8);
-    const eyePupilMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-
-    const eyeZ = bodyLength / 4;
-    const eyeX = bodyWidth / 2 + (isPredator ? 0.03 : 0.02);
-    const eyeY = isPredator ? 0.1 : 0.06;
-
-    const eye1 = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    eye1.position.set(eyeX, eyeY, eyeZ);
-    fishContainer.add(eye1);
-
-    const pupil1 = new THREE.Mesh(eyePupilGeometry, eyePupilMaterial);
-    pupil1.position.set(eyeX + 0.02, eyeY, eyeZ + 0.02);
-    fishContainer.add(pupil1);
-
-    const eye2 = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    eye2.position.set(-eyeX, eyeY, eyeZ);
-    fishContainer.add(eye2);
-
-    const pupil2 = new THREE.Mesh(eyePupilGeometry, eyePupilMaterial);
-    pupil2.position.set(-eyeX - 0.02, eyeY, eyeZ + 0.02);
-    fishContainer.add(pupil2);
-
-    // Dorsal fin - on top of body (triangular shape)
-    const dorsalFinShape = new THREE.Shape();
-    dorsalFinShape.moveTo(0, 0);
-    dorsalFinShape.lineTo(isPredator ? 0.4 : 0.25, isPredator ? 0.4 : 0.25);
-    dorsalFinShape.lineTo(isPredator ? 0.5 : 0.3, 0);
-    dorsalFinShape.lineTo(0, 0);
-
-    const dorsalFinGeometry = new THREE.ExtrudeGeometry(dorsalFinShape, {
-      depth: 0.02,
-      bevelEnabled: false
-    });
-    dorsalFinGeometry.rotateX(-Math.PI / 2);
-    dorsalFinGeometry.rotateY(Math.PI);
-    const dorsalFin = new THREE.Mesh(dorsalFinGeometry, bodyMaterial);
-    dorsalFin.position.set(0.01, bodyHeight / 2 - 0.02, isPredator ? 0.1 : 0.05);
-    dorsalFin.castShadow = true;
-    fishContainer.add(dorsalFin);
-
-    // Side fins (pectoral fins) - more fin-like shape
-    const pectoralFinShape = new THREE.Shape();
-    pectoralFinShape.moveTo(0, 0);
-    pectoralFinShape.lineTo(isPredator ? 0.3 : 0.18, isPredator ? 0.15 : 0.1);
-    pectoralFinShape.lineTo(isPredator ? 0.35 : 0.22, 0);
-    pectoralFinShape.lineTo(0, 0);
-
-    const pectoralFinGeometry = new THREE.ExtrudeGeometry(pectoralFinShape, {
-      depth: 0.015,
-      bevelEnabled: false
-    });
-
-    const leftFin = new THREE.Mesh(pectoralFinGeometry, bodyMaterial);
-    leftFin.position.set(bodyWidth / 2, -0.02, bodyLength / 6);
-    leftFin.rotation.z = -0.5;
-    leftFin.rotation.y = 0.3;
-    fishContainer.add(leftFin);
-
-    const rightFin = new THREE.Mesh(pectoralFinGeometry.clone(), bodyMaterial);
-    rightFin.position.set(-bodyWidth / 2 - 0.02, -0.02, bodyLength / 6);
-    rightFin.rotation.z = 0.5;
-    rightFin.rotation.y = -0.3;
-    rightFin.scale.x = -1;
-    fishContainer.add(rightFin);
-
-    // Predators have teeth/mouth
-    if (isPredator) {
-      const teethMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const mouthZ = bodyLength / 2.5 + headLength - 0.15;
-      for (let i = 0; i < 4; i++) {
-        const tooth = new THREE.Mesh(
-          new THREE.ConeGeometry(0.025, 0.08, 4),
-          teethMaterial
-        );
-        tooth.position.set((i - 1.5) * 0.06, -0.08, mouthZ);
-        tooth.rotation.x = Math.PI;
-        fishContainer.add(tooth);
-      }
-    }
-
-    group.add(fishContainer);
-
-    const scale = isPredator
-      ? 1.0 + Math.random() * 0.4
-      : 0.5 + Math.random() * 0.4;
-    group.scale.setScalar(scale);
-
-    group.userData = { isPredator, fishContainer };
-
-    return { group };
   }
 
   // Sample terrain height at a given x, z position
@@ -1027,14 +870,11 @@ export class UnderwaterScene {
         fish.group.lookAt(lookTarget);
       }
 
-      // Tail wiggle - faster when fleeing/chasing
-      const wiggleSpeed = (fish.fleeTarget || fish.chaseTarget) ? 20 : 10;
-      const tailWiggle = Math.sin(this.clock.elapsedTime * wiggleSpeed) * 0.3;
-      const fishContainer = fish.group.userData.fishContainer as THREE.Group;
-      if (fishContainer && fishContainer.children.length > 3) {
-        // Tail fin is at index 2, tail connector at index 3
-        fishContainer.children[2].rotation.y = tailWiggle;
-        fishContainer.children[3].rotation.y = tailWiggle * 0.5;
+      // Tail beat lives in the vertex shader; all the CPU does is set the rate,
+      // and only when it actually changes, so a chase reads as a faster stroke.
+      const rate = fish.rig.cruise * ((fish.fleeTarget || fish.chaseTarget) ? 2 : 1);
+      if (fish.rig.swim.value.y !== rate) {
+        Reef.setFishGait(fish.rig, this.clock.elapsedTime, rate);
       }
 
       // Boundary handling
