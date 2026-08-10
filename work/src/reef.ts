@@ -592,12 +592,14 @@ export function buildSchool(rng: () => number, count: number, colour: number): S
   };
 }
 
-export function updateSchool(s: School, t: number): void {
-  s.centre.add(s.drift);
+/** `scale` is the frame time expressed in 1/60 s units, so the drift moves at
+ *  the same rate whatever the display is doing. */
+export function updateSchool(s: School, t: number, scale = 1): void {
+  s.centre.addScaledVector(s.drift, scale);
   // turn back toward the middle rather than wrapping across the scene
   if (s.centre.length() > 46) {
-    s.drift.x -= s.centre.x * 0.00016;
-    s.drift.z -= s.centre.z * 0.00016;
+    s.drift.x -= s.centre.x * 0.00016 * scale;
+    s.drift.z -= s.centre.z * 0.00016 * scale;
   }
   s.centre.y = Math.max(terrainHeight(s.centre.x, s.centre.z) + 2.2, Math.min(s.centre.y, 14));
   const m = new THREE.Matrix4();
