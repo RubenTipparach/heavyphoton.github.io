@@ -15,6 +15,15 @@ interface Snow {
   seed: Float32Array;
 }
 
+/**
+ * Re-aim a per-frame lerp factor at an arbitrary frame time. `alpha` is the
+ * fraction of the gap closed in one 1/60 s frame; this returns the fraction to
+ * close in `dt` so the curve has the same shape at any refresh rate.
+ */
+function damp(alpha: number, dt: number): number {
+  return 1 - Math.pow(1 - alpha, dt * 60);
+}
+
 interface Fish {
   group: THREE.Group;
   rig: Reef.FishRig;
@@ -86,6 +95,14 @@ export class UnderwaterScene {
   // Fish settings
   private readonly PREDATOR_COUNT = 5;
   private readonly PREY_COUNT = 20;
+  // Every steering constant below was tuned against a 1/60 s frame, so that is
+  // the rate the simulation steps at. Movement then integrates over the real
+  // frame time, which is what stops a 144 Hz panel running the shoal 2.4x fast.
+  private readonly SIM_HZ = 60;
+  private readonly SIM_STEP = 1 / 60;
+  private readonly MAX_STEPS = 5;
+  private simAccumulator = 0;
+
   private readonly PREDATOR_SPEED = 0.12;
   private readonly PREY_SPEED = 0.08;
   private readonly CHASE_DISTANCE = 15;
@@ -644,18 +661,19 @@ export class UnderwaterScene {
     }
   }
 
-  private updateReefLife(delta: number): void {
-    this.reefClock += delta;
+  private updateReefLife(dt: number): void {
+    this.reefClock += dt;
     const t = this.reefClock;
+    const scale = dt * this.SIM_HZ;
     for (const j of this.jellies) {
       const pulse = Math.sin(t * j.speed * 2.4 + j.phase);
       j.group.scale.set(1 + pulse * 0.11, 1 - pulse * 0.16, 1 + pulse * 0.11);
-      j.group.position.y += (pulse > 0 ? 0.006 : -0.002) * j.speed;
-      j.group.position.add(j.drift);
+      j.group.position.y += (pulse > 0 ? 0.006 : -0.002) * j.speed * scale;
+      j.group.position.addScaledVector(j.drift, scale);
       if (j.group.position.y > 13) j.group.position.y = 2;
       if (j.group.position.length() > 46) j.drift.negate();
     }
-    for (const s of this.schools) Reef.updateSchool(s, t);
+    for (const s of this.schools) Reef.updateSchool(s, t, scale);
   }
 
   private createRocks(): void {
@@ -820,14 +838,15 @@ export class UnderwaterScene {
     return this.currentLocation;
   }
 
-  private updateParticles(): void {
+  private updateParticles(dt: number): void {
+    const scale = dt * this.SIM_HZ;
     const { positions, velocity, seed } = this.snow;
     const t = this.clock.elapsedTime;
     for (let i = 0; i < seed.length; i++) {
       const o = i * 3;
-      positions[o] += velocity[o] + Math.sin(t + seed[i]) * 0.002;
-      positions[o + 1] += velocity[o + 1];
-      positions[o + 2] += velocity[o + 2];
+      positions[o] += (velocity[o] + Math.sin(t + seed[i]) * 0.002) * scale;
+      positions[o + 1] += velocity[o + 1] * scale;
+      positions[o + 2] += velocity[o + 2] * scale;
       if (positions[o + 1] > 35) positions[o + 1] = -5;
       if (positions[o] > 40) positions[o] = -40;
       else if (positions[o] < -40) positions[o] = 40;
@@ -838,12 +857,14 @@ export class UnderwaterScene {
 
     // bubbles are still individual bodies, but they share one material now
     for (const particle of this.particles) {
-      particle.mesh.position.add(particle.velocity);
+      particle.mesh.position.addScaledVector(particle.velocity, scale);
       if (particle.mesh.position.y > 35) particle.mesh.position.y = -5;
     }
   }
 
-  private updateFish(delta: number): void {
+  /** Decisions and steering. Runs at a fixed rate, so the lerp factors and
+   *  speeds here keep the meaning they were tuned with. */
+  private steerFish(step: number): void {
     const alivePrey = this.fish.filter(f => !f.isPredator && f.isAlive);
     const alivePredators = this.fish.filter(f => f.isPredator && f.isAlive);
 
@@ -855,20 +876,13 @@ export class UnderwaterScene {
 
       if (fish.isPredator) {
         // Predator behavior: hunt prey
-        this.updatePredator(fish, alivePrey, delta);
+        this.updatePredator(fish, alivePrey, step);
       } else {
         // Prey behavior: flee from predators
-        this.updatePrey(fish, alivePredators, delta);
+        this.updatePrey(fish, alivePredators, step);
       }
 
-      // Apply velocity
-      fish.group.position.add(fish.velocity);
-
-      // Make fish look in movement direction
-      if (fish.velocity.length() > 0.001) {
-        const lookTarget = fish.group.position.clone().add(fish.velocity);
-        fish.group.lookAt(lookTarget);
-      }
+      this.steerFromBounds(fish);
 
       // Tail beat lives in the vertex shader; all the CPU does is set the rate,
       // and only when it actually changes, so a chase reads as a faster stroke.
@@ -876,13 +890,31 @@ export class UnderwaterScene {
       if (fish.rig.swim.value.y !== rate) {
         Reef.setFishGait(fish.rig, this.clock.elapsedTime, rate);
       }
-
-      // Boundary handling
-      this.handleFishBoundaries(fish);
     }
 
     // Clean up dead fish and respawn
     this.cleanupAndRespawn();
+  }
+
+  /** Movement. Runs every frame over the real elapsed time, so the motion is
+   *  as smooth as the display allows. `velocity` is still the displacement per
+   *  1/60 s that the steering produced, so scaling by `dt * SIM_HZ` reproduces
+   *  the old 60 Hz motion exactly and simply stops it scaling with frame rate. */
+  private advanceFish(dt: number): void {
+    const scale = dt * this.SIM_HZ;
+    const lookTarget = new THREE.Vector3();
+    for (const fish of this.fish) {
+      if (!fish.isAlive) continue;
+
+      fish.group.position.addScaledVector(fish.velocity, scale);
+
+      // Make fish look in movement direction
+      if (fish.velocity.lengthSq() > 1e-6) {
+        fish.group.lookAt(lookTarget.copy(fish.group.position).add(fish.velocity));
+      }
+
+      this.clampToBounds(fish);
+    }
   }
 
   private updatePredator(predator: Fish, prey: Fish[], delta: number): void {
@@ -1012,11 +1044,12 @@ export class UnderwaterScene {
 
       // Fade out and remove
       const startTime = this.clock.elapsedTime;
+      const startY = particle.position.y;
       const animate = () => {
         const elapsed = this.clock.elapsedTime - startTime;
         if (elapsed < 1) {
           (particle.material as THREE.MeshBasicMaterial).opacity = 0.8 * (1 - elapsed);
-          particle.position.y += 0.05;
+          particle.position.y = startY + elapsed * 3;
           requestAnimationFrame(animate);
         } else {
           this.scene.remove(particle);
@@ -1050,35 +1083,33 @@ export class UnderwaterScene {
     }
   }
 
-  private handleFishBoundaries(fish: Fish): void {
-    const bounds = 35;
+  /** Soft boundary — a steering nudge, so it belongs with the rest of the AI
+   *  at the fixed rate rather than being applied once per rendered frame. */
+  private steerFromBounds(fish: Fish): void {
     const softBounds = 30;
+    const p = fish.group.position;
 
-    // Soft boundary - steer away from edges
-    if (Math.abs(fish.group.position.x) > softBounds) {
-      fish.targetDirection.x -= Math.sign(fish.group.position.x) * 0.1;
-    }
-    if (Math.abs(fish.group.position.z) > softBounds) {
-      fish.targetDirection.z -= Math.sign(fish.group.position.z) * 0.1;
-    }
+    if (Math.abs(p.x) > softBounds) fish.targetDirection.x -= Math.sign(p.x) * 0.1;
+    if (Math.abs(p.z) > softBounds) fish.targetDirection.z -= Math.sign(p.z) * 0.1;
+    if (p.y > 17) fish.targetDirection.y = -0.3;
     fish.targetDirection.normalize();
+  }
 
-    // Hard boundary - wrap around
-    if (fish.group.position.x > bounds) fish.group.position.x = -bounds;
-    if (fish.group.position.x < -bounds) fish.group.position.x = bounds;
-    if (fish.group.position.z > bounds) fish.group.position.z = -bounds;
-    if (fish.group.position.z < -bounds) fish.group.position.z = bounds;
+  /** Hard limits, applied after the frame's movement so nothing can finish a
+   *  frame outside the tank or inside the seabed. */
+  private clampToBounds(fish: Fish): void {
+    const bounds = 35;
+    const p = fish.group.position;
 
-    // Vertical boundaries
-    if (fish.group.position.y > 18) {
-      fish.targetDirection.y = -0.3;
-      fish.group.position.y = 18;
-    }
-    const floorY = Reef.terrainHeight(fish.group.position.x, fish.group.position.z);
-    const minY = floorY + (fish.isPredator ? 1.1 : 0.65);
-    if (fish.group.position.y < minY) {
+    // wrap around
+    if (p.x > bounds) p.x = -bounds; else if (p.x < -bounds) p.x = bounds;
+    if (p.z > bounds) p.z = -bounds; else if (p.z < -bounds) p.z = bounds;
+
+    if (p.y > 18) p.y = 18;
+    const minY = Reef.terrainHeight(p.x, p.z) + (fish.isPredator ? 1.1 : 0.65);
+    if (p.y < minY) {
+      p.y = minY;
       fish.velocity.y = Math.abs(fish.velocity.y);
-      fish.group.position.y = minY;
     }
   }
 
@@ -1121,10 +1152,12 @@ export class UnderwaterScene {
     }
   }
 
-  private updateCamera(): void {
-    // Smooth transition to target position
-    const positionLerpSpeed = this.isTransitioning ? 0.025 : 0.02;
-    const rotationLerpSpeed = this.isTransitioning ? 0.03 : 0.02;
+  private updateCamera(dt: number): void {
+    // Smooth transition to target position. The factors are still "per 1/60 s";
+    // damp() re-aims them at this frame so a transition takes the same wall
+    // time on any panel.
+    const positionLerpSpeed = damp(this.isTransitioning ? 0.025 : 0.02, dt);
+    const rotationLerpSpeed = damp(this.isTransitioning ? 0.03 : 0.02, dt);
 
     // Store current camera quaternion before any changes
     const currentQuaternion = this.camera.quaternion.clone();
@@ -1144,11 +1177,13 @@ export class UnderwaterScene {
     const targetX = this.cameraTarget.x - this.mouseX * mouseInfluence;
     const targetY = this.cameraTarget.y - this.mouseY * mouseInfluence * 0.5;
 
-    this.camera.position.x += (targetX - this.camera.position.x) * 0.015;
-    this.camera.position.y += (targetY - this.camera.position.y) * 0.015;
+    const mouseLerp = damp(0.015, dt);
+    this.camera.position.x += (targetX - this.camera.position.x) * mouseLerp;
+    this.camera.position.y += (targetY - this.camera.position.y) * mouseLerp;
 
-    // Gentle floating motion (reduced when transitioning)
-    const floatAmount = this.isTransitioning ? 0.3 : 1;
+    // Gentle floating motion (reduced when transitioning). This accumulates
+    // into the position each frame, so it takes the frame-time scale too.
+    const floatAmount = (this.isTransitioning ? 0.3 : 1) * dt * this.SIM_HZ;
     this.camera.position.y += Math.sin(this.clock.elapsedTime * 0.5) * 0.008 * floatAmount;
     this.camera.position.x += Math.cos(this.clock.elapsedTime * 0.3) * 0.004 * floatAmount;
 
@@ -1161,13 +1196,15 @@ export class UnderwaterScene {
     this.camera.quaternion.copy(currentQuaternion);
   }
 
-  private updateLighting(): void {
+  private updateLighting(dt: number): void {
+    const a = damp(0.02, dt);
+
     // Smooth color transition
-    this.currentLightColor.lerp(this.targetLightColor, 0.02);
+    this.currentLightColor.lerp(this.targetLightColor, a);
     this.sunLight.color.copy(this.currentLightColor);
 
     // Smooth fog transition
-    this.currentFogDensity += (this.targetFogDensity - this.currentFogDensity) * 0.02;
+    this.currentFogDensity += (this.targetFogDensity - this.currentFogDensity) * a;
     (this.scene.fog as THREE.FogExp2).density = this.currentFogDensity;
   }
 
@@ -1179,20 +1216,37 @@ export class UnderwaterScene {
 
   private animate(): void {
     requestAnimationFrame(() => this.animate());
+    // Cap the frame so returning to a backgrounded tab does not teleport the
+    // shoal across the reef in one step.
+    this.update(Math.min(this.clock.getDelta(), 0.1));
+    this.renderer.render(this.scene, this.camera);
+  }
 
-    const delta = this.clock.getDelta();
+  /** One tick of the world, over `dt` seconds. Split out of the render loop so
+   *  it can be driven at a chosen frame time and checked for frame-rate
+   *  independence. */
+  private update(dt: number): void {
+    // Steering advances in fixed 1/60 s steps; if the display is slower than
+    // that we take several, and we stop at MAX_STEPS rather than spiralling.
+    this.simAccumulator += dt;
+    let steps = 0;
+    while (this.simAccumulator >= this.SIM_STEP && steps < this.MAX_STEPS) {
+      this.steerFish(this.SIM_STEP);
+      this.simAccumulator -= this.SIM_STEP;
+      steps++;
+    }
+    if (steps === this.MAX_STEPS) this.simAccumulator = 0;
 
-    this.updateParticles();
-    this.updateFish(delta);
+    // Everything below runs once per rendered frame, over the real frame time.
+    this.advanceFish(dt);
+    this.updateParticles(dt);
     Reef.swayTime.value = this.clock.elapsedTime;
-    this.updateReefLife(delta);
+    this.updateReefLife(dt);
     this.updateGodRays();
     this.updateCaustics();
     this.updateLocationMarkers();
-    this.updateCamera();
-    this.updateLighting();
-
-    this.renderer.render(this.scene, this.camera);
+    this.updateCamera(dt);
+    this.updateLighting(dt);
   }
 
   public start(): void {
