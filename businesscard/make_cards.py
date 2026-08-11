@@ -313,7 +313,7 @@ def make_back() -> Image.Image:
 
     fr = 15
     d.polygon(C.chamfer_points(qx0 - fr, qy0 - fr, qx1 + fr, qy0 + plate + fr, 28),
-              fill=P8_YELLOW + (255,))
+              fill=P8_DARKBLUE + (255,))
     d.polygon(C.chamfer_points(qx0 - 6, qy0 - 6, qx1 + 6, qy0 + plate + 6, 20),
               fill=P8_WHITE + (255,))
     card.paste(qr, (qx0, qy0))
