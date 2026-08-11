@@ -192,10 +192,16 @@ def make_front() -> Image.Image:
     return framed_art().resize((CANVAS_W, CANVAS_H), Image.NEAREST)
 
 
-def night_card(seed: int = 11) -> Image.Image:
-    """The card's black ground: near-black, with a barely-there lift toward the
-    art's deep space blue at the bottom edge and a sparse starfield, so every
-    face that isn't the game art reads as the same night sky."""
+def night_card(seed: int = 11, plain: bool = False) -> Image.Image:
+    """The card's black ground.
+
+    By default: near-black, with a barely-there lift toward the art's deep
+    space blue at the bottom edge and a sparse starfield, so it sits with the
+    game art on the other face. `plain` returns flat black instead — no
+    gradient, no stars — which is what the art-free alternate wants.
+    """
+    if plain:
+        return Image.new("RGB", (CANVAS_W, CANVAS_H), P8_BLACK)
     base = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.float64)
     t = (np.linspace(0, 1, CANVAS_H) ** 2.6)[:, None]
     for i in range(3):
@@ -241,7 +247,7 @@ LOGO_FACE_W_IN = 2.5
 
 
 def make_logo_face() -> Image.Image:
-    card = night_card(seed=23)
+    card = night_card(plain=True)
     target_w = px(LOGO_FACE_W_IN)
 
     # solve the height that gives the target width from a probe render
@@ -314,8 +320,8 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
 # --------------------------------------------------------------------------
 # BACK — black card, QR plate right, contact block left
 # --------------------------------------------------------------------------
-def make_back(with_logo: bool = True) -> Image.Image:
-    card = night_card()
+def make_back(with_logo: bool = True, plain: bool = False) -> Image.Image:
+    card = night_card(plain=plain)
     d = ImageDraw.Draw(card, "RGBA")
 
     # ---- QR plate, right ------------------------------------------------
@@ -427,7 +433,7 @@ def main() -> None:
     front, back = make_front(), make_back()
     # alternate: no art, just the lockup large and centred, and a bare
     # contact side so the lockup only appears once across the pair
-    alt_front, alt_back = make_logo_face(), make_back(with_logo=False)
+    alt_front, alt_back = make_logo_face(), make_back(with_logo=False, plain=True)
 
     verify(back)
     verify(alt_back)
