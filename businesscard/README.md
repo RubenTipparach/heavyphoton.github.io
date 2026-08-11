@@ -1,17 +1,17 @@
 # Heavy Photon — business card
 
-Two-sided US business card. One side is a full-bleed TENEBRIS frame, the other
-is black and carries the contact details and a QR to
-`https://heavyphoton.com/#home`.
+Two-sided US business card. The contact side is black and carries the details
+and a QR to `https://heavyphoton.com/#home`; the other side is either a
+full-bleed TENEBRIS frame or the lockup on its own.
 
 `make_cards.py` writes **two complete sets**. They differ only in which side
 carries the `raygun-v2-branded` lockup (see `../CLAUDE.md` for which lockups
 are final) — pick one and send the printer that PDF:
 
-| set | art side | contact side |
-|-----|----------|--------------|
-| default (`front-*`, `back-*`) | clean, nothing over the art | lockup above the name |
-| alternate (`alt-front-*`, `alt-back-*`) | lockup on a black bar across the bottom | no lockup, contact block re-centred |
+| set | first face | contact side |
+|-----|-----------|--------------|
+| default (`front-*`, `back-*`) | the game art, full bleed, nothing over it | lockup above the name |
+| alternate (`alt-front-*`, `alt-back-*`) | no art — the lockup alone, large and centred on black, with an ion-cyan glow | no lockup, contact block re-centred |
 
 Everything in `out/` is generated. Rebuild with:
 
@@ -32,7 +32,7 @@ python3 make_cards.py
 
 Send the printer `heavy-photon-business-card.pdf` (or the two
 `*-bleed-600dpi.png` files) and tell them the artwork already includes
-1/8 in bleed. The art, the bottom bar and the back's gradient all run out
+1/8 in bleed. The art, the black grounds and the logo face's glow all run out
 past the trim line, so a cutter drifting up to 1/8 in never exposes paper.
 
 ## Files in `out/`
