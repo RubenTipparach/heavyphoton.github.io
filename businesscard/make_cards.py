@@ -3,11 +3,17 @@
 
     python3 make_cards.py
 
-Outputs land in ./out:
-  front-bleed-600dpi.png / back-bleed-600dpi.png   press files (3.75 x 2.25 in)
-  front-bleed-300dpi.png / back-bleed-300dpi.png   300 dpi equivalents
-  heavy-photon-business-card.pdf                   2-page PDF at final size
-  preview-*.png                                    proofs (trimmed + guides)
+Two complete sets land in ./out, differing in how the lockup is used. The
+default puts it on the contact side and gives the other face to the game art.
+The alternate drops the art entirely: one face is the lockup alone, large and
+centred on black with an ion-cyan glow, and the contact side goes bare. Pick
+one and send the printer that PDF.
+
+  {front,back}-bleed-600dpi.png            press files (3.75 x 2.25 in)
+  {front,back}-bleed-300dpi.png            300 dpi equivalents
+  heavy-photon-business-card.pdf           2-page PDF at final size
+  alt-* / heavy-photon-business-card-alt.pdf   the same, logo face, no art
+  preview-*.png                            proofs (trimmed + guides)
 """
 
 from __future__ import annotations
@@ -174,57 +180,87 @@ def framed_art() -> Image.Image:
 
 
 # --------------------------------------------------------------------------
-# FRONT — the game art, full bleed, nothing on top of it.
+# FRONT — two treatments.
 #
-# The branding all lives on the back, so the front is left as one clean frame.
-# `make_front(bar=True)` renders the earlier treatment — a translucent black
-# bar carrying the lockup — for comparison.
+# Default: the game art, full bleed, nothing on top of it. The branding all
+# lives on the contact side, so this face is left as one clean frame.
+#
+# Alternate: no art at all, just the lockup large and centred on the same
+# black ground the contact side uses, lit with an ion-cyan glow.
 # --------------------------------------------------------------------------
-BAR_VISIBLE_IN = 0.40          # bar height measured up from the trim line
-BAR_ALPHA = 212                # /255 — art stays faintly visible through it
-FEATHER = 90                   # soft ramp above the bar so it doesn't hard-cut
+def make_front() -> Image.Image:
+    return framed_art().resize((CANVAS_W, CANVAS_H), Image.NEAREST)
 
 
-def make_front(bar: bool = False) -> Image.Image:
-    card = framed_art().resize((CANVAS_W, CANVAS_H), Image.NEAREST)
-    if not bar:
-        return card
+def night_card(seed: int = 11, plain: bool = False) -> Image.Image:
+    """The card's black ground.
 
-    bar_top = TRIM[3] - px(BAR_VISIBLE_IN)
+    By default: near-black, with a barely-there lift toward the art's deep
+    space blue at the bottom edge and a sparse starfield. That is the ground
+    the contact side always uses. `plain` returns flat black instead — no
+    gradient, no stars — which is what the logo face wants, so nothing
+    competes with the glow.
+    """
+    if plain:
+        return Image.new("RGB", (CANVAS_W, CANVAS_H), P8_BLACK)
+    base = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.float64)
+    t = (np.linspace(0, 1, CANVAS_H) ** 2.6)[:, None]
+    for i in range(3):
+        base[:, :, i] = t * (P8_DARKBLUE[i] * 0.5)
+    card = Image.fromarray(base.clip(0, 255).astype(np.uint8), "RGB")
+    paste(card, C.starfield((CANVAS_W, CANVAS_H), seed=seed, density=0.000035,
+                            palette=[P8_WHITE, (194, 195, 199), P8_INDIGO]),
+          (0, 0))
+    return card
 
-    # translucent black bar, run out through the bottom bleed
-    ramp = np.zeros((CANVAS_H, CANVAS_W), dtype=np.uint8)
-    ramp[bar_top:, :] = BAR_ALPHA
-    grad = np.linspace(0, BAR_ALPHA, FEATHER)
-    ramp[bar_top - FEATHER:bar_top, :] = grad[:, None].astype(np.uint8)
-    card = Image.composite(Image.new("RGB", card.size, (0, 0, 0)), card,
-                           Image.fromarray(ramp, "L"))
 
-    d = ImageDraw.Draw(card, "RGBA")
-    # ion-cyan hairline along the top of the bar, ties back to the logo
-    d.rectangle([0, bar_top - 4, CANVAS_W, bar_top - 1], fill=BRAND_CYAN + (235,))
-    d.rectangle([0, bar_top, CANVAS_W, bar_top + 2], fill=(0, 0, 0, 140))
+# Three passes: a tight hot core, a mid bloom, and a wide haze. Stacking them
+# gives a falloff that keeps going instead of ending on a visible ring.
+GLOW_PASSES = ((16, 0.62), (44, 0.40), (100, 0.26))
 
-    # logo, bottom-left, inside the safe margin and optically centred in the
-    # part of the bar that survives trimming
-    logo_h = px(0.25)
-    logo = C.logo_at_height(LOGO_BRANDED, logo_h)
-    pad = 44
-    halo = Image.new("RGBA", (logo.width + 2 * pad, logo.height + 2 * pad),
-                     (0, 0, 0, 0))
-    halo.paste(Image.new("RGBA", logo.size, (0, 0, 0, 235)), (pad, pad), logo)
-    halo = halo.filter(ImageFilter.GaussianBlur(20))
-    lx = SAFE[0]
-    ly = (bar_top + TRIM[3]) // 2 - logo_h // 2
-    paste(card, halo, (lx - pad, ly - pad))
+
+def glow(mask: Image.Image, colour: tuple[int, int, int]) -> tuple[Image.Image, int]:
+    """A soft coloured bloom shaped like `mask`, on its own transparent canvas.
+
+    Returns the bloom and the padding it was grown by, so the caller can place
+    it against the mask's own origin. The canvas is padded to three sigma of
+    the widest pass — past that a Gaussian is numerically nothing — so the
+    falloff is never cut off by the edge of its own bitmap.
+    """
+    pad = GLOW_PASSES[-1][0] * 3
+    size = (mask.width + 2 * pad, mask.height + 2 * pad)
+    stamp = Image.new("RGBA", size, colour + (0,))
+    stamp.paste(Image.new("RGBA", mask.size, colour + (255,)), (pad, pad), mask)
+
+    out = Image.new("RGBA", size, (0, 0, 0, 0))
+    for radius, strength in GLOW_PASSES:
+        layer = stamp.filter(ImageFilter.GaussianBlur(radius))
+        layer.putalpha(layer.getchannel("A").point(
+            lambda v, k=strength: int(v * k)))
+        out = Image.alpha_composite(out, layer)
+    return out, pad
+
+
+# The lockup is sized by width, not height — it is a 4.39:1 wide cut, and the
+# width is what the card constrains. Short of the safe width so the glow has
+# somewhere to fall off inside the bleed rather than being cut at the edge.
+LOGO_FACE_W_IN = 2.5
+
+
+def make_logo_face() -> Image.Image:
+    card = night_card(plain=True)
+    target_w = px(LOGO_FACE_W_IN)
+
+    # solve the height that gives the target width from a probe render
+    probe_h = px(0.5)
+    probe = C.logo_at_height(LOGO_BRANDED, probe_h)
+    logo = C.logo_at_height(LOGO_BRANDED, round(probe_h * target_w / probe.width))
+
+    lx = (CANVAS_W - logo.width) // 2
+    ly = (CANVAS_H - logo.height) // 2
+    bloom, pad = glow(logo, BRAND_CYAN)
+    paste(card, bloom, (lx - pad, ly - pad))
     paste(card, logo, (lx, ly))
-
-    # signal ticks on the right of the bar, in the capture's own palette
-    cy = ly + logo_h // 2
-    for i, col in enumerate((P8_YELLOW, P8_RED, BRAND_CYAN)):
-        x1 = SAFE[2] - i * 34
-        d.polygon(C.chamfer_points(x1 - 18, cy - 30, x1, cy + 30, 6),
-                  fill=col + (230,))
     return card
 
 
@@ -285,31 +321,18 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
 # --------------------------------------------------------------------------
 # BACK — black card, QR plate right, contact block left
 # --------------------------------------------------------------------------
-def make_back() -> Image.Image:
-    # black, with a barely-there lift toward the art's deep space blue at the
-    # bottom edge so the two sides feel like the same night sky
-    base = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.float64)
-    t = (np.linspace(0, 1, CANVAS_H) ** 2.6)[:, None]
-    for i in range(3):
-        base[:, :, i] = t * (P8_DARKBLUE[i] * 0.5)
-    card = Image.fromarray(base.clip(0, 255).astype(np.uint8), "RGB")
-    paste(card, C.starfield((CANVAS_W, CANVAS_H), seed=11, density=0.000035,
-                            palette=[P8_WHITE, (194, 195, 199), P8_INDIGO]),
-          (0, 0))
-
+def make_back(with_logo: bool = True) -> Image.Image:
+    card = night_card()
     d = ImageDraw.Draw(card, "RGBA")
 
     # ---- QR plate, right ------------------------------------------------
     qr = build_qr(px(1.12))
     plate = qr.width
-    cap_f = font("Jura-Medium.ttf", 34)
-    cap = "SCAN FOR HEAVYPHOTON.COM"
-    cap_gap, cap_h = 30, 40
 
     qx1 = SAFE[2]
     qx0 = qx1 - plate
-    group_h = plate + cap_gap + cap_h
-    qy0 = (SAFE[1] + SAFE[3]) // 2 - group_h // 2
+    # the frame is symmetric about the plate, so centring the plate centres it
+    qy0 = (SAFE[1] + SAFE[3]) // 2 - plate // 2
 
     fr = 15
     d.polygon(C.chamfer_points(qx0 - fr, qy0 - fr, qx1 + fr, qy0 + plate + fr, 28),
@@ -318,41 +341,40 @@ def make_back() -> Image.Image:
               fill=P8_WHITE + (255,))
     card.paste(qr, (qx0, qy0))
 
-    cw = C.text_width(d, cap, cap_f, tracking=4)
-    C.text_tracked(d, (qx0 + (plate - cw) / 2, qy0 + plate + cap_gap), cap,
-                   cap_f, BRAND_CYAN + (225,), tracking=4)
-
     # ---- contact block, left --------------------------------------------
     x = SAFE[0]
     logo_h = px(0.185)
-    logo = C.logo_at_height(LOGO_BRANDED, logo_h)
     name_f = font("Tektur-Medium.ttf", 92)
-    lab_f = font("Jura-Medium.ttf", 34)
     val_f = font("GeistMono-Regular.ttf", 50)
 
     name_h = name_f.getbbox("RUBEN TIPPARACH")[3]
-    lab_h = lab_f.getbbox("EMAIL")[3]
-    val_h = val_f.getbbox("gy@.")[3]
-    row_h = val_h
-    stack = [logo_h, 52, name_h, 30, 4, 44, row_h, 30, row_h]
+    row_h = val_f.getbbox("gy@.")[3]
+    rule_h = 4
+    logo_gap, name_gap, rule_gap, row_gap = 52, 30, 44, 30
+
+    # Measure the block first so it stays optically centred whether or not the
+    # lockup is on this side (the alternate card carries it on the art side).
+    stack = ([logo_h, logo_gap] if with_logo else []) + [
+        name_h, name_gap, rule_h, rule_gap, row_h, row_gap, row_h]
     y = (SAFE[1] + SAFE[3]) // 2 - sum(stack) // 2
 
-    paste(card, logo, (x, y))
-    y += stack[0] + stack[1]
+    if with_logo:
+        paste(card, C.logo_at_height(LOGO_BRANDED, logo_h), (x, y))
+        y += logo_h + logo_gap
 
     C.text_tracked(d, (x, y - name_f.getbbox("R")[1]), NAME, name_f,
                    BONE + (255,), tracking=5)
     name_w = C.text_width(d, NAME, name_f, tracking=5)
-    y += stack[2] + stack[3]
+    y += name_h + name_gap
 
-    d.rectangle([x, y, x + int(name_w), y + 3], fill=BRAND_CYAN + (255,))
-    y += stack[4] + stack[5]
+    d.rectangle([x, y, x + int(name_w), y + rule_h - 1], fill=BRAND_CYAN + (255,))
+    y += rule_h + rule_gap
 
     # No EMAIL/WEB labels — an address and a domain say what they are. The
     # accent ticks went with them; on their own they read as stray marks.
     for value in (EMAIL, SITE):
         d.text((x, y), value, font=val_f, fill=BONE + (255,))
-        y += row_h + 30
+        y += row_h + row_gap
     return card
 
 
@@ -385,33 +407,40 @@ def verify(back: Image.Image) -> None:
         print(f"  QR decodes at {w}px wide -> {QR_URL}")
 
 
-def main() -> None:
-    os.makedirs(OUT, exist_ok=True)
-    front, back = make_front(), make_back()
-    front_bar = make_front(bar=True)
-    verify(back)
-
+def emit(front: Image.Image, back: Image.Image, tag: str = "") -> None:
+    """Write one complete set: two press rasters, two 300 dpi copies, a
+    2-page PDF and the proofs. `tag` prefixes/suffixes the alternate set."""
     dpi = (C.DPI, C.DPI)
-    front.save(os.path.join(OUT, "front-bleed-600dpi.png"), dpi=dpi)
-    back.save(os.path.join(OUT, "back-bleed-600dpi.png"), dpi=dpi)
-
     half = (CANVAS_W // 2, CANVAS_H // 2)
-    front.resize(half, Image.LANCZOS).save(
-        os.path.join(OUT, "front-bleed-300dpi.png"), dpi=(300, 300))
-    back.resize(half, Image.LANCZOS).save(
-        os.path.join(OUT, "back-bleed-300dpi.png"), dpi=(300, 300))
+    pre = f"{tag}-" if tag else ""
+
+    for name, side in (("front", front), ("back", back)):
+        side.save(os.path.join(OUT, f"{pre}{name}-bleed-600dpi.png"), dpi=dpi)
+        side.resize(half, Image.LANCZOS).save(
+            os.path.join(OUT, f"{pre}{name}-bleed-300dpi.png"), dpi=(300, 300))
+        C.guides(side).save(os.path.join(OUT, f"preview-{pre}{name}-guides.png"))
+        C.trimmed(side).save(os.path.join(OUT, f"preview-{pre}{name}-trimmed.png"))
 
     front.convert("RGB").save(
-        os.path.join(OUT, "heavy-photon-business-card.pdf"),
+        os.path.join(OUT, f"heavy-photon-business-card{'-' + tag if tag else ''}.pdf"),
         save_all=True, append_images=[back.convert("RGB")], resolution=C.DPI)
+    mockup(front, back).save(os.path.join(OUT, f"preview-{pre}both.png"))
 
-    C.guides(front).save(os.path.join(OUT, "preview-front-guides.png"))
-    C.guides(back).save(os.path.join(OUT, "preview-back-guides.png"))
-    C.trimmed(front).save(os.path.join(OUT, "preview-front-trimmed.png"))
-    front_bar.save(os.path.join(OUT, "alt-front-bar-bleed-600dpi.png"), dpi=dpi)
-    C.trimmed(front_bar).save(os.path.join(OUT, "preview-front-bar-trimmed.png"))
-    C.trimmed(back).save(os.path.join(OUT, "preview-back-trimmed.png"))
-    mockup(front, back).save(os.path.join(OUT, "preview-both.png"))
+
+def main() -> None:
+    os.makedirs(OUT, exist_ok=True)
+
+    # default: clean art, lockup on the contact side
+    front, back = make_front(), make_back()
+    # alternate: no art, just the lockup large and centred, and a bare
+    # contact side so the lockup only appears once across the pair
+    alt_front, alt_back = make_logo_face(), make_back(with_logo=False)
+
+    verify(back)
+    verify(alt_back)
+
+    emit(front, back)
+    emit(alt_front, alt_back, "alt")
     print("wrote", len(os.listdir(OUT)), "files to", OUT)
 
 

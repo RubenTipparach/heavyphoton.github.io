@@ -750,12 +750,7 @@
       <path
          d="m 48,42 h 64 l 8,26 H 40 Z"
          id="path132" />
-      <rect
-         x="112"
-         y="146"
-         width="30"
-         height="16"
-         id="rect132" />
+      <path d="M118,144 L130,144 L128,168 L120,172 Z" id="rect132" />
       <path
          d="m 146,76 h 100 v 64 H 146 Z"
          id="path133" />
@@ -863,12 +858,7 @@
       <path
          d="M48,42 L112,42 L120,68 L40,68 Z"
          id="path53" />
-      <rect
-         x="112"
-         y="146"
-         width="30"
-         height="16"
-         id="rect53" />
+      <path d="M118,144 L130,144 L128,168 L120,172 Z" id="rect53" />
       <path
          d="M146,76 L246,76 L246,140 L146,140 Z"
          id="path54" />
@@ -951,33 +941,16 @@
            filter="url(#soften2)"
            transform="translate(6,7)"
            id="g77">
-          <rect
-             x="112"
-             y="146"
-             width="30"
-             height="16"
-             id="rect76" />
+          <path d="M118,144 L130,144 L128,168 L120,172 Z" id="rect76" />
         </g>
       </g>
       <g
          fill="url(#steel2)"
          id="g79"
          style="fill:url(#linearGradient174)">
-        <rect
-           x="112"
-           y="146"
-           width="30"
-           height="16"
-           id="rect78"
-           style="fill:url(#linearGradient173)" />
+        <path d="M118,144 L130,144 L128,168 L120,172 Z" id="rect78" />
       </g>
-      <rect
-         x="118"
-         y="158"
-         width="14"
-         height="8"
-         fill="#232936"
-         id="rect79" />
+      
     </g>
     <g
        id="barrel"

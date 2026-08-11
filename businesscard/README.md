@@ -1,14 +1,17 @@
 # Heavy Photon — business card
 
-Two-sided US business card. Front is a full-bleed TENEBRIS frame and nothing
-else; back is black and carries all the branding — the `raygun-v2-branded`
-lockup, contact details, and a QR to `https://heavyphoton.com/#home` with the
-`raygun-v2-compact` cut in its centre. (See `../CLAUDE.md` for which lockups
-are final.)
+Two-sided US business card. The contact side is black and carries the details
+and a QR to `https://heavyphoton.com/#home`; the other side is either a
+full-bleed TENEBRIS frame or the lockup on its own.
 
-`make_cards.py` also writes `alt-front-bar-*` — the earlier front treatment,
-with a translucent black bar carrying the lockup along the bottom — in case
-that one is wanted instead.
+`make_cards.py` writes **two complete sets**. They differ only in which side
+carries the `raygun-v2-branded` lockup (see `../CLAUDE.md` for which lockups
+are final) — pick one and send the printer that PDF:
+
+| set | first face | contact side |
+|-----|-----------|--------------|
+| default (`front-*`, `back-*`) | the game art, full bleed, nothing over it | lockup above the name |
+| alternate (`alt-front-*`, `alt-back-*`) | no art — the lockup alone, large and centred on black, with an ion-cyan glow | no lockup, contact block re-centred |
 
 Everything in `out/` is generated. Rebuild with:
 
@@ -29,10 +32,12 @@ python3 make_cards.py
 
 Send the printer `heavy-photon-business-card.pdf` (or the two
 `*-bleed-600dpi.png` files) and tell them the artwork already includes
-1/8 in bleed. The art, the bottom bar and the back's gradient all run out
+1/8 in bleed. The art, the black grounds and the logo face's glow all run out
 past the trim line, so a cutter drifting up to 1/8 in never exposes paper.
 
 ## Files in `out/`
+
+Each set writes the same seven files; the alternate's are prefixed `alt-`.
 
 | file | what it is |
 |------|------------|
@@ -40,9 +45,9 @@ past the trim line, so a cutter drifting up to 1/8 in never exposes paper.
 | `front-bleed-600dpi.png`, `back-bleed-600dpi.png` | press rasters |
 | `front-bleed-300dpi.png`, `back-bleed-300dpi.png` | 300 dpi equivalents |
 | `preview-front-trimmed.png`, `preview-back-trimmed.png` | what the cut card looks like |
-| `alt-front-bar-bleed-600dpi.png`, `preview-front-bar-trimmed.png` | alternate front: black bar + lockup |
 | `preview-front-guides.png`, `preview-back-guides.png` | bleed / trim / safe proof |
 | `preview-both.png` | both sides side by side |
+| `heavy-photon-business-card-alt.pdf`, `alt-*`, `preview-alt-*` | the alternate set, same seven files |
 
 ## How the art is handled
 
@@ -68,12 +73,12 @@ re-run, and the framing adapts by itself. `ART_WIN_X` / `ART_WIN_W` in
 
 Styled from the capture's own PICO-8 palette: chamfered modules washing from
 ink black into the art's deep space blue, chamfered finder rings with a navy
-pupil, and the compact lockup on a dark tile in the middle, carried by
+pupil, and a deep-space-blue frame around the plate, all carried by
 error-correction level H.
 
 Scan reliability is enforced, not assumed. `make_cards.py` asserts every dark
 module colour holds at least 7:1 contrast against the plate, and `verify()`
 decodes the QR back out of the finished card at four sizes down to 460 px
-wide with blur applied, failing the build if any of them miss. The bright
-yellow/red/cyan accents live on the frame *outside* the quiet zone, where
-they cannot cost the scanner anything.
+wide with blur applied, failing the build if any of them miss — for both sets.
+The coloured frame lives *outside* the white ring and the code's own
+four-module quiet zone, where it cannot cost the scanner anything.
