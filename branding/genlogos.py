@@ -285,6 +285,22 @@ def scanmask(mid, w, y=46):
             f'fill="#000"/></mask>')
 
 # ================================================================ raygun v2
+# The trigger group. The guard's rear edge runs (112,146) to (98,202) — the
+# same -0.25 slope as the grip's leading edge, so the two weld instead of
+# meeting on a seam. The finger opening is cut through the guard in the
+# background colour, and the blade hangs into it from the solid housing above,
+# which is why it never floats: it is welded to the block it hangs from.
+TRIGGER_GUARD = 'M110,146 L150,146 L150,190 L132,202 L96,202 Z'
+TRIGGER_EYE = 'M114,158 L142,158 L142,186 L114,186 Z'
+TRIGGER_BLADE = 'M120,158 L133,158 L131,174 L122,179 Z'
+
+
+def trigger_detail(fill, notch_fill):
+    """Cut the finger opening, then hang the blade back into it."""
+    return (f'<path d="{TRIGGER_EYE}" fill="{notch_fill}"/>'
+            f'<path d="{TRIGGER_BLADE}" fill="{fill}"/>')
+
+
 def raygun2_struct(fat=False, shelf=None):
     """Gun structural shapes, no fills (inherit from parent), ~300x220 box.
     fat=True deepens the barrel band (y76-140 vs y84-132) so a full-height
@@ -300,7 +316,7 @@ def raygun2_struct(fat=False, shelf=None):
     return (fins + shelf +
             f'<path d="M32,64 L128,64 L150,{bt} L150,150 L32,150 Z"'
             '/><path d="M56,150 L112,150 L94,218 L40,218 Z"'
-            '/><rect x="112" y="150" width="30" height="12"'
+            f'/><path d="{TRIGGER_GUARD}"'
             '/><path d="M48,42 L112,42 L120,64 L40,64 Z"'
             f'/><path d="M150,{bt} L242,{bt} L242,{bb} L150,{bb} Z"'
             f'/><path d="M242,66 L262,66 L262,{lt} L274,{lt} L274,{lb} L262,{lb} '
@@ -315,7 +331,7 @@ def raygun2_energy(accent, vents=True, rail_y=132, rail=True):
 
 def raygun2(fill, accent, detail=None):
     return (f'<g fill="{fill}">{raygun2_struct()}</g>{raygun2_energy(accent)}'
-            f'<rect x="118" y="158" width="14" height="8" fill="{detail or INK}"/>')
+            f'{trigger_detail(fill, detail or INK)}')
 
 # shared layout for mainline + embossed: gun fires at an asteroid, the beam
 # ricochets off to the side, and a chipped shard of rock flies away
@@ -401,7 +417,7 @@ def raygun_v2_embossed():
     body.append(f'<g fill="url(#steel)">{content}</g>')
     body.append(asteroid_details("#3A4150"))
     body.append(f'<g transform="translate({gx} {gy})">'
-                f'<rect x="118" y="158" width="14" height="8" fill="#232936"/></g>')
+                f'{trigger_detail("url(#steel)", "#232936")}</g>')
     # live cyan energy: continuous ricochet beam, impact shards, glowing O,
     # chip motion ticks, vents
     o_inner = "".join(glyph_parts2("O", 0))
@@ -524,7 +540,7 @@ def branded_gun(fill, accent, brand_fill, notch_fill):
     return (f'<g transform="{BR["gun_t"]}">'
             f'<g fill="{fill}">{raygun2_struct(fat=True)}</g>'
             f'{raygun2_energy(accent, vents=False, rail_y=134)}'
-            f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+            f'{trigger_detail(fill, notch_fill)}'
             f'{brand_heavy(brand_fill)}</g>')
 
 # The branded cuts share the compact's per-object structure: every part of
@@ -538,11 +554,11 @@ def branded_shapes():
     shapes = list(COMPACT_SHAPES)
     return shapes[:5] + [BRANDED_SHELF] + shapes[5:]
 
-def branded_extras(name, accent, notch_fill):
+def branded_extras(name, accent, notch_fill, fill=BONE):
     """Details that belong inside a specific object's group (branded cuts:
     the rail lives on the shelf, and there is no muzzle charge tick)."""
     if name == "trigger":
-        return f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+        return trigger_detail(fill, notch_fill)
     if name == "shelf":
         return f'<rect x="154" y="134" width="76" height="10" fill="{accent}"/>'
     return ""
@@ -641,7 +657,7 @@ def raygun_v2_branded_steel():
             f'<g fill="#04060A" opacity="0.75" filter="url(#soften2)" '
             f'transform="translate(6 7)">{el}</g></g>'
             f'<g fill="url(#steel2)">{el}</g>'
-            f'{branded_extras(name, CYAN, "#232936")}</g>')
+            f'{branded_extras(name, CYAN, "#232936", "url(#steel2)")}</g>')
     heavy = wordmark2_grouped(
         "HEAVY", 8, prefix="heavy",
         layers=(("#D8DFEA", (5.7, 10)), ("#232936", (0, 0))))
@@ -677,17 +693,17 @@ COMPACT_SHAPES = [
     ("grip",    '<path d="M56,146 L112,146 L94,218 L40,218 Z"/>'),
     ("body",    '<path d="M32,64 L128,64 L150,76 L150,150 L32,150 Z"/>'),
     ("sight",   '<path d="M48,42 L112,42 L120,68 L40,68 Z"/>'),
-    ("trigger", '<rect x="112" y="146" width="30" height="16"/>'),
+    ("trigger", f'<path d="{TRIGGER_GUARD}"/>'),
     ("barrel",  '<path d="M146,76 L246,76 L246,140 L146,140 Z"/>'),
     ("muzzle",  '<path d="M242,66 L262,66 L262,82 L274,82 L274,134 '
                 'L262,134 L262,148 L242,148 Z"/>'),
     ("tip",     '<rect x="270" y="94" width="18" height="26"/>'),
 ]
 
-def compact_extras(name, accent, notch_fill):
+def compact_extras(name, accent, notch_fill, fill=BONE):
     """Details that belong inside a specific object's group."""
     if name == "trigger":
-        return f'<rect x="118" y="158" width="14" height="8" fill="{notch_fill}"/>'
+        return trigger_detail(fill, notch_fill)
     if name == "barrel":
         return f'<rect x="154" y="144" width="76" height="10" fill="{accent}"/>'
     if name == "tip":
@@ -785,7 +801,7 @@ def raygun_v2_compact_steel():
             f'<g fill="#04060A" opacity="0.75" filter="url(#soften3)" '
             f'transform="translate(6 7)">{el}</g></g>'
             f'<g fill="url(#steel3)">{el}</g>'
-            f'{compact_extras(name, CYAN, "#232936")}</g>')
+            f'{compact_extras(name, CYAN, "#232936", "url(#steel3)")}</g>')
     # debossed words: each glyph group stacks its highlight + dark stamp
     heavy = wordmark2_grouped(
         "HEAVY", 8, prefix="heavy",

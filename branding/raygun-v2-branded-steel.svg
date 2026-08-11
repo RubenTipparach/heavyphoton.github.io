@@ -750,12 +750,7 @@
       <path
          d="m 48,42 h 64 l 8,26 H 40 Z"
          id="path132" />
-      <rect
-         x="112"
-         y="146"
-         width="30"
-         height="16"
-         id="rect132" />
+      <path d="M110,146 L150,146 L150,190 L132,202 L96,202 Z" id="rect132" />
       <path
          d="m 146,76 h 100 v 64 H 146 Z"
          id="path133" />
@@ -863,12 +858,7 @@
       <path
          d="M48,42 L112,42 L120,68 L40,68 Z"
          id="path53" />
-      <rect
-         x="112"
-         y="146"
-         width="30"
-         height="16"
-         id="rect53" />
+      <path d="M110,146 L150,146 L150,190 L132,202 L96,202 Z" id="rect53" />
       <path
          d="M146,76 L246,76 L246,140 L146,140 Z"
          id="path54" />
@@ -951,33 +941,16 @@
            filter="url(#soften2)"
            transform="translate(6,7)"
            id="g77">
-          <rect
-             x="112"
-             y="146"
-             width="30"
-             height="16"
-             id="rect76" />
+          <path d="M110,146 L150,146 L150,190 L132,202 L96,202 Z" id="rect76" />
         </g>
       </g>
       <g
          fill="url(#steel2)"
          id="g79"
          style="fill:url(#linearGradient174)">
-        <rect
-           x="112"
-           y="146"
-           width="30"
-           height="16"
-           id="rect78"
-           style="fill:url(#linearGradient173)" />
+        <path d="M110,146 L150,146 L150,190 L132,202 L96,202 Z" id="rect78" />
       </g>
-      <rect
-         x="118"
-         y="158"
-         width="14"
-         height="8"
-         fill="#232936"
-         id="rect79" />
+      <path d="M114,158 L142,158 L142,186 L114,186 Z" fill="#232936" id="rect79" /><path d="M120,158 L133,158 L131,174 L122,179 Z" fill="url(#steel2)" id="trigger-blade" />
     </g>
     <g
        id="barrel"

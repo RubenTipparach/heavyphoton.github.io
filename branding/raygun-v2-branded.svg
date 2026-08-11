@@ -361,20 +361,9 @@
       <g
          fill="#F2F0E9"
          id="g34">
-        <rect
-           x="112"
-           y="146"
-           width="30"
-           height="16"
-           id="rect33" />
+        <path d="M110,146 L150,146 L150,190 L132,202 L96,202 Z" id="rect33" />
       </g>
-      <rect
-         x="118"
-         y="158"
-         width="14"
-         height="8"
-         fill="#0B0E14"
-         id="rect34" />
+      <path d="M114,158 L142,158 L142,186 L114,186 Z" fill="#0B0E14" id="rect34" /><path d="M120,158 L133,158 L131,174 L122,179 Z" fill="#F2F0E9" id="trigger-blade" />
     </g>
     <g
        id="barrel">
