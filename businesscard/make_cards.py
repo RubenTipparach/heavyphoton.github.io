@@ -333,8 +333,8 @@ def make_back() -> Image.Image:
     name_h = name_f.getbbox("RUBEN TIPPARACH")[3]
     lab_h = lab_f.getbbox("EMAIL")[3]
     val_h = val_f.getbbox("gy@.")[3]
-    row_h = lab_h + 16 + val_h
-    stack = [logo_h, 52, name_h, 30, 4, 44, row_h, 34, row_h]
+    row_h = val_h
+    stack = [logo_h, 52, name_h, 30, 4, 44, row_h, 30, row_h]
     y = (SAFE[1] + SAFE[3]) // 2 - sum(stack) // 2
 
     paste(card, logo, (x, y))
@@ -348,13 +348,11 @@ def make_back() -> Image.Image:
     d.rectangle([x, y, x + int(name_w), y + 3], fill=BRAND_CYAN + (255,))
     y += stack[4] + stack[5]
 
-    for i, (label, value, accent) in enumerate((("EMAIL", EMAIL, P8_YELLOW),
-                                                ("WEB", SITE, P8_BLUE))):
-        d.rectangle([x, y + 4, x + 7, y + lab_h], fill=accent + (255,))
-        C.text_tracked(d, (x + 26, y - lab_f.getbbox("E")[1]), label, lab_f,
-                       P8_INDIGO + (255,), tracking=7)
-        d.text((x, y + lab_h + 16), value, font=val_f, fill=BONE + (255,))
-        y += row_h + 34
+    # No EMAIL/WEB labels — an address and a domain say what they are. The
+    # accent ticks went with them; on their own they read as stray marks.
+    for value in (EMAIL, SITE):
+        d.text((x, y), value, font=val_f, fill=BONE + (255,))
+        y += row_h + 30
     return card
 
 
