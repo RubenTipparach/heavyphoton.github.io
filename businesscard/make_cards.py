@@ -302,14 +302,11 @@ def make_back() -> Image.Image:
     # ---- QR plate, right ------------------------------------------------
     qr = build_qr(px(1.12))
     plate = qr.width
-    cap_f = font("Jura-Medium.ttf", 34)
-    cap = "SCAN FOR HEAVYPHOTON.COM"
-    cap_gap, cap_h = 30, 40
 
     qx1 = SAFE[2]
     qx0 = qx1 - plate
-    group_h = plate + cap_gap + cap_h
-    qy0 = (SAFE[1] + SAFE[3]) // 2 - group_h // 2
+    # the frame is symmetric about the plate, so centring the plate centres it
+    qy0 = (SAFE[1] + SAFE[3]) // 2 - plate // 2
 
     fr = 15
     d.polygon(C.chamfer_points(qx0 - fr, qy0 - fr, qx1 + fr, qy0 + plate + fr, 28),
@@ -318,20 +315,14 @@ def make_back() -> Image.Image:
               fill=P8_WHITE + (255,))
     card.paste(qr, (qx0, qy0))
 
-    cw = C.text_width(d, cap, cap_f, tracking=4)
-    C.text_tracked(d, (qx0 + (plate - cw) / 2, qy0 + plate + cap_gap), cap,
-                   cap_f, BRAND_CYAN + (225,), tracking=4)
-
     # ---- contact block, left --------------------------------------------
     x = SAFE[0]
     logo_h = px(0.185)
     logo = C.logo_at_height(LOGO_BRANDED, logo_h)
     name_f = font("Tektur-Medium.ttf", 92)
-    lab_f = font("Jura-Medium.ttf", 34)
     val_f = font("GeistMono-Regular.ttf", 50)
 
     name_h = name_f.getbbox("RUBEN TIPPARACH")[3]
-    lab_h = lab_f.getbbox("EMAIL")[3]
     val_h = val_f.getbbox("gy@.")[3]
     row_h = val_h
     stack = [logo_h, 52, name_h, 30, 4, 44, row_h, 30, row_h]
