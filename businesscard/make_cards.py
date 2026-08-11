@@ -196,9 +196,10 @@ def night_card(seed: int = 11, plain: bool = False) -> Image.Image:
     """The card's black ground.
 
     By default: near-black, with a barely-there lift toward the art's deep
-    space blue at the bottom edge and a sparse starfield, so it sits with the
-    game art on the other face. `plain` returns flat black instead — no
-    gradient, no stars — which is what the art-free alternate wants.
+    space blue at the bottom edge and a sparse starfield. That is the ground
+    the contact side always uses. `plain` returns flat black instead — no
+    gradient, no stars — which is what the logo face wants, so nothing
+    competes with the glow.
     """
     if plain:
         return Image.new("RGB", (CANVAS_W, CANVAS_H), P8_BLACK)
@@ -320,8 +321,8 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
 # --------------------------------------------------------------------------
 # BACK — black card, QR plate right, contact block left
 # --------------------------------------------------------------------------
-def make_back(with_logo: bool = True, plain: bool = False) -> Image.Image:
-    card = night_card(plain=plain)
+def make_back(with_logo: bool = True) -> Image.Image:
+    card = night_card()
     d = ImageDraw.Draw(card, "RGBA")
 
     # ---- QR plate, right ------------------------------------------------
@@ -433,7 +434,7 @@ def main() -> None:
     front, back = make_front(), make_back()
     # alternate: no art, just the lockup large and centred, and a bare
     # contact side so the lockup only appears once across the pair
-    alt_front, alt_back = make_logo_face(), make_back(with_logo=False, plain=True)
+    alt_front, alt_back = make_logo_face(), make_back(with_logo=False)
 
     verify(back)
     verify(alt_back)
