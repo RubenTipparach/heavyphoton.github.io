@@ -3,11 +3,16 @@
 
     python3 make_cards.py
 
-Outputs land in ./out:
-  front-bleed-600dpi.png / back-bleed-600dpi.png   press files (3.75 x 2.25 in)
-  front-bleed-300dpi.png / back-bleed-300dpi.png   300 dpi equivalents
-  heavy-photon-business-card.pdf                   2-page PDF at final size
-  preview-*.png                                    proofs (trimmed + guides)
+Two complete sets land in ./out. They differ only in which side carries the
+lockup — the default puts it on the contact side and leaves the art clean; the
+alternate puts it on a black bar across the art and takes it off the contact
+side. Pick one and send the printer that PDF.
+
+  {front,back}-bleed-600dpi.png            press files (3.75 x 2.25 in)
+  {front,back}-bleed-300dpi.png            300 dpi equivalents
+  heavy-photon-business-card.pdf           2-page PDF at final size
+  alt-* / heavy-photon-business-card-alt.pdf   the same, lockup on the art
+  preview-*.png                            proofs (trimmed + guides)
 """
 
 from __future__ import annotations
@@ -285,7 +290,7 @@ def build_qr(size_px: int, quiet_modules: int = 4) -> Image.Image:
 # --------------------------------------------------------------------------
 # BACK — black card, QR plate right, contact block left
 # --------------------------------------------------------------------------
-def make_back() -> Image.Image:
+def make_back(with_logo: bool = True) -> Image.Image:
     # black, with a barely-there lift toward the art's deep space blue at the
     # bottom edge so the two sides feel like the same night sky
     base = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.float64)
@@ -318,32 +323,37 @@ def make_back() -> Image.Image:
     # ---- contact block, left --------------------------------------------
     x = SAFE[0]
     logo_h = px(0.185)
-    logo = C.logo_at_height(LOGO_BRANDED, logo_h)
     name_f = font("Tektur-Medium.ttf", 92)
     val_f = font("GeistMono-Regular.ttf", 50)
 
     name_h = name_f.getbbox("RUBEN TIPPARACH")[3]
-    val_h = val_f.getbbox("gy@.")[3]
-    row_h = val_h
-    stack = [logo_h, 52, name_h, 30, 4, 44, row_h, 30, row_h]
+    row_h = val_f.getbbox("gy@.")[3]
+    rule_h = 4
+    logo_gap, name_gap, rule_gap, row_gap = 52, 30, 44, 30
+
+    # Measure the block first so it stays optically centred whether or not the
+    # lockup is on this side (the alternate card carries it on the art side).
+    stack = ([logo_h, logo_gap] if with_logo else []) + [
+        name_h, name_gap, rule_h, rule_gap, row_h, row_gap, row_h]
     y = (SAFE[1] + SAFE[3]) // 2 - sum(stack) // 2
 
-    paste(card, logo, (x, y))
-    y += stack[0] + stack[1]
+    if with_logo:
+        paste(card, C.logo_at_height(LOGO_BRANDED, logo_h), (x, y))
+        y += logo_h + logo_gap
 
     C.text_tracked(d, (x, y - name_f.getbbox("R")[1]), NAME, name_f,
                    BONE + (255,), tracking=5)
     name_w = C.text_width(d, NAME, name_f, tracking=5)
-    y += stack[2] + stack[3]
+    y += name_h + name_gap
 
-    d.rectangle([x, y, x + int(name_w), y + 3], fill=BRAND_CYAN + (255,))
-    y += stack[4] + stack[5]
+    d.rectangle([x, y, x + int(name_w), y + rule_h - 1], fill=BRAND_CYAN + (255,))
+    y += rule_h + rule_gap
 
     # No EMAIL/WEB labels — an address and a domain say what they are. The
     # accent ticks went with them; on their own they read as stray marks.
     for value in (EMAIL, SITE):
         d.text((x, y), value, font=val_f, fill=BONE + (255,))
-        y += row_h + 30
+        y += row_h + row_gap
     return card
 
 
@@ -376,33 +386,39 @@ def verify(back: Image.Image) -> None:
         print(f"  QR decodes at {w}px wide -> {QR_URL}")
 
 
-def main() -> None:
-    os.makedirs(OUT, exist_ok=True)
-    front, back = make_front(), make_back()
-    front_bar = make_front(bar=True)
-    verify(back)
-
+def emit(front: Image.Image, back: Image.Image, tag: str = "") -> None:
+    """Write one complete set: two press rasters, two 300 dpi copies, a
+    2-page PDF and the proofs. `tag` prefixes/suffixes the alternate set."""
     dpi = (C.DPI, C.DPI)
-    front.save(os.path.join(OUT, "front-bleed-600dpi.png"), dpi=dpi)
-    back.save(os.path.join(OUT, "back-bleed-600dpi.png"), dpi=dpi)
-
     half = (CANVAS_W // 2, CANVAS_H // 2)
-    front.resize(half, Image.LANCZOS).save(
-        os.path.join(OUT, "front-bleed-300dpi.png"), dpi=(300, 300))
-    back.resize(half, Image.LANCZOS).save(
-        os.path.join(OUT, "back-bleed-300dpi.png"), dpi=(300, 300))
+    pre = f"{tag}-" if tag else ""
+
+    for name, side in (("front", front), ("back", back)):
+        side.save(os.path.join(OUT, f"{pre}{name}-bleed-600dpi.png"), dpi=dpi)
+        side.resize(half, Image.LANCZOS).save(
+            os.path.join(OUT, f"{pre}{name}-bleed-300dpi.png"), dpi=(300, 300))
+        C.guides(side).save(os.path.join(OUT, f"preview-{pre}{name}-guides.png"))
+        C.trimmed(side).save(os.path.join(OUT, f"preview-{pre}{name}-trimmed.png"))
 
     front.convert("RGB").save(
-        os.path.join(OUT, "heavy-photon-business-card.pdf"),
+        os.path.join(OUT, f"heavy-photon-business-card{'-' + tag if tag else ''}.pdf"),
         save_all=True, append_images=[back.convert("RGB")], resolution=C.DPI)
+    mockup(front, back).save(os.path.join(OUT, f"preview-{pre}both.png"))
 
-    C.guides(front).save(os.path.join(OUT, "preview-front-guides.png"))
-    C.guides(back).save(os.path.join(OUT, "preview-back-guides.png"))
-    C.trimmed(front).save(os.path.join(OUT, "preview-front-trimmed.png"))
-    front_bar.save(os.path.join(OUT, "alt-front-bar-bleed-600dpi.png"), dpi=dpi)
-    C.trimmed(front_bar).save(os.path.join(OUT, "preview-front-bar-trimmed.png"))
-    C.trimmed(back).save(os.path.join(OUT, "preview-back-trimmed.png"))
-    mockup(front, back).save(os.path.join(OUT, "preview-both.png"))
+
+def main() -> None:
+    os.makedirs(OUT, exist_ok=True)
+
+    # default: clean art, lockup on the contact side
+    front, back = make_front(), make_back()
+    # alternate: lockup on a black bar across the art, off the contact side
+    alt_front, alt_back = make_front(bar=True), make_back(with_logo=False)
+
+    verify(back)
+    verify(alt_back)
+
+    emit(front, back)
+    emit(alt_front, alt_back, "alt")
     print("wrote", len(os.listdir(OUT)), "files to", OUT)
 
 
