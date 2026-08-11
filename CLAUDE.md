@@ -9,7 +9,7 @@ Everything else is history, kept for reference.**
 | Use it for | File | Shape |
 |---|---|---|
 | **Primary.** Wide placements: site hero, boot screen, card, banners, headers | `branding/raygun-v2-branded.svg` | 4.39:1 — HEAVY across the gun, PHOTON in relief on the cyan beam |
-| **Small / tight spaces.** Badges, avatars, stamps, anywhere the wide cut can't breathe | `branding/raygun-v2-compact.svg` | 1.87:1 — gun-only, HEAVY across it, PHOTON tucked under |
+| **Small / tight spaces.** Badges, avatars, stamps, anywhere the wide cut can't breathe | `branding/raygun-v2-compact.svg` | 1.69:1 — gun-only, HEAVY across it, PHOTON tucked under |
 
 Not final, do not reach for: `raygun-v2-mainline`, `-strike`, `-sticker`,
 `-icon`, `-embossed`, the `-steel` cuts, the `concept1/2/3` files, and anything
