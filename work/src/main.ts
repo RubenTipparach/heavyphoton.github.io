@@ -104,7 +104,15 @@ let currentSceneType: 'underwater' | 'astronautics' = 'underwater';
 
 // Steam widget management
 const steamWidgetContainer = document.querySelector('#panel-home .steam-widget');
-const STEAM_IFRAME_HTML = '<iframe src="https://store.steampowered.com/widget/4342510/" frameborder="0" width="100%" height="190" style="max-width: 646px; border-radius: 8px;"></iframe>';
+// Wishlist widgets, in the order they stack on the hero: nearest release first.
+const STEAM_WIDGET_APPS = [
+  { id: 4342510, title: 'Tom Lander: The Exiled King' },
+  { id: 5082410, title: 'Mining Mike' },
+];
+const STEAM_IFRAME_HTML = STEAM_WIDGET_APPS.map(
+  ({ id, title }) =>
+    `<iframe src="https://store.steampowered.com/widget/${id}/" frameborder="0" width="100%" height="190" style="max-width: 646px; border-radius: 8px;" title="${title} on Steam"></iframe>`
+).join('');
 
 function showPanel(location: string) {
   // Don't show panels when in astronautics mode
