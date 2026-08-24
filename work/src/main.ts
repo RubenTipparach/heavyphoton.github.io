@@ -18,7 +18,11 @@ underwaterScene.start();
 // injected before load fires, so a slow store.steampowered.com would pin the
 // visitor to a black screen. A hard timeout backs the whole thing up.
 (function runBootSequence() {
-  const MIN_BLACK_MS = 500;
+  // The floor is what the lockup gets, not what the scene needs — on a warm
+  // cache the scene paints in well under a second and the mark used to flash
+  // past before it read as anything. Long enough for the 2.4s pulse to carry
+  // it from dim up to full, so the fade starts on a lit logo.
+  const MIN_BLACK_MS = 1500;
   const MAX_WAIT_MS = 6000;
   const started = performance.now();
   let done = false;
