@@ -1,0 +1,406 @@
+{
+ "name": "brushed_steel",
+ "type": "graph",
+ "label": "brushed_steel",
+ "shortdesc": "",
+ "longdesc": "",
+ "parameters": {},
+ "node_position": {
+  "x": 0,
+  "y": 0
+ },
+ "nodes": [
+  {
+   "name": "noise_anisotropic_0",
+   "type": "noise_anisotropic",
+   "parameters": {
+    "scale_x": 4,
+    "scale_y": 512,
+    "smoothness": 1,
+    "interpolation": 1
+   },
+   "node_position": {
+    "x": 200,
+    "y": 0
+   }
+  },
+  {
+   "name": "noise_anisotropic_1",
+   "type": "noise_anisotropic",
+   "parameters": {
+    "scale_x": 12,
+    "scale_y": 256,
+    "smoothness": 1,
+    "interpolation": 1
+   },
+   "node_position": {
+    "x": 400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_2",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "clamp": true
+   },
+   "node_position": {
+    "x": 600,
+    "y": 0
+   }
+  },
+  {
+   "name": "fbm2_3",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 1,
+    "scale_x": 4,
+    "scale_y": 4,
+    "iterations": 6,
+    "persistence": 0.6
+   },
+   "node_position": {
+    "x": 800,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_4",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1000,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_5",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.6,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1200,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_6",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.43137254901960786,
+       "g": 0.4549019607843137,
+       "b": 0.47843137254901963,
+       "a": 1
+      },
+      {
+       "pos": 0.5,
+       "r": 0.6627450980392157,
+       "g": 0.6862745098039216,
+       "b": 0.7098039215686275,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.8156862745098039,
+       "g": 0.8313725490196079,
+       "b": 0.8470588235294118,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1400,
+    "y": 0
+   }
+  },
+  {
+   "name": "scratches2_7",
+   "type": "scratches2",
+   "parameters": {
+    "length": 0.4,
+    "width": 0.2,
+    "layers": 8,
+    "waviness": 0.3,
+    "angle": 70,
+    "randomness": 0.7
+   },
+   "node_position": {
+    "x": 1600,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_8",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.36,
+       "g": 0.36,
+       "b": 0.36,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.18,
+       "g": 0.18,
+       "b": 0.18,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1800,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_9",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.2,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2000,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_10",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": true
+   },
+   "node_position": {
+    "x": 2200,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_11",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.5,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_12",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.8,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2600,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_13",
+   "type": "math",
+   "parameters": {
+    "op": 1,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2800,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_14",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.35,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 3000,
+    "y": 0
+   }
+  },
+  {
+   "name": "uniform_greyscale_15",
+   "type": "uniform_greyscale",
+   "parameters": {
+    "color": 1
+   },
+   "node_position": {
+    "x": 3200,
+    "y": 0
+   }
+  },
+  {
+   "name": "Material",
+   "type": "material",
+   "parameters": {
+    "albedo_color": {
+     "type": "Color",
+     "r": 1,
+     "g": 1,
+     "b": 1,
+     "a": 1
+    },
+    "metallic": 1,
+    "roughness": 1,
+    "emission_energy": 1,
+    "normal": 1,
+    "ao": 1,
+    "depth_scale": 0.5,
+    "flags_transparent": false,
+    "sss": 0,
+    "size": 11
+   },
+   "node_position": {
+    "x": 3400,
+    "y": 0
+   }
+  }
+ ],
+ "connections": [
+  {
+   "from": "noise_anisotropic_0",
+   "from_port": 0,
+   "to": "math_2",
+   "to_port": 0
+  },
+  {
+   "from": "noise_anisotropic_1",
+   "from_port": 0,
+   "to": "math_2",
+   "to_port": 1
+  },
+  {
+   "from": "math_2",
+   "from_port": 0,
+   "to": "math_4",
+   "to_port": 0
+  },
+  {
+   "from": "fbm2_3",
+   "from_port": 0,
+   "to": "math_4",
+   "to_port": 1
+  },
+  {
+   "from": "math_4",
+   "from_port": 0,
+   "to": "math_5",
+   "to_port": 0
+  },
+  {
+   "from": "math_5",
+   "from_port": 0,
+   "to": "colorize_6",
+   "to_port": 0
+  },
+  {
+   "from": "math_5",
+   "from_port": 0,
+   "to": "colorize_8",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_7",
+   "from_port": 0,
+   "to": "math_9",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_8",
+   "from_port": 0,
+   "to": "math_10",
+   "to_port": 0
+  },
+  {
+   "from": "math_9",
+   "from_port": 0,
+   "to": "math_10",
+   "to_port": 1
+  },
+  {
+   "from": "math_2",
+   "from_port": 0,
+   "to": "math_11",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_7",
+   "from_port": 0,
+   "to": "math_12",
+   "to_port": 0
+  },
+  {
+   "from": "math_11",
+   "from_port": 0,
+   "to": "math_13",
+   "to_port": 0
+  },
+  {
+   "from": "math_12",
+   "from_port": 0,
+   "to": "math_13",
+   "to_port": 1
+  },
+  {
+   "from": "math_13",
+   "from_port": 0,
+   "to": "math_14",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_6",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 0
+  },
+  {
+   "from": "math_10",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 2
+  },
+  {
+   "from": "math_14",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 6
+  },
+  {
+   "from": "uniform_greyscale_15",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 1
+  }
+ ]
+}

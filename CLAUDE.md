@@ -53,6 +53,9 @@ green `#008751`, blue `#29ADFF`, indigo `#83769C`, white `#FFF1E8`.
 - `branding/` — logo source SVGs, `genlogos.py` that generates them, and PNG
   exports. `genlogos.py` refuses to overwrite an SVG that has been re-saved
   from Inkscape, so hand edits are safe.
+- `branding/render3d/` — the primary lockup as a 3D scene: Blender (Cycles)
+  geometry and lighting, Material Maker surfaces, preview renders for
+  approval. See its README for the pipeline.
 - `businesscard/` — business card generator and press files. See its README.
 
 ## Print work

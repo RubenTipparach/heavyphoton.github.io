@@ -1,0 +1,357 @@
+{
+ "name": "polished_brass",
+ "type": "graph",
+ "label": "polished_brass",
+ "shortdesc": "",
+ "longdesc": "",
+ "parameters": {},
+ "node_position": {
+  "x": 0,
+  "y": 0
+ },
+ "nodes": [
+  {
+   "name": "fbm2_0",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 1,
+    "scale_x": 5,
+    "scale_y": 5,
+    "iterations": 4,
+    "persistence": 0.5
+   },
+   "node_position": {
+    "x": 200,
+    "y": 0
+   }
+  },
+  {
+   "name": "voronoi_1",
+   "type": "voronoi",
+   "parameters": {
+    "scale_x": 14,
+    "scale_y": 14,
+    "stretch_x": 1,
+    "stretch_y": 1,
+    "intensity": 0.6,
+    "randomness": 0.85
+   },
+   "node_position": {
+    "x": 400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_2",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.5,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 600,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_3",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.5,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 800,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_4",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1000,
+    "y": 0
+   }
+  },
+  {
+   "name": "fbm2_5",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 2,
+    "scale_x": 3,
+    "scale_y": 3,
+    "iterations": 6,
+    "persistence": 0.6
+   },
+   "node_position": {
+    "x": 1200,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_6",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.611764705882353,
+       "g": 0.4196078431372549,
+       "b": 0.1411764705882353,
+       "a": 1
+      },
+      {
+       "pos": 0.45,
+       "r": 0.8156862745098039,
+       "g": 0.6039215686274509,
+       "b": 0.24313725490196078,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.9490196078431372,
+       "g": 0.7764705882352941,
+       "b": 0.43137254901960786,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1400,
+    "y": 0
+   }
+  },
+  {
+   "name": "fbm2_7",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 2,
+    "scale_x": 10,
+    "scale_y": 10,
+    "iterations": 6,
+    "persistence": 0.6
+   },
+   "node_position": {
+    "x": 1600,
+    "y": 0
+   }
+  },
+  {
+   "name": "scratches2_8",
+   "type": "scratches2",
+   "parameters": {
+    "length": 0.25,
+    "width": 0.15,
+    "layers": 5,
+    "waviness": 0.6,
+    "angle": 10,
+    "randomness": 0.8
+   },
+   "node_position": {
+    "x": 1800,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_9",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.1,
+       "g": 0.1,
+       "b": 0.1,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.3,
+       "g": 0.3,
+       "b": 0.3,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 2000,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_10",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.15,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2200,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_11",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": true
+   },
+   "node_position": {
+    "x": 2400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_12",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.18,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2600,
+    "y": 0
+   }
+  },
+  {
+   "name": "uniform_greyscale_13",
+   "type": "uniform_greyscale",
+   "parameters": {
+    "color": 1
+   },
+   "node_position": {
+    "x": 2800,
+    "y": 0
+   }
+  },
+  {
+   "name": "Material",
+   "type": "material",
+   "parameters": {
+    "albedo_color": {
+     "type": "Color",
+     "r": 1,
+     "g": 1,
+     "b": 1,
+     "a": 1
+    },
+    "metallic": 1,
+    "roughness": 1,
+    "emission_energy": 1,
+    "normal": 1,
+    "ao": 1,
+    "depth_scale": 0.5,
+    "flags_transparent": false,
+    "sss": 0,
+    "size": 11
+   },
+   "node_position": {
+    "x": 3000,
+    "y": 0
+   }
+  }
+ ],
+ "connections": [
+  {
+   "from": "fbm2_0",
+   "from_port": 0,
+   "to": "math_2",
+   "to_port": 0
+  },
+  {
+   "from": "voronoi_1",
+   "from_port": 0,
+   "to": "math_3",
+   "to_port": 0
+  },
+  {
+   "from": "math_2",
+   "from_port": 0,
+   "to": "math_4",
+   "to_port": 0
+  },
+  {
+   "from": "math_3",
+   "from_port": 0,
+   "to": "math_4",
+   "to_port": 1
+  },
+  {
+   "from": "fbm2_5",
+   "from_port": 0,
+   "to": "colorize_6",
+   "to_port": 0
+  },
+  {
+   "from": "fbm2_7",
+   "from_port": 0,
+   "to": "colorize_9",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_8",
+   "from_port": 0,
+   "to": "math_10",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_9",
+   "from_port": 0,
+   "to": "math_11",
+   "to_port": 0
+  },
+  {
+   "from": "math_10",
+   "from_port": 0,
+   "to": "math_11",
+   "to_port": 1
+  },
+  {
+   "from": "math_4",
+   "from_port": 0,
+   "to": "math_12",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_6",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 0
+  },
+  {
+   "from": "math_11",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 2
+  },
+  {
+   "from": "math_12",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 6
+  },
+  {
+   "from": "uniform_greyscale_13",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 1
+  }
+ ]
+}
