@@ -153,6 +153,11 @@ def walk(el, m, fill, groups, out):
     })
 
 
+# Gun parts merged into one solid, the hull. HEAVY runs across all four, and
+# as separate pieces their seams and depth steps showed through the letters.
+HULL = ("body", "barrel", "shelf", "muzzle")
+
+
 def part_key(shape):
     """(name, role) for the 3D part a leaf belongs to."""
     g = shape["groups"]
@@ -161,9 +166,9 @@ def part_key(shape):
     if g[0] in ("word-heavy", "word-photon"):
         return g[1], ("heavy" if g[0] == "word-heavy" else "photon")
     if g[0] == "shelf":
-        return ("rail", "rail") if shape["fill"] == "#3ee0ff" else ("shelf", "gun")
+        return ("rail", "rail") if shape["fill"] == "#3ee0ff" else ("hull", "gun")
     if g[0] == "gun":
-        return g[1], "gun"
+        return ("hull" if g[1] in HULL else g[1]), "gun"
     if g[0].startswith("fin-"):
         return g[0], "fin"
     raise ValueError("unplaced shape %r" % shape["id"])

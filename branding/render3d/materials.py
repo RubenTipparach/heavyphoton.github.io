@@ -206,8 +206,9 @@ def hull_panels():
     g = Graph("hull_panels")
     # Uneven bricks split the square into plates of mixed sizes, which reads
     # as hull plating; even bricks read as bathroom tile.
+    # Seams about 3 cm wide, so they still read at 1:1 (one SVG px is 1 cm).
     plates = g.node("bricks_uneven2", iterations=5, min_size=0.22, randomness=0.6,
-                    mortar=0.006, bevel=0.012, round=0, corner=0.04)
+                    mortar=0.014, bevel=0.02, round=0, corner=0.04)
     shade = g.node("fbm2", noise=1, scale_x=4, scale_y=4, iterations=5, persistence=0.5)
     # Port 1 gives each plate a random colour; its red channel is a per-plate
     # value.
@@ -216,7 +217,7 @@ def hull_panels():
     base = g.node("colorize", [(tone, 0)],
                   gradient=gradient((0, "#D9D5C9"), (0.6, "#EAE7DE"), (1, "#F4F2EC")))
     grime = g.node("colorize", [((plates, 0), 0)],
-                   gradient=gradient((0, "#9C9890"), (0.3, "#DDD9CF"), (1, "#FFFFFF")))
+                   gradient=gradient((0, "#5E5B55"), (0.3, "#C9C5BA"), (1, "#FFFFFF")))
     albedo = g.node("blend2", [(base, 0), (grime, 1)], blend_type=2, amount=1)
     rough = add(g, ramp(g, tone, 0.26, 0.4), scale(g, g.node("invert", [((plates, 0), 0)]), 0.3))
     scratches = g.node("scratches2", length=0.3, width=0.2, layers=5, waviness=0.4,
@@ -224,6 +225,24 @@ def hull_panels():
     relief = sub(g, (plates, 0), scale(g, scratches, 0.15), clamp=False)
     g.material({ALBEDO: albedo, ROUGHNESS: rough, DEPTH: height(g, relief, 0.6),
                 METALLIC: g.node("uniform_greyscale", color=0)}, metallic=0)
+    return g
+
+
+def gunmetal():
+    """Dark brushed gunmetal for the frame: the steel's grain and scratches,
+    much darker, with a blue cast that sits next to the cyan."""
+    g = Graph("gunmetal")
+    grain = g.node("noise_anisotropic", scale_x=4, scale_y=512, smoothness=1, interpolation=1)
+    grime = g.node("fbm2", noise=1, scale_x=3, scale_y=3, iterations=6, persistence=0.6)
+    tone = scale(g, g.node("math", [(grain, 0), (grime, 1)], op=0, clamp=False), 0.6)
+    albedo = g.node("colorize", [(tone, 0)],
+                    gradient=gradient((0, "#1E2228"), (0.55, "#343B44"), (1, "#4C5560")))
+    scratches = g.node("scratches2", length=0.35, width=0.15, layers=7, waviness=0.3,
+                       angle=75, randomness=0.7)
+    rough = add(g, ramp(g, tone, 0.42, 0.24), scale(g, scratches, 0.18))
+    relief = sub(g, scale(g, grain, 0.5), scale(g, scratches, 0.7), clamp=False)
+    g.material({ALBEDO: albedo, ROUGHNESS: rough, DEPTH: height(g, relief, 0.3),
+                METALLIC: g.node("uniform_greyscale", color=1)}, metallic=1)
     return g
 
 
@@ -274,7 +293,7 @@ def floor_resin():
 
 
 ALL = [bone_enamel, brushed_steel, polished_brass, gloss_ceramic, hull_panels,
-       ink_gloss, wear_mask, floor_resin]
+       gunmetal, ink_gloss, wear_mask, floor_resin]
 
 if __name__ == "__main__":
     for build in ALL:

@@ -1,9 +1,12 @@
 """Build the Heavy Photon lockup as a 3D scene in Blender and render it.
 
     blender -b --factory-startup -P build_scene.py -- \\
-        --material bone_enamel --light studio \\
-        --res 960 540 --samples 64 --out out/bone_enamel-studio.png \\
-        [--save out/scene.blend]
+        --material hull_panels --light studio \\
+        --width 1566 --samples 64 --out out/hull_panels-studio.png \\
+        [--view logo|gun|hero] [--save out/scene.blend]
+
+The default view looks square-on at the original's own crop, grown by the
+frame, through a 45 degree lens; --width 3840 is 4K.
 
 The geometry comes from shapes.json (python3 svg_shapes.py), the surface
 textures from textures/ (python3 materials.py; python3 mm_export.py textures
@@ -38,13 +41,12 @@ CYAN_HOT = "#B9F4FF"
 
 # (back, front) in SVG px along the depth axis, and the bevel radius in px.
 DEPTH = {
-    "body": (-60, 60, 4), "sight": (-38, 38, 4), "grip": (-44, 44, 4),
-    "trigger": (-14, 14, 3), "barrel": (-48, 48, 4), "shelf": (-52, 52, 4),
-    "muzzle": (-66, 66, 5), "tip": (-30, 30, 3),
+    "hull": (-60, 60, 4), "sight": (-38, 38, 4), "grip": (-44, 44, 4),
+    "trigger": (-14, 14, 3), "tip": (-30, 30, 3),
     "fin-1": (-82, 82, 2.5), "fin-2": (-72, 72, 2.5), "fin-3": (-62, 62, 2.5),
-    "rail": (48, 56, 1.5),
+    "rail": (54, 64, 1.5),
 }
-HEAVY_DEPTH = (0, 72, 2.5)      # 12 px proud of the body, 6 of the muzzle
+HEAVY_DEPTH = (0, 72, 2.5)      # 12 px proud of the hull
 BEAM_DEPTH = (-55, 55, 22)
 BEAM_REACH = 2600               # the beam runs on past the frame's edge
 PHOTON_DEPTH = (10, 76, 2.5)    # 21 px out of the beam's front face
@@ -130,7 +132,7 @@ def box_uv(me):
     bm.free()
 
 
-def build_logo(mats):
+def build_logo(mats, reach=BEAM_REACH):
     data = json.load(open(os.path.join(HERE, "shapes.json")))
     parts = {p["name"]: p for p in data["parts"]}
     objs = {}
@@ -155,15 +157,16 @@ def build_logo(mats):
             ob.data.materials.append(mats["gun"])
         objs[name] = ob
 
-    # The beam: the SVG's trapezoid nozzle and slab, carried on past the
-    # right edge of the frame, with a hot core running down its middle.
+    # The beam: the SVG's trapezoid nozzle and slab, carried on to reach (past
+    # the edge of frame, or in under the frame's right side), with a hot core
+    # running down its middle.
     beam = parts["beam"]["polys"][0]["outer"]
-    beam = [[BEAM_REACH if x >= 1600 else x, y] for x, y in beam]
+    beam = [[reach if x >= 1600 else x, y] for x, y in beam]
     back, front, bev = BEAM_DEPTH
     shell = solid_from_polys("beam", [{"outer": beam, "holes": []}], back, front, bev, 4)
     shell.data.materials.append(mats["beam"])
     shell.visible_shadow = False
-    core = [[618, 224], [705, 214], [BEAM_REACH, 214], [BEAM_REACH, 242], [705, 242], [618, 234]]
+    core = [[618, 224], [705, 214], [reach, 214], [reach, 242], [705, 242], [618, 234]]
     core_ob = solid_from_polys("beam_core", [{"outer": core, "holes": []}], -10, 10, 6, 3)
     core_ob.data.materials.append(mats["core"])
     core_ob.visible_shadow = False
@@ -183,13 +186,74 @@ def build_logo(mats):
         ld.energy = 0
         lo = bpy.data.objects.new(ld.name, ld)
         lo["share"] = energy
-        lo.location = ((700 + BEAM_REACH) / 2 * S - CX * S + 1.2, 0.0, -(228 - CY) * S)
+        lo.location = ((700 + 1600) / 2 * S - CX * S + 1.2, 0.0, -(228 - CY) * S)
         lo.rotation_euler = rot
         lo.visible_camera = False
         lo.visible_glossy = False
         bpy.context.scene.collection.objects.link(lo)
         objs["beam_light_%d" % i] = lo
     return objs
+
+
+# The frame, in SVG px: the gap between the original's crop and the frame,
+# the frame's border, and any strip of background left outside it (none:
+# the crop is the frame). The lockup keeps its size; the canvas grows to
+# take the frame, and everything outside the frame renders transparent.
+FRAME_GAP, FRAME_BORDER, FRAME_MARGIN = 22, 34, 0
+FRAME_DEPTH = (-40, 95, 12)     # back, front, chamfer: proud of everything
+FRAME_CUT = 16                  # corner cut on the inside edge
+
+
+def chamfer_rect(x0, y0, x1, y1, c):
+    return [[x0 + c, y0], [x1 - c, y0], [x1, y0 + c], [x1, y1 - c],
+            [x1 - c, y1], [x0 + c, y1], [x0, y1 - c], [x0, y0 + c]]
+
+
+def frame_rect(grow):
+    """The original's crop grown by grow px, with its corners cut. Cuts on
+    parallel rings grow by (2 - sqrt 2) per px so the chamfers stay parallel."""
+    x, y, w, h = VIEWBOX
+    g = grow
+    cut = FRAME_CUT + (g - FRAME_GAP) * (2 - math.sqrt(2))
+    return chamfer_rect(x - g, y - g, x + w + g, y + h + g, cut)
+
+
+def build_frame(mats):
+    """A bevelled gunmetal frame around the lockup, its corners cut like the
+    letterforms, with a cyan pinline glowing along the middle of its face.
+    The beam runs in under its right-hand side."""
+    inner, outer = FRAME_GAP, FRAME_GAP + FRAME_BORDER
+    back, front, bev = FRAME_DEPTH
+    ring = solid_from_polys("frame", [{"outer": frame_rect(outer),
+                                       "holes": [frame_rect(inner)]}],
+                            back, front, bev, bevel_res=0)
+    ring.data.materials.append(mats["frame"])
+    mid = (inner + outer) / 2
+    pin = solid_from_polys("frame_pinline", [{"outer": frame_rect(mid + 1.5),
+                                              "holes": [frame_rect(mid - 1.5)]}],
+                           front - 4, front + 2, 0.8)
+    pin.data.materials.append(mats["rail"])
+
+    # Everything outside the frame is transparent: a holdout sheet with the
+    # frame's outline cut out of it, seen only by the camera. It sits where
+    # the frame's outer wall ends and the chamfer begins, which is the
+    # frame's silhouette from a camera square to it.
+    x, y, w, h = VIEWBOX
+    far = 5000
+    sil = front - bev
+    cut = solid_from_polys("outside", [{"outer": [[x - far, y - far], [x + w + far, y - far],
+                                                  [x + w + far, y + h + far], [x - far, y + h + far]],
+                                        "holes": [frame_rect(outer)]}],
+                           sil - 0.05, sil, 0, bevel_res=0)
+    hold = bpy.data.materials.new("outside_frame")
+    hnt, hN, hL = nodes_of(hold)
+    hL.new(hN.new("ShaderNodeHoldout").outputs["Holdout"],
+           hN.new("ShaderNodeOutputMaterial").inputs["Surface"])
+    cut.data.materials.append(hold)
+    for attr in ("visible_diffuse", "visible_glossy", "visible_transmission",
+                 "visible_volume_scatter", "visible_shadow"):
+        setattr(cut, attr, False)
+    return ring, pin
 
 
 # --------------------------------------------------------------------------
@@ -324,6 +388,15 @@ def gun_material(finish):
     L.new(paint.outputs["BSDF"], mix.inputs[1])
     L.new(steel.outputs["BSDF"], mix.inputs[2])
     L.new(mix.outputs["Shader"], out.inputs["Surface"])
+    return mat
+
+
+def frame_material():
+    mat = bpy.data.materials.new("frame")
+    nt, N, L = nodes_of(mat)
+    out = N.new("ShaderNodeOutputMaterial")
+    bsdf = principled_from(nt, "gunmetal", 3.0, 0.012, grime=0.3, aniso=0.5)
+    L.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     return mat
 
 
@@ -583,7 +656,7 @@ def add_planet():
     mp.inputs["Scale"].default_value = (1.0, 1.0, 6.0)  # bands
     L.new(tc.outputs["Object"], mp.inputs["Vector"])
     noise = N.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 0.03
+    noise.inputs["Scale"].default_value = 0.12
     noise.inputs["Detail"].default_value = 12
     noise.inputs["Distortion"].default_value = 2.5
     L.new(mp.outputs["Vector"], noise.inputs["Vector"])
@@ -615,12 +688,14 @@ def add_planet():
     L.new(add.outputs["Shader"], out.inputs["Surface"])
     me = bpy.data.meshes.new("planet")
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=192, v_segments=96, radius=120)
+    bmesh.ops.create_uvsphere(bm, u_segments=192, v_segments=96, radius=30)
     bm.to_mesh(me)
     bm.free()
     me.shade_smooth()
     ob = bpy.data.objects.new("planet", me)
-    ob.location = (8, 150, -152)
+    # Its top sits just under the beam, so the limb runs behind the gap
+    # between the beam and the bottom of the crop.
+    ob.location = (5.5, 80, -31.0)
     ob.rotation_euler = (0.35, 0.2, 0)
     ob.data.materials.append(mat)
     bpy.context.scene.collection.objects.link(ob)
@@ -659,7 +734,9 @@ def add_light(kind, name, loc, target, energy, color="#FFFFFF", size=1.0, size_y
     return ob
 
 
-def world(color, strength=1.0, stars=False, top=None):
+def world(color, strength=1.0):
+    """A flat world colour. Stars live on star_card(), a card behind the set,
+    so they sit at a scale that reads in the logo's narrow frame."""
     w = bpy.data.worlds.new("world")
     bpy.context.scene.world = w
     w.use_nodes = True
@@ -670,71 +747,95 @@ def world(color, strength=1.0, stars=False, top=None):
     out = N.new("ShaderNodeOutputWorld")
     bg = N.new("ShaderNodeBackground")
     bg.inputs["Strength"].default_value = strength
+    bg.inputs["Color"].default_value = hex_lin(color)
     L.new(bg.outputs["Background"], out.inputs["Surface"])
-    if not (stars or top):
-        bg.inputs["Color"].default_value = hex_lin(color)
-        return
+
+
+def star_card(y=160.0, half=120.0):
+    """A starfield on a card far behind the set, facing the camera: one star
+    in a third of the cells of a 33 cm Voronoi grid, at varied brightness."""
+    mat = bpy.data.materials.new("stars")
+    nt, N, L = nodes_of(mat)
+    out = N.new("ShaderNodeOutputMaterial")
     tc = N.new("ShaderNodeTexCoord")
-    base = bg.inputs["Color"]
-    if top:
-        sep = N.new("ShaderNodeSeparateXYZ")
-        L.new(tc.outputs["Generated"], sep.inputs["Vector"])
-        mix = N.new("ShaderNodeMix")
-        mix.data_type = "RGBA"
-        mr = N.new("ShaderNodeMapRange")
-        mr.inputs["From Min"].default_value = -0.1
-        mr.inputs["From Max"].default_value = 0.5
-        L.new(sep.outputs["Z"], mr.inputs["Value"])
-        L.new(mr.outputs["Result"], mix.inputs["Factor"])
-        mix.inputs["A"].default_value = hex_lin(color)
-        mix.inputs["B"].default_value = hex_lin(top)
-        sky = mix.outputs["Result"]
-    else:
-        rgb = N.new("ShaderNodeRGB")
-        rgb.outputs[0].default_value = hex_lin(color)
-        sky = rgb.outputs[0]
-    if stars:
-        vor = N.new("ShaderNodeTexVoronoi")
-        vor.inputs["Scale"].default_value = 420
-        vor.inputs["Randomness"].default_value = 1
-        L.new(tc.outputs["Generated"], vor.inputs["Vector"])
-        mr2 = N.new("ShaderNodeMapRange")
-        mr2.inputs["From Min"].default_value = 0.12
-        mr2.inputs["From Max"].default_value = 0.0
-        mr2.inputs["To Max"].default_value = 1.0
-        L.new(vor.outputs["Distance"], mr2.inputs["Value"])
-        # Only some cells get a star, at varied brightness.
-        wn = N.new("ShaderNodeTexWhiteNoise")
-        wn.noise_dimensions = "3D"
-        L.new(vor.outputs["Position"], wn.inputs["Vector"])
-        gate = N.new("ShaderNodeMapRange")
-        gate.inputs["From Min"].default_value = 0.965
-        gate.inputs["From Max"].default_value = 1.0
-        gate.inputs["To Max"].default_value = 40.0
-        L.new(wn.outputs["Value"], gate.inputs["Value"])
-        st = N.new("ShaderNodeMath")
-        st.operation = "MULTIPLY"
-        L.new(mr2.outputs["Result"], st.inputs[0])
-        L.new(gate.outputs["Result"], st.inputs[1])
-        add = N.new("ShaderNodeMix")
-        add.data_type = "RGBA"
-        add.blend_type = "ADD"
-        add.inputs["Factor"].default_value = 1
-        L.new(sky, add.inputs["A"])
-        L.new(st.outputs["Value"], add.inputs["B"])
-        sky = add.outputs["Result"]
-    L.new(sky, base)
+    vor = N.new("ShaderNodeTexVoronoi")
+    vor.inputs["Scale"].default_value = 3.0
+    vor.inputs["Randomness"].default_value = 1
+    L.new(tc.outputs["Object"], vor.inputs["Vector"])
+    dot = N.new("ShaderNodeMapRange")
+    dot.inputs["From Min"].default_value = 0.055
+    dot.inputs["From Max"].default_value = 0.0
+    L.new(vor.outputs["Distance"], dot.inputs["Value"])
+    wn = N.new("ShaderNodeTexWhiteNoise")
+    wn.noise_dimensions = "3D"
+    L.new(vor.outputs["Position"], wn.inputs["Vector"])
+    gate = N.new("ShaderNodeMapRange")
+    gate.inputs["From Min"].default_value = 0.66
+    gate.inputs["From Max"].default_value = 1.0
+    gate.inputs["To Max"].default_value = 30.0
+    L.new(wn.outputs["Value"], gate.inputs["Value"])
+    st = N.new("ShaderNodeMath")
+    st.operation = "MULTIPLY"
+    L.new(dot.outputs["Result"], st.inputs[0])
+    L.new(gate.outputs["Result"], st.inputs[1])
+    em = N.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = hex_lin("#FFF1E8")
+    L.new(st.outputs["Value"], em.inputs["Strength"])
+    L.new(em.outputs["Emission"], out.inputs["Surface"])
+    me = bpy.data.meshes.new("stars")
+    bm = bmesh.new()
+    for x, z in ((-half, -half), (half, -half), (half, half), (-half, half)):
+        bm.verts.new((x, 0, z))
+    bm.faces.new(bm.verts)
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new("stars", me)
+    ob.location.y = y
+    ob.data.materials.append(mat)
+    ob.visible_shadow = False
+    ob.visible_diffuse = False
+    ob.visible_glossy = False
+    bpy.context.scene.collection.objects.link(ob)
+    return ob
 
 
 # --------------------------------------------------------------------------
 # Lighting styles
 
-LOGO_CENTRE = (0.4, 0.0, -0.1)
+# The original's crop, raygun-v2-branded.svg's viewBox in SVG px. The logo
+# view is framed on exactly this (plus the frame), in the same proportions.
+VIEWBOX = (34.67, 95.33, 1565.33, 356.0)
+
+
+FOV = 45.0  # degrees across the frame
+
+
+def view_camera(view, framed=True):
+    """Camera for a view: 'logo' looks square-on at the original's crop (grown
+    by the frame when there is one), 'gun' square-on at the gun for judging
+    the surface, 'hero' the earlier three-quarter perspective."""
+    if view in ("logo", "gun"):
+        x, y, w, h = VIEWBOX if view == "logo" else (1.0, 90.0, 640.0, 360.0)
+        if view == "logo" and framed:
+            g = FRAME_GAP + FRAME_BORDER + FRAME_MARGIN
+            x, y, w, h = x - g, y - g, w + 2 * g, h + 2 * g
+        cx, cz = svg_to_xz(x + w / 2, y + h / 2)
+        # Square to the logo, a 45 degree field, backed off until the crop
+        # exactly spans the frame's silhouette (or, unframed, PHOTON's face).
+        if framed and view == "logo":
+            near = (FRAME_DEPTH[1] - FRAME_DEPTH[2]) * S   # the frame's silhouette
+        else:
+            near = PHOTON_DEPTH[1] * S
+        dist = (w * S / 2) / math.tan(math.radians(FOV / 2))
+        return dict(fov=FOV, loc=(cx, -near - dist, cz), target=(cx, 0.0, cz),
+                    width=round(w) if view == "logo" else 960, aspect=w / h)
+    return dict(loc=(-2.6, -26.0, 2.6), target=(0.9, 0, -0.45), lens=45, width=960,
+                aspect=16 / 9)
 
 
 def light_rig(style, objs, mats):
     """Each style sets the world, the atmosphere, the floor, the lights and
-    how hard the beam glows. Returns (camera settings, look, glare)."""
+    how hard the beam glows. Returns (look, glare)."""
     beam_lights = [objs["beam_light_%d" % i] for i in range(3)]
 
     def beam_power(w):
@@ -742,25 +843,28 @@ def light_rig(style, objs, mats):
             b.data.energy = w * b["share"]
 
     floor_z = -(470 - CY) * S
-    cam = dict(loc=(-2.6, -26.0, 2.6), target=(0.9, 0, -0.45), lens=45)
+    # A broad, dim card behind the camera. It barely lights anything, but a
+    # metal face square to the lens reflects what is behind the camera, and
+    # without this that is black: the gunmetal frame would vanish.
+    add_light("AREA", "reflection_card", (0.0, -45.0, 1.5), (0.0, 0.0, 0.0), 650, "#E8EEF5",
+              30, 7)
     # The haze only fills the set, not the miles behind it, or every light
-    # in the rig turns the whole background grey.
-    haze_lo, haze_hi = (-30, -30, floor_z - 0.5), (35, 9, 14)
+    # in the rig turns the whole background grey. It starts at the frame's
+    # face, so none of it lies over the transparent cut-out around the frame.
+    haze_lo, haze_hi = (-30, -FRAME_DEPTH[1] * S, floor_z - 0.5), (35, 9, 14)
 
     if style == "studio":
         world("#020306")
-        add_floor(floor_z, floor_material("resin"))
         add_box("fog", haze_lo, haze_hi, fog_material(0.0025, 0.5))
         add_light("AREA", "key", (-11, -8, 12), (-2, 0, 0), 2400, "#FFF3E6", 6, 3, spread=60)
         add_light("AREA", "fill", (6, -16, -1), (0, 0, 0), 120, "#DDE8FF", 6, 3)
         add_light("AREA", "rim_top", (-4, 9, 9), (-2, 0, 0), 3500, "#FFFFFF", 10, 1.2, spread=60)
         add_light("AREA", "rim_left", (-14, 6, 2), (-3, 0, 0), 2000, "#FFFFFF", 2, 6, spread=60)
         beam_power(1800)
-        return cam, "AgX - Punchy", 0.35
+        return "AgX - Punchy", 0.35
 
     if style == "noir":
         world("#000000")
-        add_floor(floor_z, floor_material("resin"))
         add_box("fog", haze_lo, (35, 12, 24),
                 fog_material(0.010, 0.2, wisps=0.9, wisp_scale=0.09))
         # Hard shafts from high behind: they cut through the fins and the
@@ -777,10 +881,11 @@ def light_rig(style, objs, mats):
                   size=0.02, spot=36)
         add_light("AREA", "key", (-10, -14, 6), (-2, 0, 0), 700, "#FFF3E6", 2.5, 2.5)
         beam_power(1500)
-        return cam, "AgX - High Contrast", 0.45
+        return "AgX - High Contrast", 0.45
 
     if style == "space":
-        world("#000000", stars=True, top="#060A18")
+        world("#000000")
+        star_card()
         add_box("nebula", (-45, 6, -25), (60, 60, 30),
                 fog_material(0.002, 0.2, wisps=0.95, wisp_scale=0.055,
                              nebula=("#1D2B53", "#83769C", 0.6)))
@@ -789,28 +894,33 @@ def light_rig(style, objs, mats):
         add_light("AREA", "rim", (-10, 8, 6), (-2, 0, 0), 4000, "#83769C", 6, 6)
         add_light("AREA", "fill", (-4, -14, -6), (0, 0, 0), 250, "#29ADFF", 8, 4)
         beam_power(2200)
-        return cam, "AgX - Punchy", 0.4
+        return "AgX - Punchy", 0.4
 
     if style == "ember":
         world("#070302")
-        add_floor(floor_z, floor_material("resin"))
         add_box("fog", haze_lo, haze_hi,
                 fog_material(0.004, 0.55, wisps=0.6, wisp_scale=0.12, color="#FFE8D6"))
         add_light("AREA", "ember_back", (-11, 9, 5), (-2, 0, 0), 9000, "#FFA300", 4, 8, spread=60)
         add_light("AREA", "ember_top", (-2, 4, 12), (-1, 0, 0), 3500, "#FF8A1A", 9, 2, spread=60)
         add_light("AREA", "key", (-6, -15, 7), (-1, 0, 0), 700, "#FFF1E8", 5, 3)
         beam_power(1700)
-        return cam, "AgX - Punchy", 0.4
+        return "AgX - Punchy", 0.4
 
     if style == "product":
         world("#9AA0A8", strength=0.15)
-        add_floor(floor_z, floor_material("sweep"), sweep=True)
+        backdrop = bpy.data.materials.new("backdrop")
+        bnt, bN, bL = nodes_of(backdrop)
+        bsdf = bN.new("ShaderNodeBsdfPrincipled")
+        bsdf.inputs["Base Color"].default_value = hex_lin("#9EA3AB")
+        bsdf.inputs["Roughness"].default_value = 0.6
+        bL.new(bsdf.outputs["BSDF"], bN.new("ShaderNodeOutputMaterial").inputs["Surface"])
+        add_box("backdrop", (-60, 9, -40), (60, 9.2, 40), backdrop)
         add_box("fog", haze_lo, haze_hi, fog_material(0.001, 0.3))
         add_light("AREA", "top", (0, -3, 12), (0, -1, 0), 4500, "#FFFFFF", 14, 6)
         add_light("AREA", "key", (-12, -12, 4), (-1, 0, 0), 2200, "#FFF6EC", 6, 6)
         add_light("AREA", "fill", (12, -14, 2), (1, 0, 0), 700, "#EEF4FF", 8, 6)
         beam_power(1200)
-        return cam, "AgX - Base Contrast", 0.2
+        return "AgX - Base Contrast", 0.2
 
     raise SystemExit("unknown light style " + style)
 
@@ -847,6 +957,7 @@ def setup_render(res, samples, out_path, look, glare):
     sc.render.filepath = out_path
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_depth = "8"
+    sc.render.image_settings.color_mode = "RGBA"
     sc.render.film_transparent = False
     sc.view_settings.view_transform = "AgX"
     try:
@@ -854,8 +965,8 @@ def setup_render(res, samples, out_path, look, glare):
     except TypeError:
         print("look %r not available" % look)
 
-    # Post: a bloom on what is brighter than white, and a touch of lens
-    # dispersion at the edges.
+    # Post: a bloom on what is brighter than white. No lens distortion, so the
+    # straight lines of the lockup and the frame stay straight.
     sc.use_nodes = True
     nt = sc.node_tree
     for n in list(nt.nodes):
@@ -877,12 +988,8 @@ def setup_render(res, samples, out_path, look, glare):
         gl.threshold = 1.0
         gl.mix = glare - 1.0
         gl.size = 9
-    lens = nt.nodes.new("CompositorNodeLensdist")
-    if "Dispersion" in lens.inputs:
-        lens.inputs["Dispersion"].default_value = 0.012
     nt.links.new(rl.outputs["Image"], gl.inputs["Image"])
-    nt.links.new(gl.outputs["Image"], lens.inputs["Image"])
-    nt.links.new(lens.outputs["Image"], comp.inputs["Image"])
+    nt.links.new(gl.outputs["Image"], comp.inputs["Image"])
 
 
 def main():
@@ -890,7 +997,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--material", default="bone_enamel", choices=sorted(FINISHES))
     ap.add_argument("--light", default="studio", choices=sorted(BEAM_GLOW))
-    ap.add_argument("--res", type=int, nargs=2, default=(960, 540))
+    ap.add_argument("--view", default="logo", choices=["logo", "gun", "hero"])
+    ap.add_argument("--width", type=int, default=None,
+                    help="output width; height follows the view's shape "
+                         "(logo: 1566 is 1:1 with the SVG, 3840 is 4K)")
+    ap.add_argument("--res", type=int, nargs=2, default=None, help="exact W H")
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--out", default=os.path.join(HERE, "out", "render.png"))
     ap.add_argument("--save", default=None)
@@ -899,6 +1010,7 @@ def main():
                     metavar=("X", "Y", "Z", "TX", "TY", "TZ", "LENS"),
                     help="override the style's camera: position, target, lens")
     ap.add_argument("--exposure", type=float, default=0.0)
+    ap.add_argument("--no-frame", action="store_true", help="the bare lockup, no frame")
     a = ap.parse_args(argv)
 
     for ob in list(bpy.data.objects):
@@ -910,14 +1022,30 @@ def main():
         "rail": emissive("rail", CYAN, 14.0),
         "beam": beam_material(BEAM_GLOW[a.light]),
         "core": emissive("core", CYAN_HOT, 9.0 * BEAM_GLOW[a.light]),
+        "frame": frame_material(),
     }
-    objs = build_logo(mats)
-    cam_cfg, look, glare = light_rig(a.light, objs, mats)
+    if a.no_frame:
+        objs = build_logo(mats)
+    else:
+        objs = build_logo(mats, reach=1600 + FRAME_GAP + FRAME_BORDER / 2)
+        build_frame(mats)
+    look, glare = light_rig(a.light, objs, mats)
 
+    cam_cfg = view_camera(a.view, framed=not a.no_frame)
     if a.cam:
-        cam_cfg = dict(loc=a.cam[0:3], target=a.cam[3:6], lens=a.cam[6])
+        cam_cfg = dict(loc=a.cam[0:3], target=a.cam[3:6], lens=a.cam[6], width=960,
+                       aspect=16 / 9)
+    if a.res:
+        res = tuple(a.res)
+    else:
+        w = a.width or cam_cfg["width"]
+        res = (w, round(w / cam_cfg["aspect"]))
     cd = bpy.data.cameras.new("cam")
-    cd.lens = cam_cfg["lens"]
+    if "fov" in cam_cfg:
+        cd.sensor_fit = "HORIZONTAL"
+        cd.angle = math.radians(cam_cfg["fov"])
+    else:
+        cd.lens = cam_cfg["lens"]
     cd.clip_end = 400
     cam = bpy.data.objects.new("cam", cd)
     cam.location = cam_cfg["loc"]
@@ -925,7 +1053,7 @@ def main():
     look_at(cam, cam_cfg["target"])
     bpy.context.scene.camera = cam
 
-    setup_render(tuple(a.res), a.samples, os.path.abspath(a.out), look, glare)
+    setup_render(res, a.samples, os.path.abspath(a.out), look, glare)
     bpy.context.scene.view_settings.exposure = a.exposure
     if a.threads:
         bpy.context.scene.render.threads_mode = "FIXED"
