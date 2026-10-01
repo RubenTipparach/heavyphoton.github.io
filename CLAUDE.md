@@ -33,6 +33,10 @@ tight-cropped versions live in `work/public/branding/` and are regenerated with:
 python3 branding/export_web_svg.py
 ```
 
+The site's boot screen shows the 3D render of the primary lockup instead
+(`branding/render3d/`), as WebP cuts in `work/public/branding/` written by
+`python3 branding/render3d/export_web.py`.
+
 ### Palette
 
 Ink `#0B0E14`, bone `#F2F0E9`, ion cyan `#3EE0FF`.
