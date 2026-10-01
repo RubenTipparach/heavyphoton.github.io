@@ -1,0 +1,271 @@
+{
+ "name": "floor_resin",
+ "type": "graph",
+ "label": "floor_resin",
+ "shortdesc": "",
+ "longdesc": "",
+ "parameters": {},
+ "node_position": {
+  "x": 0,
+  "y": 0
+ },
+ "nodes": [
+  {
+   "name": "fbm2_0",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 1,
+    "scale_x": 2,
+    "scale_y": 2,
+    "iterations": 5,
+    "persistence": 0.5
+   },
+   "node_position": {
+    "x": 200,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_1",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.023529411764705882,
+       "g": 0.027450980392156862,
+       "b": 0.0392156862745098,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.07058823529411765,
+       "g": 0.08235294117647059,
+       "b": 0.12549019607843137,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 400,
+    "y": 0
+   }
+  },
+  {
+   "name": "fbm2_2",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 2,
+    "scale_x": 3,
+    "scale_y": 3,
+    "iterations": 7,
+    "persistence": 0.62
+   },
+   "node_position": {
+    "x": 600,
+    "y": 0
+   }
+  },
+  {
+   "name": "scratches2_3",
+   "type": "scratches2",
+   "parameters": {
+    "length": 0.2,
+    "width": 0.15,
+    "layers": 8,
+    "waviness": 0.7,
+    "angle": 0,
+    "randomness": 1
+   },
+   "node_position": {
+    "x": 800,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_4",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.03,
+       "g": 0.03,
+       "b": 0.03,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.3,
+       "g": 0.3,
+       "b": 0.3,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1000,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_5",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.06,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1200,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_6",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": true
+   },
+   "node_position": {
+    "x": 1400,
+    "y": 0
+   }
+  },
+  {
+   "name": "perlin_7",
+   "type": "perlin",
+   "parameters": {
+    "scale_x": 6,
+    "scale_y": 6,
+    "iterations": 5,
+    "persistence": 0.6
+   },
+   "node_position": {
+    "x": 1600,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_8",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.08,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1800,
+    "y": 0
+   }
+  },
+  {
+   "name": "uniform_greyscale_9",
+   "type": "uniform_greyscale",
+   "parameters": {
+    "color": 0
+   },
+   "node_position": {
+    "x": 2000,
+    "y": 0
+   }
+  },
+  {
+   "name": "Material",
+   "type": "material",
+   "parameters": {
+    "albedo_color": {
+     "type": "Color",
+     "r": 1,
+     "g": 1,
+     "b": 1,
+     "a": 1
+    },
+    "metallic": 0,
+    "roughness": 1,
+    "emission_energy": 1,
+    "normal": 1,
+    "ao": 1,
+    "depth_scale": 0.5,
+    "flags_transparent": false,
+    "sss": 0,
+    "size": 11
+   },
+   "node_position": {
+    "x": 2200,
+    "y": 0
+   }
+  }
+ ],
+ "connections": [
+  {
+   "from": "fbm2_0",
+   "from_port": 0,
+   "to": "colorize_1",
+   "to_port": 0
+  },
+  {
+   "from": "fbm2_2",
+   "from_port": 0,
+   "to": "colorize_4",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_3",
+   "from_port": 0,
+   "to": "math_5",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_4",
+   "from_port": 0,
+   "to": "math_6",
+   "to_port": 0
+  },
+  {
+   "from": "math_5",
+   "from_port": 0,
+   "to": "math_6",
+   "to_port": 1
+  },
+  {
+   "from": "perlin_7",
+   "from_port": 0,
+   "to": "math_8",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_1",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 0
+  },
+  {
+   "from": "math_6",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 2
+  },
+  {
+   "from": "math_8",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 6
+  },
+  {
+   "from": "uniform_greyscale_9",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 1
+  }
+ ]
+}

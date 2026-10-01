@@ -1,0 +1,368 @@
+{
+ "name": "gunmetal",
+ "type": "graph",
+ "label": "gunmetal",
+ "shortdesc": "",
+ "longdesc": "",
+ "parameters": {},
+ "node_position": {
+  "x": 0,
+  "y": 0
+ },
+ "nodes": [
+  {
+   "name": "noise_anisotropic_0",
+   "type": "noise_anisotropic",
+   "parameters": {
+    "scale_x": 4,
+    "scale_y": 512,
+    "smoothness": 1,
+    "interpolation": 1
+   },
+   "node_position": {
+    "x": 200,
+    "y": 0
+   }
+  },
+  {
+   "name": "fbm2_1",
+   "type": "fbm2",
+   "parameters": {
+    "noise": 1,
+    "scale_x": 3,
+    "scale_y": 3,
+    "iterations": 6,
+    "persistence": 0.6
+   },
+   "node_position": {
+    "x": 400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_2",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 600,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_3",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.6,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 800,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_4",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.11764705882352941,
+       "g": 0.13333333333333333,
+       "b": 0.1568627450980392,
+       "a": 1
+      },
+      {
+       "pos": 0.55,
+       "r": 0.20392156862745098,
+       "g": 0.23137254901960785,
+       "b": 0.26666666666666666,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.2980392156862745,
+       "g": 0.3333333333333333,
+       "b": 0.3764705882352941,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1000,
+    "y": 0
+   }
+  },
+  {
+   "name": "scratches2_5",
+   "type": "scratches2",
+   "parameters": {
+    "length": 0.35,
+    "width": 0.15,
+    "layers": 7,
+    "waviness": 0.3,
+    "angle": 75,
+    "randomness": 0.7
+   },
+   "node_position": {
+    "x": 1200,
+    "y": 0
+   }
+  },
+  {
+   "name": "colorize_6",
+   "type": "colorize",
+   "parameters": {
+    "gradient": {
+     "type": "Gradient",
+     "interpolation": 1,
+     "points": [
+      {
+       "pos": 0,
+       "r": 0.42,
+       "g": 0.42,
+       "b": 0.42,
+       "a": 1
+      },
+      {
+       "pos": 1,
+       "r": 0.24,
+       "g": 0.24,
+       "b": 0.24,
+       "a": 1
+      }
+     ]
+    }
+   },
+   "node_position": {
+    "x": 1400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_7",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.18,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 1600,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_8",
+   "type": "math",
+   "parameters": {
+    "op": 0,
+    "clamp": true
+   },
+   "node_position": {
+    "x": 1800,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_9",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.5,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2000,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_10",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.7,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2200,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_11",
+   "type": "math",
+   "parameters": {
+    "op": 1,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2400,
+    "y": 0
+   }
+  },
+  {
+   "name": "math_12",
+   "type": "math",
+   "parameters": {
+    "op": 2,
+    "default_in2": 0.3,
+    "clamp": false
+   },
+   "node_position": {
+    "x": 2600,
+    "y": 0
+   }
+  },
+  {
+   "name": "uniform_greyscale_13",
+   "type": "uniform_greyscale",
+   "parameters": {
+    "color": 1
+   },
+   "node_position": {
+    "x": 2800,
+    "y": 0
+   }
+  },
+  {
+   "name": "Material",
+   "type": "material",
+   "parameters": {
+    "albedo_color": {
+     "type": "Color",
+     "r": 1,
+     "g": 1,
+     "b": 1,
+     "a": 1
+    },
+    "metallic": 1,
+    "roughness": 1,
+    "emission_energy": 1,
+    "normal": 1,
+    "ao": 1,
+    "depth_scale": 0.5,
+    "flags_transparent": false,
+    "sss": 0,
+    "size": 11
+   },
+   "node_position": {
+    "x": 3000,
+    "y": 0
+   }
+  }
+ ],
+ "connections": [
+  {
+   "from": "noise_anisotropic_0",
+   "from_port": 0,
+   "to": "math_2",
+   "to_port": 0
+  },
+  {
+   "from": "fbm2_1",
+   "from_port": 0,
+   "to": "math_2",
+   "to_port": 1
+  },
+  {
+   "from": "math_2",
+   "from_port": 0,
+   "to": "math_3",
+   "to_port": 0
+  },
+  {
+   "from": "math_3",
+   "from_port": 0,
+   "to": "colorize_4",
+   "to_port": 0
+  },
+  {
+   "from": "math_3",
+   "from_port": 0,
+   "to": "colorize_6",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_5",
+   "from_port": 0,
+   "to": "math_7",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_6",
+   "from_port": 0,
+   "to": "math_8",
+   "to_port": 0
+  },
+  {
+   "from": "math_7",
+   "from_port": 0,
+   "to": "math_8",
+   "to_port": 1
+  },
+  {
+   "from": "noise_anisotropic_0",
+   "from_port": 0,
+   "to": "math_9",
+   "to_port": 0
+  },
+  {
+   "from": "scratches2_5",
+   "from_port": 0,
+   "to": "math_10",
+   "to_port": 0
+  },
+  {
+   "from": "math_9",
+   "from_port": 0,
+   "to": "math_11",
+   "to_port": 0
+  },
+  {
+   "from": "math_10",
+   "from_port": 0,
+   "to": "math_11",
+   "to_port": 1
+  },
+  {
+   "from": "math_11",
+   "from_port": 0,
+   "to": "math_12",
+   "to_port": 0
+  },
+  {
+   "from": "colorize_4",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 0
+  },
+  {
+   "from": "math_8",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 2
+  },
+  {
+   "from": "math_12",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 6
+  },
+  {
+   "from": "uniform_greyscale_13",
+   "from_port": 0,
+   "to": "Material",
+   "to_port": 1
+  }
+ ]
+}
