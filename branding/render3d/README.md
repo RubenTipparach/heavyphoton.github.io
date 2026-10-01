@@ -4,9 +4,16 @@
 Blender with surfaces authored in Material Maker, rendered in Cycles with
 volumetric haze, smoke and a glowing plasma beam.
 
-This is the approval round: low-res previews of five lighting styles and five
-gun finishes, in `previews/`. Once a pairing is picked, the same scene
-renders at 3840 x 2160.
+**The approved look** is finish 5, hull plating, under A, the dark studio
+light, square-on through a 45 degree lens, inside a bevelled gunmetal frame
+with a cyan pinline. The crop is the frame, and everything outside it is
+transparent. The 4K render is `final/heavy-photon-3d-4k.png` (3840 x 1071).
+A 1724 px wide cut of it is the boot splash in godot-sandbox.
+
+`previews/` holds the first approval round: five lighting styles and five
+finishes from a three-quarter camera, before the frame. The scene has moved
+on since (the frame, the merged hull, no floor), so they are a record of
+that round, not of what `build_scene.py` renders today.
 
 ## Pipeline
 
@@ -29,31 +36,45 @@ python3 render_previews.py
 python3 make_sheets.py
 ```
 
-One look, any size:
+The approved render:
 
 ```sh
 blender -b --factory-startup -P build_scene.py -- \
-    --material bone_enamel --light studio \
-    --res 3840 2160 --samples 256 --out out/final.png --save out/final.blend
+    --material hull_panels --light studio \
+    --width 3840 --samples 256 --out final/heavy-photon-3d-4k.png
 ```
 
 `--material` is one of `bone_enamel`, `brushed_steel`, `polished_brass`,
 `gloss_ceramic`, `hull_panels`. `--light` is one of `studio`, `noir`, `space`,
-`ember`, `product`. `--cam X Y Z TX TY TZ LENS` overrides the camera.
+`ember`, `product`. `--width` sets the size and the height follows the
+frame's shape; `--no-frame` drops the frame and crops to the original
+viewBox. `--view gun` is a square-on close-up of the gun, `--view hero` the
+first round's three-quarter camera, and `--cam X Y Z TX TY TZ LENS` any
+camera at all. At 3840 wide on a 4-core CPU with no GPU the render takes
+about 40 minutes.
 
 ## The model
 
 One SVG px is 1 cm, so the lockup is about 16 m wide; the camera looks down
-+Y. Every part of the gun is its own bevelled extrusion, so it reads as an
-assembly rather than one slab: the fins stand proudest, the muzzle ring is the
-fattest piece, HEAVY is a raised ink plate across the body and barrel, and
-PHOTON stands 21 cm out of the front of the beam. The depths are the `DEPTH`
-table at the top of `build_scene.py`.
++Y. The gun is a few bevelled extrusions, so it reads as an assembly: the
+fins stand proudest, the sight, grip, trigger and tip are their own pieces,
+and the body, barrel, shelf and muzzle are one hull, so HEAVY, a raised ink
+plate, sits on a single flat surface with no seam or step behind its
+letters. PHOTON stands 21 cm out of the front of the beam. The depths are
+the `DEPTH` table at the top of `build_scene.py`; `svg_shapes.py` decides
+which SVG groups merge into the hull.
 
-The beam is the SVG's nozzle and slab, carried on past the right edge of
-frame the way the flat logo bleeds off its canvas: a clear skin with a lit
-rim, filled with turbulent plasma that is white-hot on the axis and falls off
-to cyan and blue at the walls. Three hidden area lights inside it do its
+The frame is the original's viewBox grown by a 22 px gap and a 34 px
+border, its inside corners cut like the letterforms, chamfered on both
+edges, standing proud of everything else. The camera backs off until the
+crop exactly spans the frame's silhouette, and a holdout sheet that only
+the camera sees, with the frame's outline cut out of it, makes everything
+outside the frame transparent. There is no floor.
+
+The beam is the SVG's nozzle and slab, carried on in under the frame's right
+side (or, with no frame, past the edge, the way the flat logo bleeds off its
+canvas): a clear skin with a lit rim, filled with turbulent plasma that is
+white-hot on the axis and falls off to cyan and blue at the walls. Three hidden area lights inside it do its
 lighting, which is far less noisy than leaving it to the emissive volume.
 
 ## Materials
