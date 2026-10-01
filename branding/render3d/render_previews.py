@@ -5,7 +5,8 @@ finish under one lighting style with a close-up of the gun beside it.
     python3 render_previews.py                # all of it
     python3 render_previews.py --only lights  # or: materials
 
-Renders land in previews/, one PNG per look, which the review page shows.
+Renders land in previews/, one PNG per look; make_sheets.py lays them out
+as the two contact sheets.
 Set BLENDER to the blender binary if it is not the default below.
 """
 import argparse
