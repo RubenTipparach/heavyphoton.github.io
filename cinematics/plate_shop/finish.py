@@ -11,8 +11,10 @@ and writes OUT/final/f_0001.png onwards:
                            frames it exactly as the end card frames the logo
                            (OUT/s9_plate.json), so it is a cross-fade in place,
                            through a cyan bloom
-  then the hold            the logo for 3 s, with a slow 1.5 % push so the
-                           hold is not a freeze frame
+  then the hold            the logo for 3 s, still, at exactly the size the
+                           plate dissolved into (no push: resizing a small
+                           logo frame by frame rounds its width and height
+                           apart, and it visibly stretches)
 
 --final adds the late-90s finish:
   a vignette and per-frame film grain on the picture, a 640 x 480 letterbox
@@ -145,10 +147,10 @@ def main():
         mix = base * (1 - s) + c * s
         glow = np.sin(np.pi * a) * 0.9
         emit(mix + glow * bloom(np.maximum(base, c), 10 * W / 768) + glow * 0.25 * bloom(mix, 40 * W / 768), n)
-    hold = T["hold"]
-    for k in range(hold):
+    still = card(logo, W, H, 1.0)
+    for k in range(T["hold"]):
         n += 1
-        emit(card(logo, W, H, 1.0 + 0.015 * k / (hold - 1)), n)
+        emit(still, n)
 
     if final:
         # One palette for the whole film, from frames sampled across it.
