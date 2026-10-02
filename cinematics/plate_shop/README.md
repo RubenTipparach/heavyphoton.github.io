@@ -72,8 +72,9 @@ needs. `paths.py` finds both repositories.
   so the walk is re-planted. He turns to his right the way people do: his
   head comes round first, then his chest (`LEAD_HEAD`, `LEAD_CHEST`, twisted
   up the spine and carried out along the arms), then his hips, and his feet
-  follow in two authored steps (`TURN_STEPS`): the right foot pivots out
-  where it stands, the left swings round in front of it toward the door, and
+  follow in two authored steps (`TURN_STEPS`). He is still in the shooting
+  stance, feet 0.64 m apart, so the left foot comes back in beside the right
+  as he comes round (0.20 m apart), the right steps off toward the door, and
   he walks out on the clip, his steps opening up to its full stride. The
   ball of each foot stays where it came down while the heel peels up and the
   body turns over it; a foot in the air rises, then travels eased round the

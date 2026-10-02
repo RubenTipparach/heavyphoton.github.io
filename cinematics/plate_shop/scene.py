@@ -610,8 +610,9 @@ WALK_FROM = -10.7    # the suit starts just inside the corridor
 SHOOT_LEAD = 1       # Pistol_Shoot starts this many frames before the bolt
 # Leaving: he turns round to his right, toward the S8 camera, head first, then
 # his chest, then his hips, and his feet follow in two steps (gait.py plants
-# them): the right foot pivots out where it stands, the left swings round in
-# front of it toward the door, and he walks out.
+# them). He is still in the shooting stance, feet 0.64 m apart, so the left
+# foot comes back in beside the right as he comes round, closing the stance,
+# and the right steps off toward the door.
 TURN_FROM = 272      # his hips start to come round, his feet pivoting on their balls
 LEAVE = 276          # his feet start to step
 TURN_END = 293       # the second step is down: he faces the door
@@ -620,9 +621,11 @@ LEAD_HEAD = 9        # and his head
 # the two steps: where the ball of each foot comes down, in metres from where
 # his pelvis stood (x to his right, y ahead of him), and the foot's heading
 # (degrees, + to his left)
-TURN_STEPS = {"r": [(0.33, -0.21, -105.0)], "l": [(0.48, -0.73, -175.0)]}
+TURN_STEPS = {"l": [(0.257, -0.072, -95.0)],    # 0.21 m to the left of the right foot
+              "r": [(0.025, -0.578, -178.0)]}   # 0.38 m on, toward the door
+TURN_PHASE = 0.65    # seconds into the walk clip at LEAVE: the left foot is the one about to lift
 # his hips on the way round: (frame, x to his right, y ahead), from where they stood
-TURN_PATH = [(LEAVE, 0.0, 0.0), (286, 0.08, -0.08), (TURN_END, 0.30, -0.33)]
+TURN_PATH = [(LEAVE, 0.0, 0.0), (286, 0.13, -0.12), (TURN_END, 0.08, -0.25)]
 TURN_STRIDE = 0.5    # the turn's steps lift and swing the arms like half a walk's
 TURN_CADENCE = 1.5   # and come quicker than the walk's
 TURN_EASE = 0.5      # seconds to come up to walking from standing
@@ -792,7 +795,7 @@ def walk_away(track, start, pelvis0, v, fps, end):
     for f in range(TURN_FROM, LEAVE):
         track.root[f] = (x0, y0, hips_yaw(f))
 
-    stride, clock, walked, last, tau = {}, {}, 0.0, None, 0.0
+    stride, clock, walked, last, tau = {}, {}, 0.0, None, TURN_PHASE
     for f in range(LEAVE, end + 1):
         up, s, c = step(f)
         stride[f] = 1.0 - up * (1.0 - s)
