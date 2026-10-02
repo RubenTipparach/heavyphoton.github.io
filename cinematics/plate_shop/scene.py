@@ -620,15 +620,17 @@ LEAD_CHEST = 2       # frames his chest turns ahead of his hips
 LEAD_HEAD = 4        # and his head
 HAND_OVER = 7        # frames after TURN_END for his legs to go back to the walk clip, all FK
 PLANT_FROM = 249     # his feet are planted from the shot's white-out, which hides the switch
-# the two steps: where the ball of each foot comes down, in metres from where
-# his pelvis stood (x to his right, y ahead of him), and the foot's heading
-# (degrees, + to his left)
-TURN_STEPS = {"l": [(0.257, -0.072, -95.0)],    # 0.21 m to the left of the right foot
-              "r": [(0.025, -0.578, -178.0)]}   # 0.38 m on, toward the door
+# the closing step: where the ball of his left foot comes down, in metres from
+# where his pelvis stood (x to his right, y ahead of him), 0.21 m to the left
+# of his right foot, and the foot's heading (degrees, + to his left). The
+# right foot's step off is not authored: it lands where the walk clip has the
+# right foot when the left is there, a full stride on, so the clip takes over
+# with both feet where it has them
+TURN_STEP = (0.257, -0.072, -95.0)
 TURN_PHASE = 0.65    # seconds into the walk clip at LEAVE: the left foot is the one about to lift
-# his hips on the way round: (frame, x to his right, y ahead), from where they
-# stood; at TURN_END they are wherever the walk clip has them over the right foot
-TURN_MID = (286, 0.13, -0.12)
+TURN_MID = 286       # the hips are over his feet, the closing step down
+HIPS_BACK = 0.10     # m behind the middle of his feet that his hips ride then
+HIPS_LEFT = 0.05     # and to his left, so the right thigh never swings in across him
 TURN_STRIDE = 0.5    # the turn swings the arms like half a walk, opening up by TURN_END
 TURN_EASE = 0.5      # seconds to come up to walking from standing
 WALK = "Walk_Formal_Loop"
@@ -862,8 +864,8 @@ def arms(body):
 
 def walk_away(track, body, lib, start, pelvis0, v, fps, end):
     """Turn round to the right and walk to the door. The hips come round from
-    TURN_FROM to TURN_END through TURN_MID while the two TURN_STEPS are taken
-    (gait.py plants them). The walk clip's clock is bent so that its right
+    TURN_FROM to TURN_END, over his feet at TURN_MID, while his left foot
+    closes in (TURN_STEP) and his right steps off (gait.py plants them). The walk clip's clock is bent so that its right
     foot comes down on TURN_END, and the hips end where the clip has them over
     that foot: from there on he is the walk clip as authored, at its own
     speed and cadence, all forward kinematics. Returns the hips' yaw curve,
@@ -875,16 +877,18 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
     t1 = touch["r"][0]
     while t1 < t0 + 0.8 * cycle:
         t1 += cycle   # the right foot's second fall: the turn's second step
-    plan = {side: [(pelvis0.x + bx, pelvis0.y + by, yw) for bx, by, yw in steps]
-            for side, steps in TURN_STEPS.items()}
-    r2 = Vector(plan["r"][0][:2])
+    l1 = Vector((pelvis0.x + TURN_STEP[0], pelvis0.y + TURN_STEP[1]))
     rb = gait.ball_local(body, lib, WALK, t1, "r")
+    lb = gait.ball_local(body, lib, WALK, t1, "l")
     heading = 180.0
-    for _ in range(3):   # the hips sit behind the right foot, facing the door
-        end_xy = r2 - gait.yaw(heading).to_2x2() @ Vector((rb.x, rb.y))
+    for _ in range(3):   # the right foot a stride on from the left, the hips over it, facing the door
+        Y2 = gait.yaw(heading).to_2x2()
+        r2 = l1 - Y2 @ Vector((lb.x - rb.x, lb.y - rb.y))
+        end_xy = r2 - Y2 @ Vector((rb.x, rb.y))
         d = Vector((DOOR[0] - end_xy.x, DOOR[1] - end_xy.y)).normalized()
         heading = math.degrees(math.atan2(-d.x, d.y))
         heading -= 360.0 if heading > 0 else 0.0   # come round clockwise, to the right
+    plan = {"l": [(l1.x, l1.y, TURN_STEP[2])], "r": [(r2.x, r2.y, heading)]}
 
     def hips_yaw(f):
         return heading * gait.smooth((f - TURN_FROM) / float(TURN_END - TURN_FROM))
@@ -895,9 +899,14 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
         return (pa * (2 * t ** 3 - 3 * t * t + 1) + ta * (n * (t ** 3 - 2 * t * t + t))
                 + pb * (-2 * t ** 3 + 3 * t * t) + tb * (n * (t ** 3 - t * t)))
 
-    # the hips: from standing, through TURN_MID, leaving TURN_END at the walk's speed
-    keys = [(LEAVE, Vector((x0, y0))), (TURN_MID[0], Vector((x0 + TURN_MID[1], y0 + TURN_MID[2]))),
-            (TURN_END, end_xy)]
+    # the hips: from standing, over his feet as the closing step comes down,
+    # leaving TURN_END at the walk's speed
+    A, wrot, pel = clips.pose_world(body, lib, track, LEAVE)
+    r0 = body.world(A, body.solve_world(A, wrot, pel), "ball_r")
+    Ym = gait.yaw(hips_yaw(TURN_MID)).to_2x2()
+    mid = (l1 + Vector((r0.x, r0.y))) / 2 + Ym @ Vector((-HIPS_LEFT, -HIPS_BACK)) \
+        - Ym @ Vector((pelvis0.x - x0, pelvis0.y - y0))
+    keys = [(LEAVE, Vector((x0, y0))), (TURN_MID, mid), (TURN_END, end_xy)]
     tang = [Vector((0.0, 0.0)), (keys[2][1] - keys[0][1]) / float(TURN_END - LEAVE), d * (v / fps)]
     for i in range(2):
         (fa, pa), (fb, pb) = keys[i], keys[i + 1]
@@ -915,7 +924,7 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
     stride, clock = {}, {}
     for f in range(TURN_FROM, end + 1):
         up = gait.smooth((f - LEAVE) / (TURN_EASE * fps))
-        s = TURN_STRIDE + (1.0 - TURN_STRIDE) * gait.smooth((f - TURN_MID[0]) / float(TURN_END - TURN_MID[0]))
+        s = TURN_STRIDE + (1.0 - TURN_STRIDE) * gait.smooth((f - TURN_MID) / float(TURN_END - TURN_MID))
         stride[f] = 1.0 - up * (1.0 - s)
         if f < LEAVE:
             continue
@@ -1077,7 +1086,7 @@ def cast(gun, muzzle):
              for f in range(TURN_FROM - LEAD_HEAD, TURN_END + 1)]
     print("LEAD chest at most %.0f deg ahead of the hips, head %.0f" % (
         max(abs(c) for c, _ in twist), max(abs(h) for _, h in twist)))
-    ts.legs = gait.Gait(fg, lib, ts, range(PLANT_FROM, TURN_END + HAND_OVER + 1), lambda f: stride.get(f, 1.0), plan,
+    ts.legs = gait.Gait(fg, lib, ts, range(PLANT_FROM, END + 1), lambda f: stride.get(f, 1.0), plan,
                         ik=lambda f: 1.0 - gait.smooth((f - TURN_END) / float(HAND_OVER)), stance=stance)
     for f, side, length, turned in ts.legs.report():
         if f <= TURN_END:
