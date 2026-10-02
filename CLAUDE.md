@@ -61,6 +61,10 @@ green `#008751`, blue `#29ADFF`, indigo `#83769C`, white `#FFF1E8`.
   geometry and lighting, Material Maker surfaces, preview renders for
   approval. See its README for the pipeline.
 - `businesscard/` — business card generator and press files. See its README.
+- `cinematics/plate_shop/` — the plate shop cinematic: a late-90s style
+  cutscene that ends on the 3D logo. Built in Blender from scripts, with
+  bodies, animation and textures borrowed from a sibling fps-game-demo
+  checkout. See its README.
 
 ## Print work
 

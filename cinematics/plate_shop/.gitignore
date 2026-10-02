@@ -1,0 +1,6 @@
+# built from cine_bodies.json by build_cine.py
+bodies/
+# render output: frames, the finished film, intermediates
+out*/
+__pycache__/
+*.blend1
