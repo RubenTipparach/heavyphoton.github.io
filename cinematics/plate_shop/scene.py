@@ -607,6 +607,10 @@ GRIP_BEHIND = 0.55   # the shooter's grip stops this far behind the prisoner's h
 GRIP_SIDE = -0.05    # and this far to the prisoner's left
 WALK_FROM = -10.7    # the suit starts just inside the corridor
 SHOOT_LEAD = 1       # Pistol_Shoot starts this many frames before the bolt
+LEAVE = 276          # the suit starts to walk away
+TURN_R = 0.5         # metres: the radius of the arc he walks to turn round, to his left
+TURN_EASE = 0.5      # seconds to come up to walking speed from standing
+DOOR = (0.0, -10.4)  # where he heads once he has turned
 
 
 STRIPE_PAIRS = 12        # black and white bands over the body's height: ~7.5 cm each at 1.79 m
@@ -724,6 +728,33 @@ def arms(body):
     return keep
 
 
+def walk_away(track, f0, start, v, fps, end):
+    """Turn round by walking it: a left-hand U-turn on an arc of TURN_R, at the
+    walk clip's own ground speed so the feet stay planted, easing up to speed
+    from standing, then on toward the door. A spin on the spot (what this
+    replaced) skates the feet. Returns the frames the arc runs over."""
+    cx, cy = start[0] - TURN_R, start[1]
+    arc = math.pi * TURN_R
+
+    def dist(t):   # metres walked after t seconds, accelerating over TURN_EASE
+        return v * t * t / (2 * TURN_EASE) if t < TURN_EASE else v * (t - TURN_EASE / 2)
+
+    f = f0
+    while dist((f - f0) / fps) < arc:
+        phi = dist((f - f0) / fps) / TURN_R
+        track.root[f] = (cx + TURN_R * math.cos(phi), cy + TURN_R * math.sin(phi), math.degrees(phi))
+        f += 1
+    out = (cx - TURN_R, cy)
+    d = Vector((DOOR[0] - out[0], DOOR[1] - out[1])).normalized()
+    heading = math.degrees(math.atan2(-d.x, d.y)) % 360.0   # yaw that faces the door
+    s0 = dist((f - f0) / fps) - arc
+    for g in range(f, end + 1):
+        s = s0 + v * (g - f) / fps
+        u = min(1.0, (g - f) / 8.0)
+        track.root[g] = (out[0] + d.x * s, out[1] + d.y * s, 180.0 + (heading - 180.0) * u * u * (3 - 2 * u))
+    return f0, f
+
+
 def look_back(f):
     """He hears the charge and starts to turn his head, to his right."""
     u = max(0.0, min(1.0, (f - 236) / 11.0))
@@ -788,8 +819,8 @@ def cast(gun, muzzle):
     ts.play(WALK_STOP, FIRE - SHOOT_LEAD, "Pistol_Idle_Loop", blend=10)
     ts.play(FIRE - SHOOT_LEAD, FIRE - SHOOT_LEAD + n_shoot, "Pistol_Shoot", loop=False, blend=2)
     ts.play(FIRE - SHOOT_LEAD + n_shoot, 262, "Pistol_Idle_Loop", blend=4)
-    ts.play(262, 276, "Idle_Loop", blend=12)
-    ts.play(276, END, "Walk_Formal_Loop", blend=6)
+    ts.play(262, LEAVE, "Idle_Loop", blend=12)
+    ts.play(LEAVE, END, "Walk_Formal_Loop", blend=round(TURN_EASE * FPS))
     ts.hold(0, END, 0.0, 0.0, 0.0)
 
     def grip(A, M_):
@@ -830,9 +861,20 @@ def cast(gun, muzzle):
     ts.segs[1] = (walk0, WALK_STOP, "Walk_Formal_Loop", 0.0, rate, True, 4)
     ts.hold(0, walk0, x, WALK_FROM, 0.0)
     ts.move(walk0, WALK_STOP, (x, WALK_FROM), (x, stop), 0.0)
-    ts.hold(WALK_STOP, 276, x, stop, 0.0)
-    ts.turn(276, 288, x, stop, 0.0, 180.0)
-    ts.move(288, END, (x, stop), (x, stop - v * (END - 288) / FPS), 180.0)
+    ts.hold(WALK_STOP, LEAVE, x, stop, 0.0)
+    a0, a1 = walk_away(ts, LEAVE, (x, stop), v, FPS, END)
+    print("TURN a %.1f m arc over frames %d to %d (%.2f s), then for the door" % (
+        math.pi * TURN_R, a0, a1, (a1 - a0) / FPS))
+
+    def lead(f):
+        """His head turns into the turn before his body does, and comes back."""
+        u = (f - a0) / max(1, a1 - a0)
+        if not 0.0 <= u <= 1.0:
+            return {}
+        w = math.sin(math.pi * min(1.0, u / 0.8)) if u < 0.8 else 0.0
+        q = lambda deg: Quaternion((0, 0, 1), math.radians(deg * w))
+        return {"neck_01": q(12), "head": q(28)}
+    ts.layers.append(lead)
 
     def weight(f):
         if f <= WALK_STOP or f >= 274:

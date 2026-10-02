@@ -17,7 +17,7 @@ and writes OUT/final/f_0001.png onwards:
                            apart, and it visibly stretches)
 
 --final adds the late-90s finish:
-  a vignette and per-frame film grain on the picture, a 640 x 480 letterbox
+  a vignette (and film grain, if GRAIN is set; it is off) on the picture, a 640 x 480 letterbox
   around it, and the whole film reduced to one 256-colour palette with
   error-diffusion dither. One palette for every frame, built from frames
   sampled across the film, so colours never flicker from frame to frame.
@@ -48,7 +48,7 @@ LEGACY = {"story_fps": 15, "fps": 15, "first": 1, "last": 369, "trans": [357, 36
 # the late-90s finish
 BOX = (640, 480)            # the letterbox frame; the picture sits in its middle
 VIGNETTE = 0.32             # how dark the corners go
-GRAIN = 0.03                # film grain, standard deviation in 0..1 light
+GRAIN = 0.0                 # film grain, standard deviation in 0..1 light (0: none, by the owner's call)
 COLOURS = 256
 PALETTE_SAMPLES = 48        # frames sampled across the film to build the palette
 
@@ -80,6 +80,8 @@ def look(a, n):
     y, x = np.mgrid[0:H, 0:W].astype(np.float32)
     r2 = ((x - W / 2) / (W / 2)) ** 2 * 0.7 + ((y - H / 2) / (H / 2)) ** 2 * 0.5
     a = a * (1.0 - VIGNETTE * np.clip(r2, 0, 1.6) ** 1.3)[..., None]
+    if GRAIN <= 0:
+        return a
     g = np.random.default_rng(1000 + n).normal(0.0, GRAIN, (H, W, 1)).astype(np.float32)
     return a + g * (0.5 + 0.5 * np.sqrt(np.clip(a.mean(axis=2, keepdims=True), 0, 1)))
 
