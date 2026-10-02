@@ -3,7 +3,7 @@
 A 28.6 second cutscene in the style of a late-90s game cinematic. A prisoner
 stamps license plates alone on the night shift. A figure in a suit walks in,
 puts a photon gun to the back of his head and fires. He falls onto the feed
-table, and the suit turns on short steps and walks out. The camera rises over
+table, and the suit turns round, head first, and walks out. The camera rises over
 the last plate he stamped, the Heavy Photon lockup, and the plate dissolves
 into the 3D logo, which holds for 3 seconds and fades to black in 1.
 
@@ -68,16 +68,19 @@ needs. `paths.py` finds both repositories.
   two-handed (`Pistol_Idle_Loop`, `Pistol_Shoot`) and walks out. His arms are
   raised about the shoulders until the gun sits at the prisoner's eye line,
   and the gun is gripped so its barrel runs at his head on the frame it fires.
-- **gait.py** turns the suit round to leave. The library has no turn clip, so
-  the walk is re-planted on a tight arc: a quarter of its stride at one and a
-  half times its cadence, so he comes round in five short steps (the inner
-  foot 15 to 22 cm) before his stride opens up toward the door. The ball of
-  each foot stays where it came down while the heel peels up and the body
-  turns over it; a foot in the air travels eased to where the shortened clip
-  sets it down, lifted and tipped less; two-bone IK bends the legs to the
-  feet, and his arm swing is cut down with the stride. The build prints each
-  step (`STEP`) and any frame a leg cannot reach its foot (`GAIT`);
-  `audio/mix.py` cues the walk-out footsteps on the `STEP` frames.
+- **gait.py** turns the suit round to leave. The library has no turn clip,
+  so the walk is re-planted. He turns to his right the way people do: his
+  head comes round first, then his chest (`LEAD_HEAD`, `LEAD_CHEST`, twisted
+  up the spine and carried out along the arms), then his hips, and his feet
+  follow in two authored steps (`TURN_STEPS`): the right foot pivots out
+  where it stands, the left swings round in front of it toward the door, and
+  he walks out on the clip, his steps opening up to its full stride. The
+  ball of each foot stays where it came down while the heel peels up and the
+  body turns over it; a foot in the air rises, then travels eased round the
+  outside of the other foot; two-bone IK bends each knee toward its own toes.
+  The build prints each step (`STEP`) and any frame a leg cannot reach its
+  foot (`GAIT`); `audio/mix.py` cues the walk-out footsteps on the `STEP`
+  frames.
 - **ragdoll.py** turns the prisoner into a Bullet ragdoll on the shot: eleven
   boxes with jointed limits, kicked for one substep, simulated among the set's
   colliders and baked back onto his bones.

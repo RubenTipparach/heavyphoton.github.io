@@ -1,23 +1,24 @@
-"""Short, planted steps for a walked turn: the walk clip's legs, re-planted.
+"""Planted feet for the suit's turn and walk out: the walk clip's legs, re-planted.
 
-The suit turns round to leave on a tight arc. Played straight, the walk clip
-would cover that arc in full strides with its feet skating round the curve.
-Here its legs are re-planted the way a game engine fits a clip to a path it
-was not made for:
+The library has no turn clip, so the suit turns round on the walk clip with
+its legs re-planted, the way a game engine fits a clip to a path it was not
+made for:
 
-  stride   each foot's travel along the body (its local Y, about the pelvis)
-           is scaled by the stride share, and the body moves at that share
-           of the clip's speed. A short step also lifts the foot lower and
-           tips it less at heel strike and toe off (LIFT)
+  steps    the first steps can be authored (`plan`): where each ball of the
+           foot comes down and which way the foot faces. Every later step
+           lands where the clip puts it, its travel along the body scaled by
+           the stride share, and the body moves at that share of the clip's
+           speed. A short step lifts the foot lower and tips it less, by its
+           length against the clip's own (FULL_STEP)
   plant    the ball of a foot on the ground stays where it came down while
-           the body turns over it, the heel peeling up round it, and the
-           foot pivots part of the way round with the body (PIVOT). Off the
-           ground it travels, eased, from where it lifted to where the
-           scaled clip puts it down, turning to face the way he is going
-  reach    two-bone IK bends each leg to its foot, in the plane the clip's own
-           knee bends in, with the knee turned part way toward the foot
-           (KNEE_FOLLOW); the pelvis rides up as far as the shorter steps let
-           it, so the knees bend no more than the clip's do
+           the body turns over it, the heel peeling up round it, and the foot
+           pivots part of the way round with the body (PIVOT). Off the ground
+           it rises, then travels, eased, from where it lifted to where it
+           comes down, round the outside of the other foot (CLEAR), turning
+           to face its landing
+  reach    two-bone IK puts each ankle where its ball needs it, the knee
+           always bending toward its own toes, the pelvis riding up as far as
+           the legs allow so the knees bend no more than the clip's do
 
 The arms keep the clip's swing, cut down toward idle with the stride.
 """
@@ -29,12 +30,14 @@ import clips
 
 CONTACT = 0.02       # m above its stance height that the ball of a foot still counts as down
 PIVOT = 0.45         # how far a planted foot turns with the body, on its ball
-KNEE_FOLLOW = 0.6    # how far the knee turns from the body toward its foot
-LIFT = 0.85          # the shortest step lifts and tips the foot this much less than the clip
+FULL_STEP = 1.6      # m a foot travels in one of the walk clip's swings (its stride)
+LIFT_MIN = 0.35      # a step lifts and tips the foot by its length's share of FULL_STEP, at least this
+CLEAR = 0.16         # m a swinging foot keeps from the planted one, on its own side
 RISE = (-0.03, 0.06) # m the pelvis may drop or rise for the stance leg's reach
 ARMS = ("clavicle_", "upperarm_", "lowerarm_", "hand_")
 FINGERS = ("index_", "middle_", "ring_", "pinky_", "thumb_")
 SIDES = ("l", "r")
+DOWN, FWD = Vector((0, 0, -1)), Vector((0, 1, 0))
 
 
 def smooth(u):
@@ -54,19 +57,37 @@ def blend(a, b, t):
     return qa.slerp(qb, t).to_matrix()
 
 
+def frame(d, f):
+    """A rotation whose columns are d, f and d x f (d, f unit and square)."""
+    return Matrix((d, f, d.cross(f))).transposed()
+
+
+REST = frame(DOWN, FWD).transposed()   # undoes the down rest's: leg down, knee forward
+
+
+def aim(d, front):
+    """The world turn that takes a down-rest leg bone (pointing down, its knee
+    side forward) to point along d with its knee side toward `front`."""
+    f = front - d * front.dot(d)
+    return frame(d, f.normalized()) @ REST
+
+
 class Gait:
     """Planted feet for a body's track over `frames`; the track calls it
     (track.legs) to re-plant each of those frames.
 
     stride: frame -> the share of the clip's stride he steps (1: as authored)
+    plan:   {side: [(ball x, ball y, foot yaw), ...]}: where that foot's first
+            steps come down, in place of where the clip would put them
     """
 
-    def __init__(self, body, lib, track, frames, stride, idle="Idle_Loop"):
+    def __init__(self, body, lib, track, frames, stride, plan=None, idle="Idle_Loop"):
         self.body, self.lib, self.track = body, lib, track
         self.frames = list(frames)
         self.idx = {f: k for k, f in enumerate(self.frames)}
         self.stride = stride
         self.idle = idle
+        plan = plan or {}
         n = len(self.frames)
 
         fk = []
@@ -77,16 +98,13 @@ class Gait:
             o = Vector((x, y, 0.0))
             Yi = yaw(-psi)
             rest = self.idle_world(f, psi)
-            k = stride(f)
-            lift = 1.0 - LIFT * (1.0 - k)
-            row = {"psi": psi, "o": o, "pl": Yi @ (pelvis - o), "k": k, "lift": lift}
+            row = {"psi": psi, "o": o, "pl": Yi @ (pelvis - o), "k": stride(f)}
             for s in SIDES:
                 fo, ba = "foot_" + s, "ball_" + s
                 row[s] = {"bl": Yi @ (body.world(A, M, ba) - o),
                           "reach": (body.world(A, M, fo) - body.world(A, M, "thigh_" + s)).length,
                           "H": body.world(A, M, "thigh_" + s),
-                          "foot": blend(rest[fo], wrot[fo], lift),
-                          "ball": blend(rest[ba], wrot[ba], lift)}
+                          "rest": (rest[fo], rest[ba]), "clip": (wrot[fo], wrot[ba])}
             fk.append(row)
         # the ground under each ball: the clip's stance height, which is not its
         # lowest (the walk carries the left foot higher than idle does)
@@ -97,25 +115,26 @@ class Gait:
         down = {s: [] for s in SIDES}
         for r in fk:
             for s in SIDES:
-                bl, pl, z0 = r[s]["bl"], r["pl"], floor[s]
-                w = Vector((bl.x, pl.y + r["k"] * (bl.y - pl.y), z0 + (bl.z - z0) * r["lift"]))
+                bl, pl = r[s]["bl"], r["pl"]
+                w = Vector((bl.x, pl.y + r["k"] * (bl.y - pl.y), 0.0))
                 warped[s].append(r["o"] + yaw(r["psi"]) @ w)
-                down[s].append(bl.z < z0 + CONTACT)
+                down[s].append(bl.z < floor[s] + CONTACT)
         for s in SIDES:
             d = down[s]
             for i in range(1, n - 1):   # a one-frame flicker either way is noise
                 if d[i - 1] == d[i + 1] != d[i]:
                     d[i] = d[i - 1]
+        self.down = down
 
-        # plant: a ball on the ground holds where it came down; off the ground
-        # it carries the lift-off offset away over the swing
+        # plant: a ball on the ground holds where it came down
         psi = [r["psi"] for r in fk]
         ball = {s: [None] * n for s in SIDES}
         self.fyaw = {s: [None] * n for s in SIDES}
         self.landings = []
-        self.first = {}
+        swings = []
         for s in SIDES:
             B, Fy, W, d = ball[s], self.fyaw[s], warped[s], down[s]
+            steps = list(plan.get(s, []))
             i = 0
             while i < n:
                 j = i
@@ -125,41 +144,82 @@ class Gait:
                     P, y0 = W[i], psi[i]
                     if i > 0:
                         self.landings.append((self.frames[i], s))
+                        if steps:
+                            px, py, y0 = steps.pop(0)
+                            P = Vector((px, py, W[i].z))
                     for k in range(i, j + 1):
-                        B[k] = Vector((P.x, P.y, W[k].z))
+                        B[k] = Vector((P.x, P.y, 0.0))
                         Fy[k] = y0 + PIVOT * (psi[k] - y0)
-                elif i > 0 and j + 1 < n:
-                    # a step: eased from where it lifted to where it comes down,
-                    # at the scaled clip's height, turning to its landing yaw
-                    a, b, ya = B[i - 1], W[j + 1], Fy[i - 1]
-                    for k in range(i, j + 1):
-                        u = smooth((k - (i - 1)) / float(j + 1 - (i - 1)))
-                        B[k] = Vector((a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, W[k].z))
-                        Fy[k] = ya + (psi[j + 1] - ya) * u
                 else:
-                    # in the air at either end of the span: the scaled clip, carrying
-                    # away any offset from where it lifted
-                    off, oy = Vector((0, 0, 0)), 0.0
-                    if i > 0:
-                        off = B[i - 1] - W[i - 1]
-                        off.z = 0.0
-                        oy = Fy[i - 1] - psi[i - 1]
-                    for k in range(i, j + 1):
-                        u = 1.0 - smooth((k - (i - 1)) / float(j + 1 - (i - 1)))
-                        B[k] = W[k] + off * u
-                        Fy[k] = psi[k] + oy * u
+                    swings.append((s, i, j))
                 i = j + 1
-            self.first[s] = B[0]
         self.landings.sort()
+
+        # each step lifts by its length; a planted foot tips with the nearer step
+        lift = {s: [None] * n for s in SIDES}
+        for s, i, j in swings:
+            if i > 0 and j + 1 < n:
+                a, b = ball[s][i - 1], ball[s][j + 1]
+                h = max(LIFT_MIN, min(1.0, (Vector((b.x - a.x, b.y - a.y))).length / FULL_STEP))
+            else:
+                h = fk[i]["k"]
+            for k in range(i, j + 1):
+                lift[s][k] = h
+        for s in SIDES:
+            L = lift[s]
+            for k in range(n):
+                if L[k] is None:
+                    near = [(abs(j - k), L[j]) for j in range(n) if lift[s][j] is not None and j != k]
+                    L[k] = min(near)[1] if near else 1.0
+
+        # swing: it rises, then travels eased from where it lifted to where it
+        # comes down, bowed out round the planted foot on its own side,
+        # turning to its landing yaw
+        for s, i, j in swings:
+            B, Fy, W = ball[s], self.fyaw[s], warped[s]
+            o = "r" if s == "l" else "l"
+            if i > 0 and j + 1 < n:
+                a, b, ya = B[i - 1], B[j + 1], Fy[i - 1]
+                m = (i + j) // 2
+                side = yaw(psi[m]) @ Vector((-1.0 if s == "l" else 1.0, 0, 0))
+                bow = Vector((0, 0, 0))
+                st = ball[o][m]
+                seg = Vector((b.x - a.x, b.y - a.y, 0))
+                if st is not None and seg.length > 1e-6:
+                    t = max(0.2, min(0.8, Vector((st.x - a.x, st.y - a.y, 0)).dot(seg) / seg.length_squared))
+                    q = Vector((a.x, a.y, 0)) + seg * t
+                    gap = (q - Vector((st.x, st.y, 0))).dot(side)
+                    if gap < CLEAR:
+                        bow = side * ((CLEAR - gap) / (4 * t * (1 - t)))
+                for k in range(i, j + 1):
+                    u = smooth(((k - (i - 1)) / float(j + 1 - (i - 1)) - 0.1) / 0.85)
+                    p = a.lerp(b, u) + bow * (4 * u * (1 - u))
+                    B[k] = Vector((p.x, p.y, 0.0))
+                    Fy[k] = ya + (Fy[j + 1] - ya) * u
+            else:
+                # in the air at either end of the span: the scaled clip, carrying
+                # away any offset from where it lifted
+                off, oy = Vector((0, 0, 0)), 0.0
+                if i > 0:
+                    off = B[i - 1] - W[i - 1]
+                    off.z = 0.0
+                    oy = Fy[i - 1] - psi[i - 1]
+                for k in range(i, j + 1):
+                    u = 1.0 - smooth((k - (i - 1)) / float(j + 1 - (i - 1)))
+                    B[k] = W[k] + off * u
+                    Fy[k] = psi[k] + oy * u
         self.ball = ball
 
-        # the feet, turned to their yaw, and the ankles that put each ball there
+        # the feet: lifted and tipped by their step, turned to their yaw, and
+        # the ankles that put each ball there
         self.foot, self.toes, self.ankle = ({s: [None] * n for s in SIDES} for _ in range(3))
         for k, r in enumerate(fk):
             for s in SIDES:
+                h = lift[s][k]
+                ball[s][k].z = floor[s] + (r[s]["bl"].z - floor[s]) * h
                 R = yaw(self.fyaw[s][k] - r["psi"])
-                self.foot[s][k] = R @ r[s]["foot"]
-                self.toes[s][k] = R @ r[s]["ball"]
+                self.foot[s][k] = R @ blend(r[s]["rest"][0], r[s]["clip"][0], h)
+                self.toes[s][k] = R @ blend(r[s]["rest"][1], r[s]["clip"][1], h)
                 self.ankle[s][k] = ball[s][k] - self.foot[s][k] @ body.rel["ball_" + s].translation
 
         # the pelvis rises until the stance legs are as straight as the clip's
@@ -225,32 +285,29 @@ class Gait:
                     wrot[b] = new
 
         M = body.solve_world(A, wrot, pelvis)
-        fwd = yaw(psi) @ Vector((0, 1, 0))
         for s in SIDES:
-            th, ca = "thigh_" + s, "calf_" + s
+            th, ca, fo, ba = "thigh_" + s, "calf_" + s, "foot_" + s, "ball_" + s
             H = body.world(A, M, th)
-            K0 = body.world(A, M, ca)
-            A0 = body.world(A, M, "foot_" + s)
-            Rk = yaw(KNEE_FOLLOW * (self.fyaw[s][k] - psi))
-            K0, A0 = H + Rk @ (K0 - H), H + Rk @ (A0 - H)
-            l1, l2 = (K0 - H).length, (A0 - K0).length
+            l1 = (body.world(A, M, ca) - H).length
+            l2 = (body.world(A, M, fo) - body.world(A, M, ca)).length
             d = self.ankle[s][k] - H
             dist = min(max(d.length, abs(l1 - l2) + 1e-4), (l1 + l2) * 0.9999)
             if dist < d.length - 1e-3:
                 self.short.append((f, s, d.length - dist))
             u = d.normalized()
-            bend = (K0 - H) - u * (K0 - H).dot(u)
-            if bend.length < 1e-3:
-                bend = fwd - u * fwd.dot(u)
+            toes = self.foot[s][k] @ body.rel[ba].translation   # ankle to ball: the way the foot points
+            toes.z = 0.0
+            bend = toes - u * toes.dot(u)
+            if bend.length < 1e-4:
+                bend = yaw(psi) @ FWD
+                bend -= u * bend.dot(u)
             bend.normalize()
             c = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist)
             a = math.acos(max(-1.0, min(1.0, c)))
             K = H + l1 * (math.cos(a) * u + math.sin(a) * bend)
             T = H + u * dist
-            R1 = (K0 - H).rotation_difference(K - H).to_matrix()
-            R2 = (R1 @ (A0 - K0)).rotation_difference(T - K).to_matrix()
-            wrot[th] = R1 @ Rk @ wrot[th]
-            wrot[ca] = R2 @ R1 @ Rk @ wrot[ca]
-            wrot["foot_" + s] = self.foot[s][k]
-            wrot["ball_" + s] = self.toes[s][k]
+            wrot[th] = aim((K - H).normalized(), bend) @ body.wdown_ual[th]
+            wrot[ca] = aim((T - K).normalized(), bend) @ body.wdown_ual[ca]
+            wrot[fo] = self.foot[s][k]
+            wrot[ba] = self.toes[s][k]
         return wrot, pelvis

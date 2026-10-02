@@ -20,7 +20,7 @@ SHOTS = [  # name, start, end (story frames), key frame, action
     ("S5  His face", 195, 228, 215, "Through the press. He stops: a cyan glow is\ngrowing behind his head."),
     ("S6  Over the shooter", 228, 249, 244, "Two-handed, the photon gun at the back of his head.\nHeavy Photon plates ride the belt behind. Fire."),
     ("S7  The shot", 249, 251, 250, "White-out on the flash. The hit is never shown."),
-    ("S8  Wide, aftermath", 251, 312, 290, "He pitches forward and slides onto the feed table,\na ragdoll. The suit turns on short steps, walks out."),
+    ("S8  Wide, aftermath", 251, 312, 290, "He pitches forward and slides onto the feed table,\na ragdoll. The suit looks round, turns, walks out."),
     ("S9  The last plate", 312, 368, 350, "Crane up over the bed to his last plate, square and\ncentred: the Heavy Photon lockup, embossed, glossy."),
     ("S10  The logo", 368, 428, 390, "Match dissolve: the plate is the logo's frame in\nsheet metal, and becomes the 3D logo. Holds 3 s,\nthen fades to black in 1 s."),
 ]

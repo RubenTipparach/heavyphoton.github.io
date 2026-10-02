@@ -608,12 +608,25 @@ GRIP_BEHIND = 0.55   # the shooter's grip stops this far behind the prisoner's h
 GRIP_SIDE = -0.05    # and this far to the prisoner's left
 WALK_FROM = -10.7    # the suit starts just inside the corridor
 SHOOT_LEAD = 1       # Pistol_Shoot starts this many frames before the bolt
-LEAVE = 276          # the suit starts to walk away
-TURN_R = 0.25        # metres: the radius of the arc he walks to turn round, to his left
-TURN_STRIDE = 0.24   # his steps on the turn, as a share of the walk's stride (gait.py): ~20 cm
-TURN_CADENCE = 1.5   # and how much quicker he steps them than the walk does
+# Leaving: he turns round to his right, toward the S8 camera, head first, then
+# his chest, then his hips, and his feet follow in two steps (gait.py plants
+# them): the right foot pivots out where it stands, the left swings round in
+# front of it toward the door, and he walks out.
+TURN_FROM = 272      # his hips start to come round, his feet pivoting on their balls
+LEAVE = 276          # his feet start to step
+TURN_END = 293       # the second step is down: he faces the door
+LEAD_CHEST = 4       # frames his chest turns ahead of his hips
+LEAD_HEAD = 9        # and his head
+# the two steps: where the ball of each foot comes down, in metres from where
+# his pelvis stood (x to his right, y ahead of him), and the foot's heading
+# (degrees, + to his left)
+TURN_STEPS = {"r": [(0.33, -0.21, -105.0)], "l": [(0.48, -0.73, -175.0)]}
+# his hips on the way round: (frame, x to his right, y ahead), from where they stood
+TURN_PATH = [(LEAVE, 0.0, 0.0), (286, 0.08, -0.08), (TURN_END, 0.30, -0.33)]
+TURN_STRIDE = 0.5    # the turn's steps lift and swing the arms like half a walk's
+TURN_CADENCE = 1.5   # and come quicker than the walk's
 TURN_EASE = 0.5      # seconds to come up to walking from standing
-STRIDE_BACK = 1.2    # seconds, after the turn, for his steps to lengthen to the full stride
+STRIDE_BACK = 1.2    # seconds, after the turn, for his steps to open up to the full stride
 DOOR = (0.0, -10.4)  # where he heads once he has turned
 
 
@@ -732,42 +745,94 @@ def arms(body):
     return keep
 
 
-def walk_away(track, f0, start, v, fps, end):
-    """Turn round by walking it, in short quick steps: a left-hand U-turn on an
-    arc of TURN_R at TURN_STRIDE of the walk's stride and TURN_CADENCE of its
-    cadence, easing up from standing, then on toward the door as the steps
-    lengthen and slow to the walk's own. gait.py plants the feet along it; a
-    spin on the spot, or full strides round a tight arc, skate them. Returns
-    the frames the arc runs over, the stride share frame by frame, and the
-    walk clip's time frame by frame."""
-    cx, cy = start[0] - TURN_R, start[1]
-    arc = math.pi * TURN_R
-    blend = round(TURN_EASE * fps)   # the clip's own blend from idle to walking
-    out = (cx - TURN_R, cy)
-    d = Vector((DOOR[0] - out[0], DOOR[1] - out[1])).normalized()
-    heading = math.degrees(math.atan2(-d.x, d.y)) % 360.0   # yaw that faces the door
-    stride, clock, walked, a1, last, tau = {}, {}, 0.0, None, (0.0, 0.6 * TURN_CADENCE), 0.0
-    for f in range(f0, end + 1):
-        up = gait.smooth((f - f0) / blend)
-        back = 0.0 if a1 is None else gait.smooth((f - a1) / (STRIDE_BACK * fps))
+def walk_away(track, start, pelvis0, v, fps, end):
+    """Turn round to the right and walk to the door. The hips follow TURN_PATH
+    and come round from TURN_FROM to TURN_END; after that he walks for the
+    door, his steps opening up to the walk's over STRIDE_BACK. Returns the
+    yaw curve (for the upper body's lead), the stride share and the walk
+    clip's time, frame by frame, and the turn's planned steps in the world."""
+    x0, y0 = start
+    keys = [(f, x0 + dx, y0 + dy) for f, dx, dy in TURN_PATH]
+    fe, xe, ye = keys[-1]
+    d = Vector((DOOR[0] - xe, DOOR[1] - ye)).normalized()
+    heading = math.degrees(math.atan2(-d.x, d.y))
+    heading -= 360.0 if heading > 0 else 0.0   # come round clockwise, to the right
+
+    def hips_yaw(f):
+        return heading * gait.smooth((f - TURN_FROM) / float(TURN_END - TURN_FROM))
+
+    def step(f):   # stride share and cadence: the turn's, then opening up to the walk's
+        back = gait.smooth((f - TURN_END) / (STRIDE_BACK * fps))
+        up = gait.smooth((f - LEAVE) / (TURN_EASE * fps))
         s = TURN_STRIDE + (1.0 - TURN_STRIDE) * back
         c = (TURN_CADENCE + (1.0 - TURN_CADENCE) * back) * (0.6 + 0.4 * up)   # the first step is slower
-        speed = up * s * c * v
-        if f > f0:
-            walked += 0.5 * (speed + last[0]) / fps
-            tau += 0.5 * (c + last[1]) / fps
-        last = (speed, c)
+        return up, s, c
+
+    # the hips: a Hermite curve through the keys, leaving the last at walking speed
+    _, s_e, c_e = step(fe)
+    tang = []
+    for i, (f, x, y) in enumerate(keys):
+        if i == 0:
+            tang.append(Vector((0.0, 0.0)))
+        elif i == len(keys) - 1:
+            tang.append(Vector((d.x, d.y)) * (s_e * c_e * v / fps))
+        else:
+            fa, xa, ya = keys[i - 1]
+            fb, xb, yb = keys[i + 1]
+            tang.append(Vector((xb - xa, yb - ya)) / float(fb - fa))
+    for i in range(len(keys) - 1):
+        (fa, xa, ya), (fb, xb, yb) = keys[i], keys[i + 1]
+        n = fb - fa
+        for f in range(fa, fb + 1):
+            t = (f - fa) / float(n)
+            h = (2 * t ** 3 - 3 * t * t + 1, t ** 3 - 2 * t * t + t, -2 * t ** 3 + 3 * t * t, t ** 3 - t * t)
+            p = (Vector((xa, ya)) * h[0] + tang[i] * (h[1] * n) + Vector((xb, yb)) * h[2]
+                 + tang[i + 1] * (h[3] * n))
+            track.root[f] = (p.x, p.y, hips_yaw(f))
+    for f in range(TURN_FROM, LEAVE):
+        track.root[f] = (x0, y0, hips_yaw(f))
+
+    stride, clock, walked, last, tau = {}, {}, 0.0, None, 0.0
+    for f in range(LEAVE, end + 1):
+        up, s, c = step(f)
         stride[f] = 1.0 - up * (1.0 - s)
+        if last is not None:
+            tau += 0.5 * (c + last[1]) / fps
+            if f > fe:
+                walked += 0.5 * (s * c * v + last[0]) / fps
+        last = (s * c * v, c)
         clock[f] = tau
-        if walked < arc:
-            phi = walked / TURN_R
-            track.root[f] = (cx + TURN_R * math.cos(phi), cy + TURN_R * math.sin(phi), math.degrees(phi))
-            continue
-        if a1 is None:
-            a1 = f
-        e, u = walked - arc, gait.smooth((f - a1) / 8.0)
-        track.root[f] = (out[0] + d.x * e, out[1] + d.y * e, 180.0 + (heading - 180.0) * u)
-    return f0, a1 if a1 is not None else end, stride, clock
+        if f > fe:
+            track.root[f] = (xe + d.x * walked, ye + d.y * walked, heading)
+    for f in range(TURN_FROM, LEAVE):
+        stride[f] = 1.0
+
+    plan = {side: [(pelvis0.x + bx, pelvis0.y + by, yw) for bx, by, yw in steps]
+            for side, steps in TURN_STEPS.items()}
+    return hips_yaw, stride, clock, plan
+
+
+def turn_lead(hips_yaw):
+    """The upper body leads the turn: his head LEAD_HEAD frames ahead of his
+    hips, his chest LEAD_CHEST, twisted up the spine and carried out along
+    the arms, and both settle back onto the hips as they come round."""
+    chest_part = {"spine_01": 0.25, "spine_02": 0.6, "spine_03": 1.0}
+
+    def lead(f):
+        chest = hips_yaw(f + LEAD_CHEST) - hips_yaw(f)
+        head = hips_yaw(f + LEAD_HEAD) - hips_yaw(f + LEAD_CHEST)
+        if abs(chest) < 1e-3 and abs(head) < 1e-3:
+            return {}
+        q = lambda deg: Quaternion((0, 0, 1), math.radians(deg))
+        out = {b: q(chest * w) for b, w in chest_part.items()}
+        out["neck_01"] = q(chest + 0.4 * head)
+        out["head"] = q(chest + head)
+        for side in ("_l", "_r"):
+            for b in ("clavicle", "upperarm", "lowerarm", "hand") + tuple(
+                    "%s_0%d" % (g, i) for g in ("index", "middle", "ring", "pinky", "thumb") for i in (1, 2, 3)):
+                out[b + side] = q(chest)
+        return out
+    return lead
 
 
 def look_back(f):
@@ -876,21 +941,13 @@ def cast(gun, muzzle):
     ts.hold(0, walk0, x, WALK_FROM, 0.0)
     ts.move(walk0, WALK_STOP, (x, WALK_FROM), (x, stop), 0.0)
     ts.hold(WALK_STOP, LEAVE, x, stop, 0.0)
-    a0, a1, stride, clock = walk_away(ts, LEAVE, (x, stop), v, FPS, END)
+    pelvis0 = clips.pose_world(fg, lib, ts, LEAVE)[2]
+    hips_yaw, stride, clock, plan = walk_away(ts, (x, stop), pelvis0, v, FPS, END)
     ts.play(LEAVE, END, "Walk_Formal_Loop", t0=lambda f: clock[f], blend=round(TURN_EASE * FPS))
-    print("TURN a %.2f m arc over frames %d to %d (%.2f s), %d %% stride at %.1fx cadence, then for the door" % (
-        math.pi * TURN_R, a0, a1, (a1 - a0) / FPS, 100 * TURN_STRIDE, TURN_CADENCE))
-
-    def lead(f):
-        """His head turns into the turn before his body does, and comes back."""
-        u = (f - a0) / max(1, a1 - a0)
-        if not 0.0 <= u <= 1.0:
-            return {}
-        w = math.sin(math.pi * min(1.0, u / 0.8)) if u < 0.8 else 0.0
-        q = lambda deg: Quaternion((0, 0, 1), math.radians(deg * w))
-        return {"neck_01": q(12), "head": q(28)}
-    ts.layers.append(lead)
-    ts.legs = gait.Gait(fg, lib, ts, range(LEAVE, END + 1), lambda f: stride[f])
+    print("TURN to the right, hips from frame %d to %d, chest %d and head %d frames ahead; heading %.1f" % (
+        TURN_FROM, TURN_END, LEAD_CHEST, LEAD_HEAD, hips_yaw(END)))
+    ts.layers.append(turn_lead(hips_yaw))
+    ts.legs = gait.Gait(fg, lib, ts, range(TURN_FROM, END + 1), lambda f: stride[f], plan)
     for f, side, length, turned in ts.legs.report():
         print("STEP %s comes down at frame %d (%.2f s): %.2f m from where it stood, turned %+.0f deg" % (
             side, f, f / FPS, length, turned))
