@@ -60,7 +60,8 @@ TINNITUS_PITCH = 4.0       # x the source beep's pitch
 # footsteps out: his feet as scene.py plants them (its STEP lines: the frame each
 # ball comes down, / 15, less 0.03 s for the heel)
 STEPS_OUT_TURN = [19.04]   # his left foot comes in beside the right as he turns
-STEPS_OUT_WALK = [19.50, 19.90, 20.50, 21.17, 21.84, 22.50, 23.17, 23.84]   # the right steps off, and he walks
+# the right steps off (19.50), then the walk clip's own footfalls, heel 0.1 s before the ball
+STEPS_OUT_WALK = [19.50, 20.10, 20.77, 21.43, 22.10, 22.77, 23.43, 24.10]
 STEPS_OUT_TURN_DB = -11.0      # a closing step lands softer
 STEPS_OUT_DB = (-9.0, -26.0)   # first, last walking step, relative to shot peak
 

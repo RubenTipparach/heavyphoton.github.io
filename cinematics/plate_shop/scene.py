@@ -616,24 +616,32 @@ SHOOT_LEAD = 1       # Pistol_Shoot starts this many frames before the bolt
 TURN_FROM = 272      # his hips start to come round, his feet pivoting on their balls
 LEAVE = 276          # his feet start to step
 TURN_END = 293       # the second step is down: he faces the door
-LEAD_CHEST = 4       # frames his chest turns ahead of his hips
-LEAD_HEAD = 9        # and his head
+LEAD_CHEST = 2       # frames his chest turns ahead of his hips
+LEAD_HEAD = 4        # and his head
+HAND_OVER = 5        # frames after TURN_END for his legs to go back to the walk clip, all FK
 # the two steps: where the ball of each foot comes down, in metres from where
 # his pelvis stood (x to his right, y ahead of him), and the foot's heading
 # (degrees, + to his left)
 TURN_STEPS = {"l": [(0.257, -0.072, -95.0)],    # 0.21 m to the left of the right foot
               "r": [(0.025, -0.578, -178.0)]}   # 0.38 m on, toward the door
 TURN_PHASE = 0.65    # seconds into the walk clip at LEAVE: the left foot is the one about to lift
-# his hips on the way round: (frame, x to his right, y ahead), from where they stood
-TURN_PATH = [(LEAVE, 0.0, 0.0), (286, 0.13, -0.12), (TURN_END, 0.08, -0.25)]
-TURN_STRIDE = 0.5    # the turn's steps lift and swing the arms like half a walk's
-TURN_CADENCE = 1.5   # and come quicker than the walk's
+# his hips on the way round: (frame, x to his right, y ahead), from where they
+# stood; at TURN_END they are wherever the walk clip has them over the right foot
+TURN_MID = (286, 0.13, -0.12)
+TURN_STRIDE = 0.5    # the turn swings the arms like half a walk, opening up by TURN_END
 TURN_EASE = 0.5      # seconds to come up to walking from standing
-STRIDE_BACK = 1.2    # seconds, after the turn, for his steps to open up to the full stride
+WALK = "Walk_Formal_Loop"
 DOOR = (0.0, -10.4)  # where he heads once he has turned
 
 
 STRIPE_PAIRS = 12        # black and white bands over the body's height: ~7.5 cm each at 1.79 m
+# the suit's wool (tailored_wool): scales are features per metre
+FOLD = (4.0, 2.5, 0.42, 0.55) # drape creases: scale, how much shorter down the body than round it,
+                              # strength, and how much of the ridge is left flat (the rest creases)
+SLUB = (70.0, 0.5, 0.10)     # the yarn's heathered slub, ~1.5 cm: scale, bump, how far it shifts the colour
+FIBRE = (700.0, 0.6)         # the fibre's fuzz: scale, bump
+TWILL = (260.0, 0.35)        # a twill's diagonal ribs, ~4 mm apart: scale, bump
+WOOL = {"roughness": 0.86, "specular": 0.22, "sheen": 0.45, "sheen_roughness": 0.38}
 GARMENT_TILE = (0.0, 0.25, 0.75, 1.0)   # the outfit atlas's first, largest tile: the suit, not the shoes
 
 
@@ -692,6 +700,109 @@ def in_shadow(body, light=0.1):
     b.inputs["Subsurface Weight"].default_value = 0.0
 
 
+def tailored_wool(body):
+    """The suit's cloth reads as wool, not latex. Inside the garment's atlas
+    tile (the shoes and eyes keep their own), the cloth gets wool's shading:
+    rough, little specular, and a soft sheen that lifts at grazing angles
+    the way napped fibre catches a rim light. And four scales of detail
+    chained after the garment's normal map, all off the undeformed mesh in
+    metres (Generated, times its rest size) so they ride the cloth: creases
+    a few centimetres across, ridged, longer round the limbs than along
+    them (FOLD); the yarn's slub (SLUB), which also heathers its colour; the
+    fibre's fuzz (FIBRE); and a twill's diagonal ribs (TWILL)."""
+    mesh = next(o for o in body.arm.children if o.type == "MESH")
+    m = next(ms for ms in mesh.data.materials if ms.name.endswith("_outfit"))
+    nt = m.node_tree
+    b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    nm = next(n for n in nt.nodes if n.type == "NORMAL_MAP")
+    N = nt.nodes.new
+    xs = [v.co for v in mesh.data.vertices]
+    size = Vector(tuple(max(c[i] for c in xs) - min(c[i] for c in xs) for i in range(3)))
+
+    def node(kind, **inputs):
+        n = N(kind)
+        for k, v in inputs.items():
+            if hasattr(v, "is_linked") or hasattr(v, "links"):
+                nt.links.new(v, n.inputs[k])
+            else:
+                n.inputs[k].default_value = v
+        return n
+
+    def math(op, a, c):
+        n = N("ShaderNodeMath")
+        n.operation = op
+        for sock, v in ((n.inputs[0], a), (n.inputs[1], c)):
+            if isinstance(v, (int, float)):
+                sock.default_value = v
+            else:
+                nt.links.new(v, sock)
+        return n.outputs[0]
+
+    # where the cloth is: the garment's tile in the atlas
+    uvs = node("ShaderNodeSeparateXYZ", Vector=N("ShaderNodeUVMap").outputs["UV"])
+    cloth = math("MULTIPLY", math("LESS_THAN", uvs.outputs["X"], GARMENT_TILE[2]),
+                 math("GREATER_THAN", uvs.outputs["Y"], GARMENT_TILE[1]))
+
+    # the undeformed mesh, in metres
+    metres = N("ShaderNodeVectorMath")
+    metres.operation = "MULTIPLY"
+    nt.links.new(N("ShaderNodeTexCoord").outputs["Generated"], metres.inputs[0])
+    metres.inputs[1].default_value = size
+    folds_at = N("ShaderNodeVectorMath")   # folds wrap round the limbs: stretched across, short down
+    folds_at.operation = "MULTIPLY"
+    nt.links.new(metres.outputs[0], folds_at.inputs[0])
+    folds_at.inputs[1].default_value = (1.0, 1.0, FOLD[1])
+
+    folds = node("ShaderNodeTexNoise", Vector=folds_at.outputs[0], Scale=FOLD[0], Detail=2.0,
+                 Roughness=0.5, Distortion=0.6)
+    crease = math("SUBTRACT", 1.0, math("ABSOLUTE", math("SUBTRACT", math("MULTIPLY", folds.outputs["Fac"], 2.0),
+                                                          1.0), 0.0))
+    crease = math("POWER", math("MAXIMUM", math("DIVIDE", math("SUBTRACT", crease, FOLD[3]), 1.0 - FOLD[3]), 0.0),
+                  1.5)   # sparse ridges: the cloth lies flat between a few soft creases
+    slub = node("ShaderNodeTexNoise", Vector=metres.outputs[0], Scale=SLUB[0], Detail=3.0, Roughness=0.5)
+    fibre = node("ShaderNodeTexNoise", Vector=metres.outputs[0], Scale=FIBRE[0], Detail=6.0, Roughness=0.6)
+    twill = node("ShaderNodeTexWave", Vector=metres.outputs[0], Scale=TWILL[0], Distortion=1.5,
+                 **{"Detail": 1.0})
+    twill.wave_type = "BANDS"
+    twill.bands_direction = "DIAGONAL"
+    twill.wave_profile = "SIN"
+
+    bump_folds = node("ShaderNodeBump", Height=crease, Normal=nm.outputs["Normal"],
+                      Distance=0.012, Strength=math("MULTIPLY", cloth, FOLD[2]))
+    bump_folds.invert = True   # the creases sink into the cloth
+    fine = math("ADD", math("ADD", math("MULTIPLY", fibre.outputs["Fac"], FIBRE[1]),
+                            math("MULTIPLY", twill.outputs["Fac"], TWILL[1])),
+                math("MULTIPLY", slub.outputs["Fac"], SLUB[1] * 4.0))
+    bump_fine = node("ShaderNodeBump", Height=fine, Normal=bump_folds.outputs["Normal"], Distance=0.0006,
+                     Strength=math("MULTIPLY", cloth, 1.0))
+    nt.links.new(bump_fine.outputs["Normal"], b.inputs["Normal"])
+
+    # heathered colour: the fibre's mottle, a few per cent either way
+    heather = N("ShaderNodeMix")
+    heather.data_type = "RGBA"
+    heather.blend_type = "MULTIPLY"
+    nt.links.new(math("MULTIPLY", cloth, 1.0), heather.inputs["Factor"])
+    nt.links.new(b.inputs["Base Color"].links[0].from_socket, heather.inputs["A"])
+    shade = math("ADD", 1.0 - SLUB[2], math("MULTIPLY", slub.outputs["Fac"], 2 * SLUB[2]))
+    grey = node("ShaderNodeCombineXYZ", X=shade, Y=shade, Z=shade)
+    nt.links.new(grey.outputs[0], heather.inputs["B"])
+    nt.links.new(heather.outputs["Result"], b.inputs["Base Color"])
+
+    # wool's shading, inside the tile
+    rough_src = b.inputs["Roughness"].links[0].from_socket if b.inputs["Roughness"].links else None
+    rough = N("ShaderNodeMix")
+    rough.data_type = "FLOAT"
+    nt.links.new(cloth, rough.inputs["Factor"])
+    if rough_src is not None:
+        nt.links.new(rough_src, rough.inputs["A"])
+    rough.inputs["B"].default_value = WOOL["roughness"]
+    nt.links.new(rough.outputs["Result"], b.inputs["Roughness"])
+    nt.links.new(math("MULTIPLY", cloth, WOOL["sheen"]), b.inputs["Sheen Weight"])
+    b.inputs["Sheen Roughness"].default_value = WOOL["sheen_roughness"]
+    nt.links.new(math("SUBTRACT", 0.5, math("MULTIPLY", cloth, 0.5 - WOOL["specular"])),
+                 b.inputs["Specular IOR Level"])
+
+
 def convict_stripes(body):
     """Horizontal convict bands on the prisoner's suit. The build tints it off-white; the bands are
     painted here, off the mesh's undeformed (Generated) height so they stay on the cloth, and only
@@ -748,71 +859,81 @@ def arms(body):
     return keep
 
 
-def walk_away(track, start, pelvis0, v, fps, end):
-    """Turn round to the right and walk to the door. The hips follow TURN_PATH
-    and come round from TURN_FROM to TURN_END; after that he walks for the
-    door, his steps opening up to the walk's over STRIDE_BACK. Returns the
-    yaw curve (for the upper body's lead), the stride share and the walk
-    clip's time, frame by frame, and the turn's planned steps in the world."""
+def walk_away(track, body, lib, start, pelvis0, v, fps, end):
+    """Turn round to the right and walk to the door. The hips come round from
+    TURN_FROM to TURN_END through TURN_MID while the two TURN_STEPS are taken
+    (gait.py plants them). The walk clip's clock is bent so that its right
+    foot comes down on TURN_END, and the hips end where the clip has them over
+    that foot: from there on he is the walk clip as authored, at its own
+    speed and cadence, all forward kinematics. Returns the hips' yaw curve,
+    the stride share and the clip's clock frame by frame, the turn's steps in
+    the world, and the frames his feet come down on the walk."""
     x0, y0 = start
-    keys = [(f, x0 + dx, y0 + dy) for f, dx, dy in TURN_PATH]
-    fe, xe, ye = keys[-1]
-    d = Vector((DOOR[0] - xe, DOOR[1] - ye)).normalized()
-    heading = math.degrees(math.atan2(-d.x, d.y))
-    heading -= 360.0 if heading > 0 else 0.0   # come round clockwise, to the right
+    touch, cycle = gait.contacts(body, lib, WALK)
+    t0 = TURN_PHASE
+    t1 = touch["r"][0]
+    while t1 < t0 + 0.8 * cycle:
+        t1 += cycle   # the right foot's second fall: the turn's second step
+    plan = {side: [(pelvis0.x + bx, pelvis0.y + by, yw) for bx, by, yw in steps]
+            for side, steps in TURN_STEPS.items()}
+    r2 = Vector(plan["r"][0][:2])
+    rb = gait.ball_local(body, lib, WALK, t1, "r")
+    heading = 180.0
+    for _ in range(3):   # the hips sit behind the right foot, facing the door
+        end_xy = r2 - gait.yaw(heading).to_2x2() @ Vector((rb.x, rb.y))
+        d = Vector((DOOR[0] - end_xy.x, DOOR[1] - end_xy.y)).normalized()
+        heading = math.degrees(math.atan2(-d.x, d.y))
+        heading -= 360.0 if heading > 0 else 0.0   # come round clockwise, to the right
 
     def hips_yaw(f):
         return heading * gait.smooth((f - TURN_FROM) / float(TURN_END - TURN_FROM))
 
-    def step(f):   # stride share and cadence: the turn's, then opening up to the walk's
-        back = gait.smooth((f - TURN_END) / (STRIDE_BACK * fps))
-        up = gait.smooth((f - LEAVE) / (TURN_EASE * fps))
-        s = TURN_STRIDE + (1.0 - TURN_STRIDE) * back
-        c = (TURN_CADENCE + (1.0 - TURN_CADENCE) * back) * (0.6 + 0.4 * up)   # the first step is slower
-        return up, s, c
+    def hermite(fa, fb, pa, pb, ta, tb, f):
+        n = float(fb - fa)
+        t = (f - fa) / n
+        return (pa * (2 * t ** 3 - 3 * t * t + 1) + ta * (n * (t ** 3 - 2 * t * t + t))
+                + pb * (-2 * t ** 3 + 3 * t * t) + tb * (n * (t ** 3 - t * t)))
 
-    # the hips: a Hermite curve through the keys, leaving the last at walking speed
-    _, s_e, c_e = step(fe)
-    tang = []
-    for i, (f, x, y) in enumerate(keys):
-        if i == 0:
-            tang.append(Vector((0.0, 0.0)))
-        elif i == len(keys) - 1:
-            tang.append(Vector((d.x, d.y)) * (s_e * c_e * v / fps))
-        else:
-            fa, xa, ya = keys[i - 1]
-            fb, xb, yb = keys[i + 1]
-            tang.append(Vector((xb - xa, yb - ya)) / float(fb - fa))
-    for i in range(len(keys) - 1):
-        (fa, xa, ya), (fb, xb, yb) = keys[i], keys[i + 1]
-        n = fb - fa
+    # the hips: from standing, through TURN_MID, leaving TURN_END at the walk's speed
+    keys = [(LEAVE, Vector((x0, y0))), (TURN_MID[0], Vector((x0 + TURN_MID[1], y0 + TURN_MID[2]))),
+            (TURN_END, end_xy)]
+    tang = [Vector((0.0, 0.0)), (keys[2][1] - keys[0][1]) / float(TURN_END - LEAVE), d * (v / fps)]
+    for i in range(2):
+        (fa, pa), (fb, pb) = keys[i], keys[i + 1]
         for f in range(fa, fb + 1):
-            t = (f - fa) / float(n)
-            h = (2 * t ** 3 - 3 * t * t + 1, t ** 3 - 2 * t * t + t, -2 * t ** 3 + 3 * t * t, t ** 3 - t * t)
-            p = (Vector((xa, ya)) * h[0] + tang[i] * (h[1] * n) + Vector((xb, yb)) * h[2]
-                 + tang[i + 1] * (h[3] * n))
+            p = hermite(fa, fb, pa, pb, tang[i], tang[i + 1], f)
             track.root[f] = (p.x, p.y, hips_yaw(f))
     for f in range(TURN_FROM, LEAVE):
         track.root[f] = (x0, y0, hips_yaw(f))
+    for f in range(TURN_END, end + 1):
+        p = end_xy + d * (v * (f - TURN_END) / fps)
+        track.root[f] = (p.x, p.y, heading)
 
-    stride, clock, walked, last, tau = {}, {}, 0.0, None, TURN_PHASE
-    for f in range(LEAVE, end + 1):
-        up, s, c = step(f)
+    # the clip's clock: slow off the mark, bent to land the right foot on
+    # TURN_END, then the clip's own
+    stride, clock = {}, {}
+    for f in range(TURN_FROM, end + 1):
+        up = gait.smooth((f - LEAVE) / (TURN_EASE * fps))
+        s = TURN_STRIDE + (1.0 - TURN_STRIDE) * gait.smooth((f - TURN_MID[0]) / float(TURN_END - TURN_MID[0]))
         stride[f] = 1.0 - up * (1.0 - s)
-        if last is not None:
-            tau += 0.5 * (c + last[1]) / fps
-            if f > fe:
-                walked += 0.5 * (s * c * v + last[0]) / fps
-        last = (s * c * v, c)
-        clock[f] = tau
-        if f > fe:
-            track.root[f] = (xe + d.x * walked, ye + d.y * walked, heading)
-    for f in range(TURN_FROM, LEAVE):
-        stride[f] = 1.0
+        if f < LEAVE:
+            continue
+        if f <= TURN_END:
+            clock[f] = hermite(LEAVE, TURN_END, t0, t1, 0.6 / fps, 1.0 / fps, f)
+        else:
+            clock[f] = t1 + (f - TURN_END) / fps
+    falls = sorted((TURN_END + round((t - t1 + k * cycle) * fps), side)
+                   for side, (t, _) in touch.items() for k in range(4)
+                   if TURN_END < TURN_END + round((t - t1 + k * cycle) * fps) <= end)
 
-    plan = {side: [(pelvis0.x + bx, pelvis0.y + by, yw) for bx, by, yw in steps]
-            for side, steps in TURN_STEPS.items()}
-    return hips_yaw, stride, clock, plan
+    def stance(f, side):
+        """A foot is down while the clip has it down, and while he is still
+        mostly standing (the idle clip, before the walk has blended in)."""
+        if f < LEAVE or gait.smooth((f - LEAVE) / (TURN_EASE * fps)) < 0.5:
+            return True
+        dn, up = touch[side]
+        return (clock[f] - dn) % cycle < (up - dn) % cycle
+    return hips_yaw, stride, clock, plan, falls, stance
 
 
 def turn_lead(hips_yaw):
@@ -859,6 +980,7 @@ def cast(gun, muzzle):
     skin_detail(pr)
     skin_detail(fg)
     in_shadow(fg)
+    tailored_wool(fg)
     convict_stripes(pr)
     clips.prepare(pr)
     clips.prepare(fg)
@@ -945,15 +1067,23 @@ def cast(gun, muzzle):
     ts.move(walk0, WALK_STOP, (x, WALK_FROM), (x, stop), 0.0)
     ts.hold(WALK_STOP, LEAVE, x, stop, 0.0)
     pelvis0 = clips.pose_world(fg, lib, ts, LEAVE)[2]
-    hips_yaw, stride, clock, plan = walk_away(ts, (x, stop), pelvis0, v, FPS, END)
-    ts.play(LEAVE, END, "Walk_Formal_Loop", t0=lambda f: clock[f], blend=round(TURN_EASE * FPS))
+    hips_yaw, stride, clock, plan, falls, stance = walk_away(ts, fg, lib, (x, stop), pelvis0, v, FPS, END)
+    ts.play(LEAVE, END, WALK, t0=lambda f: clock[f], blend=round(TURN_EASE * FPS))
     print("TURN to the right, hips from frame %d to %d, chest %d and head %d frames ahead; heading %.1f" % (
         TURN_FROM, TURN_END, LEAD_CHEST, LEAD_HEAD, hips_yaw(END)))
     ts.layers.append(turn_lead(hips_yaw))
-    ts.legs = gait.Gait(fg, lib, ts, range(TURN_FROM, END + 1), lambda f: stride[f], plan)
+    twist = [(hips_yaw(f + LEAD_CHEST) - hips_yaw(f), hips_yaw(f + LEAD_HEAD) - hips_yaw(f))
+             for f in range(TURN_FROM - LEAD_HEAD, TURN_END + 1)]
+    print("LEAD chest at most %.0f deg ahead of the hips, head %.0f" % (
+        max(abs(c) for c, _ in twist), max(abs(h) for _, h in twist)))
+    ts.legs = gait.Gait(fg, lib, ts, range(TURN_FROM, TURN_END + HAND_OVER + 1), lambda f: stride[f], plan,
+                        ik=lambda f: 1.0 - gait.smooth((f - TURN_END) / float(HAND_OVER)), stance=stance)
     for f, side, length, turned in ts.legs.report():
-        print("STEP %s comes down at frame %d (%.2f s): %.2f m from where it stood, turned %+.0f deg" % (
-            side, f, f / FPS, length, turned))
+        if f <= TURN_END:
+            print("STEP %s comes down at frame %d (%.2f s): %.2f m from where it stood, turned %+.0f deg" % (
+                side, f, f / FPS, length, turned))
+    for f, side in falls:
+        print("STEP %s comes down at frame %d (%.2f s): the walk clip, as authored" % (side, f, f / FPS))
 
     def weight(f):
         if f <= WALK_STOP or f >= 274:

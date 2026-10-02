@@ -72,6 +72,39 @@ def aim(d, front):
     return frame(d, f.normalized()) @ REST
 
 
+def contacts(body, lib, clip, rate=60):
+    """When the ball of each foot comes down and lifts in a looping clip, in
+    seconds of clip time: {side: (down, up)}, plus the clip's length."""
+    n = int(round(lib.length(clip) * rate))
+    tr = clips.Track(lib, rate)
+    tr.play(0, n, clip)
+    tr.hold(0, n, 0.0, 0.0, 0.0)
+    z = {s: [] for s in SIDES}
+    for i in range(n):
+        A, wrot, pelvis = clips.pose_world(body, lib, tr, i)
+        M = body.solve_world(A, wrot, pelvis)
+        for s in SIDES:
+            z[s].append(body.world(A, M, "ball_" + s).z)
+    out = {}
+    for s in SIDES:
+        floor = sorted(z[s])[n // 10]
+        d = [v < floor + CONTACT for v in z[s]]
+        dn = next(i for i in range(n) if d[i] and not d[i - 1])
+        up = next(i for i in range(n) if d[i - 1] and not d[i])
+        out[s] = (dn / float(rate), up / float(rate))
+    return out, n / float(rate)
+
+
+def ball_local(body, lib, clip, t, side):
+    """Where the ball of a foot is, in character space (facing +Y from the
+    origin), at clip time t."""
+    tr = clips.Track(lib, 1.0)
+    tr.play(0, 1, clip, t0=t)
+    tr.hold(0, 1, 0.0, 0.0, 0.0)
+    A, wrot, pelvis = clips.pose_world(body, lib, tr, 0)
+    return body.world(A, body.solve_world(A, wrot, pelvis), "ball_" + side)
+
+
 class Gait:
     """Planted feet for a body's track over `frames`; the track calls it
     (track.legs) to re-plant each of those frames.
@@ -79,9 +112,15 @@ class Gait:
     stride: frame -> the share of the clip's stride he steps (1: as authored)
     plan:   {side: [(ball x, ball y, foot yaw), ...]}: where that foot's first
             steps come down, in place of where the clip would put them
+    ik:     frame -> how much the legs are re-planted (1) or the clip's own
+            forward kinematics (0), to hand back to the clip
+    stance: (frame, side) -> whether that foot is down; by default, whether
+            its ball is within CONTACT of its stance height
     """
 
-    def __init__(self, body, lib, track, frames, stride, plan=None, idle="Idle_Loop"):
+    def __init__(self, body, lib, track, frames, stride, plan=None, ik=None, stance=None,
+                 idle="Idle_Loop"):
+        self.ik = ik or (lambda f: 1.0)
         self.body, self.lib, self.track = body, lib, track
         self.frames = list(frames)
         self.idx = {f: k for k, f in enumerate(self.frames)}
@@ -109,16 +148,18 @@ class Gait:
         # the ground under each ball: the clip's stance height, which is not its
         # lowest (the walk carries the left foot higher than idle does)
         floor = {s: sorted(r[s]["bl"].z for r in fk)[n // 10] for s in SIDES}
+        if stance is not None:
+            floor = {s: min(r[s]["bl"].z for r, f in zip(fk, self.frames) if stance(f, s)) for s in SIDES}
 
         # where the scaled clip puts the ball of each foot, and whether it is down
         warped = {s: [] for s in SIDES}
         down = {s: [] for s in SIDES}
-        for r in fk:
+        for r, f in zip(fk, self.frames):
             for s in SIDES:
                 bl, pl = r[s]["bl"], r["pl"]
                 w = Vector((bl.x, pl.y + r["k"] * (bl.y - pl.y), 0.0))
                 warped[s].append(r["o"] + yaw(r["psi"]) @ w)
-                down[s].append(bl.z < floor[s] + CONTACT)
+                down[s].append(stance(f, s) if stance is not None else bl.z < floor[s] + CONTACT)
         for s in SIDES:
             d = down[s]
             for i in range(1, n - 1):   # a one-frame flicker either way is noise
@@ -264,11 +305,13 @@ class Gait:
 
     def __call__(self, f, A, wrot, pelvis):
         k = self.idx.get(f)
-        if k is None:
+        w = self.ik(f)
+        if k is None or w <= 0.0:
             return wrot, pelvis
         body = self.body
         psi = self.track.root[f][2]
-        pelvis = pelvis + Vector((0.0, 0.0, self.rise[k]))
+        clip = wrot
+        pelvis = pelvis + Vector((0.0, 0.0, self.rise[k] * w))
         wrot = dict(wrot)
 
         cut = 1.0 - self.stride(f)
@@ -310,4 +353,7 @@ class Gait:
             wrot[ca] = aim((T - K).normalized(), bend) @ body.wdown_ual[ca]
             wrot[fo] = self.foot[s][k]
             wrot[ba] = self.toes[s][k]
+            if w < 1.0:
+                for b in (th, ca, fo, ba):
+                    wrot[b] = blend(clip[b], wrot[b], w)
         return wrot, pelvis

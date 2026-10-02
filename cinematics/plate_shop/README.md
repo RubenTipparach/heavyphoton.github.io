@@ -58,8 +58,11 @@ needs. `paths.py` finds both repositories.
 - **scene.py** builds the whole scene in one run. The bodies lose half their
   triangles (5,450 and 6,435), and the skin gets its roughness, a stronger
   normal map, a pore bump and subsurface. The shooter's skin is taken down to
-  a tenth so his face stays a shape under the brim. The prisoner's stripes
-  are painted on his suit in the shader.
+  a tenth so his face stays a shape under the brim, and his suit is shaded
+  as wool (`tailored_wool`): rough, little specular, a soft sheen at grazing
+  angles, and creases, the yarn's slub, its fuzz and a twill's ribs as
+  normal detail chained after the garment's own normal map. The prisoner's
+  stripes are painted on his suit in the shader.
 - **clips.py** puts the [Universal Animation Library](https://quaternius.com/packs/universalanimationlibrary.html)
   clips on the MPFB rig: both skeletons are brought to the same arms-down
   rest and each bone takes its source bone's world rotation away from it. The
@@ -69,19 +72,21 @@ needs. `paths.py` finds both repositories.
   raised about the shoulders until the gun sits at the prisoner's eye line,
   and the gun is gripped so its barrel runs at his head on the frame it fires.
 - **gait.py** turns the suit round to leave. The library has no turn clip,
-  so the walk is re-planted. He turns to his right the way people do: his
-  head comes round first, then his chest (`LEAD_HEAD`, `LEAD_CHEST`, twisted
-  up the spine and carried out along the arms), then his hips, and his feet
-  follow in two authored steps (`TURN_STEPS`). He is still in the shooting
-  stance, feet 0.64 m apart, so the left foot comes back in beside the right
-  as he comes round (0.20 m apart), the right steps off toward the door, and
-  he walks out on the clip, his steps opening up to its full stride. The
-  ball of each foot stays where it came down while the heel peels up and the
-  body turns over it; a foot in the air rises, then travels eased round the
-  outside of the other foot; two-bone IK bends each knee toward its own toes.
-  The build prints each step (`STEP`) and any frame a leg cannot reach its
-  foot (`GAIT`); `audio/mix.py` cues the walk-out footsteps on the `STEP`
-  frames.
+  so the walk is re-planted for the turn only. He turns to his right the
+  way people do: his head comes round first, then his chest (`LEAD_HEAD`,
+  `LEAD_CHEST`, twisted up the spine and carried out along the arms), then
+  his hips, and his feet follow in two authored steps (`TURN_STEPS`). He is
+  still in the shooting stance, feet 0.64 m apart, so the left foot comes
+  back in beside the right as he comes round (0.20 m apart) and the right
+  steps off toward the door. The ball of each planted foot stays put while
+  the heel peels up; a foot in the air rises, then travels eased round the
+  outside of the other; two-bone IK bends each knee toward its own toes.
+  The walk clip's clock is bent so its own right foot comes down on that
+  second step, with the hips where the clip has them over it, and from
+  there (`TURN_END`, over `HAND_OVER` frames) the legs go back to the clip:
+  the walk out is the clip as authored, all forward kinematics. The build
+  prints each step (`STEP`) and any frame a leg cannot reach its foot
+  (`GAIT`); `audio/mix.py` cues the footsteps on the `STEP` frames.
 - **ragdoll.py** turns the prisoner into a Bullet ragdoll on the shot: eleven
   boxes with jointed limits, kicked for one substep, simulated among the set's
   colliders and baked back onto his bones.
