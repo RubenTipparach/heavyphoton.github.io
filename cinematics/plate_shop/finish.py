@@ -15,6 +15,7 @@ and writes OUT/final/f_0001.png onwards:
                            plate dissolved into (no push: resizing a small
                            logo frame by frame rounds its width and height
                            apart, and it visibly stretches)
+  then the fade out        1 s from the still logo to black (FADE_OUT)
 
 --final adds the late-90s finish:
   a vignette (and film grain, if GRAIN is set; it is off) on the picture, a 640 x 480 letterbox
@@ -50,6 +51,7 @@ BOX = (640, 480)            # the letterbox frame; the picture sits in its middl
 VIGNETTE = 0.32             # how dark the corners go
 GRAIN = 0.0                 # film grain, standard deviation in 0..1 light (0: none, by the owner's call)
 COLOURS = 256
+FADE_OUT = 1.0              # seconds from the held logo to black, after the hold
 PALETTE_SAMPLES = 48        # frames sampled across the film to build the palette
 
 
@@ -153,6 +155,10 @@ def main():
     for k in range(T["hold"]):
         n += 1
         emit(still, n)
+    fade = round(FADE_OUT * T["fps"])
+    for k in range(fade):
+        n += 1
+        emit(still * (1.0 - (k + 1) / fade), n)
 
     if final:
         # One palette for the whole film, from frames sampled across it.

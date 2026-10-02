@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild soundtrack.wav for the prison plate shop cinematic (27.6 s).
+"""Rebuild soundtrack.wav for the prison plate shop cinematic (28.6 s).
 
 Every sound comes from sources/ (OpenGameArt.org downloads, see credits.json).
 Change the cue times below and run:
@@ -27,7 +27,8 @@ from math import gcd
 # ---------------------------------------------------------------------------
 # CUE TIMES (seconds from 0.0)
 # ---------------------------------------------------------------------------
-TOTAL_LEN = 27.6
+TOTAL_LEN = 28.6           # the picture: 3 s of logo, then 1 s fade to black, 686 frames, 28.58 s
+FADE_OUT = 1.0             # the master fades to silence with the picture's fade to black
 
 BED_START = 0.0            # room tone, press flywheel hum, conveyor
 BED_FADE_START = 23.7
@@ -56,10 +57,12 @@ TINNITUS_START = 16.60     # faint high ringing after the shot
 TINNITUS_END = 19.00
 TINNITUS_PITCH = 4.0       # x the source beep's pitch
 
-STEPS_OUT_FIRST = 19.20    # footsteps out (walking away)
-STEPS_OUT_INTERVAL = 0.667
-STEPS_OUT_LAST_MAX = 24.40
-STEPS_OUT_DB = (-8.0, -26.0)
+# footsteps out: his feet as scene.py plants them (its STEP lines: the frame each
+# ball comes down, / 15, less 0.03 s for the heel)
+STEPS_OUT_TURN = [19.04, 19.50, 19.90, 20.37, 20.84]   # the short steps he turns round on
+STEPS_OUT_WALK = [21.37, 22.04, 22.70, 23.37, 24.04]   # then walking away
+STEPS_OUT_TURN_DB = -11.0      # short steps land softer
+STEPS_OUT_DB = (-9.0, -26.0)   # first, last walking step, relative to shot peak
 
 WHOOSH_START = 23.73       # reverse swell into the logo
 LOGO_HIT = 24.50           # deep impact + dark synth sting, tail to the end
@@ -479,15 +482,17 @@ def main():
         place(stem('steps_in'), pan(x, p), t - o, rel(g))
         place(room_send, pan(x, p), t - o, rel(g) * db(2 - 0.3 * (lv - STEPS_IN_DB[0])))
 
-    t_out = step_times(STEPS_OUT_FIRST, STEPS_OUT_INTERVAL, STEPS_OUT_LAST_MAX)
-    lv_out = np.linspace(STEPS_OUT_DB[0], STEPS_OUT_DB[1], len(t_out))
-    pan_out = np.linspace(0.05, -0.55, len(t_out))
+    t_out = STEPS_OUT_TURN + STEPS_OUT_WALK
+    lv_out = np.concatenate([np.full(len(STEPS_OUT_TURN), STEPS_OUT_TURN_DB),
+                             np.linspace(STEPS_OUT_DB[0], STEPS_OUT_DB[1], len(STEPS_OUT_WALK))])
+    pan_out = np.concatenate([np.full(len(STEPS_OUT_TURN), 0.05),
+                              np.linspace(0.05, -0.55, len(STEPS_OUT_WALK))])
     for t, lv, p, i in zip(t_out, lv_out, pan_out, order(len(t_out))):
         x, o = footstep(i)
-        x = filt(x[:, None], "low", 9000 - 250 * (STEPS_OUT_DB[0] - lv))[:, 0]   # duller as he recedes
+        x = filt(x[:, None], "low", 9000 - 250 * max(0.0, STEPS_OUT_DB[0] - lv))[:, 0]   # duller as he recedes
         g = lv + rng.uniform(-0.6, 0.6)
         place(stem('steps_out'), pan(x, p), t - o, rel(g))
-        place(room_send, pan(x, p), t - o, rel(g) * db(2 + 0.3 * (STEPS_OUT_DB[0] - lv)))
+        place(room_send, pan(x, p), t - o, rel(g) * db(2 + 0.3 * max(0.0, STEPS_OUT_DB[0] - lv)))
 
     # --- 7. ray gun charge: rising whine ending exactly on the shot ---
     clen = sec(CHARGE_END - CHARGE_START)
@@ -600,7 +605,7 @@ def main():
     stems["hall_reverb"] = reverb(hall_send, hall_ir) * db(HALL_REVERB_SEND_DB)
     mix = sum(stems.values())
     mix = filt(mix, "high", 22)
-    mix = fade(mix, 0.0, 0.25)        # tail rings to the very end, no click at 27.6
+    mix = fade(mix, 0.0, FADE_OUT)    # down to silence with the picture's fade to black
 
     # master: the loudest point, measured as true peak (4x oversampled), lands on
     # MASTER_PEAK_DBFS, less 2 LSB of room for the dither

@@ -1,13 +1,14 @@
 # Plate shop: the Heavy Photon cinematic
 
-A 27.5 second cutscene in the style of a late-90s game cinematic. A prisoner
+A 28.6 second cutscene in the style of a late-90s game cinematic. A prisoner
 stamps license plates alone on the night shift. A figure in a suit walks in,
 puts a photon gun to the back of his head and fires. He falls onto the feed
-table; the camera rises over the last plate he stamped, the Heavy Photon
-lockup, and the plate dissolves into the 3D logo, which holds for 3 seconds.
+table, and the suit turns on short steps and walks out. The camera rises over
+the last plate he stamped, the Heavy Photon lockup, and the plate dissolves
+into the 3D logo, which holds for 3 seconds and fades to black in 1.
 
 The finished film is 640 x 480, letterboxed, 256 colours, 24 fps, with a
-vignette, film grain and motion blur, and a soundtrack from OpenGameArt.
+vignette and motion blur (no film grain), and a soundtrack from OpenGameArt.
 It is [`film/plate_shop.mp4`](film/plate_shop.mp4), with its storyboard in
 [`film/storyboard.png`](film/storyboard.png).
 
@@ -18,7 +19,7 @@ cine_bodies.json + cine_faces.json
   -> build_cine.py     the two bodies, by fps-game-demo's NPC pipeline -> bodies/*.glb
 scene.py               Blender: set, textures, bodies, clips, ragdoll, cameras -> OUT/scene.blend
   -> blender -a        Cycles                                             -> OUT/frames/
-finish.py --final      the logo dissolve and hold, vignette, grain,
+finish.py --final      the logo dissolve, hold and fade to black, vignette,
                        letterbox, one 256-colour palette                  -> OUT/final/
 make_videos.sh         frames + audio/soundtrack.wav                      -> OUT/plate_shop.mp4
 storyboard.py          one frame per shot, with timings                   -> OUT/storyboard.png
@@ -67,6 +68,16 @@ needs. `paths.py` finds both repositories.
   two-handed (`Pistol_Idle_Loop`, `Pistol_Shoot`) and walks out. His arms are
   raised about the shoulders until the gun sits at the prisoner's eye line,
   and the gun is gripped so its barrel runs at his head on the frame it fires.
+- **gait.py** turns the suit round to leave. The library has no turn clip, so
+  the walk is re-planted on a tight arc: a quarter of its stride at one and a
+  half times its cadence, so he comes round in five short steps (the inner
+  foot 15 to 22 cm) before his stride opens up toward the door. The ball of
+  each foot stays where it came down while the heel peels up and the body
+  turns over it; a foot in the air travels eased to where the shortened clip
+  sets it down, lifted and tipped less; two-bone IK bends the legs to the
+  feet, and his arm swing is cut down with the stride. The build prints each
+  step (`STEP`) and any frame a leg cannot reach its foot (`GAIT`);
+  `audio/mix.py` cues the walk-out footsteps on the `STEP` frames.
 - **ragdoll.py** turns the prisoner into a Bullet ragdoll on the shot: eleven
   boxes with jointed limits, kicked for one substep, simulated among the set's
   colliders and baked back onto his bones.
@@ -76,8 +87,10 @@ needs. `paths.py` finds both repositories.
   sheet metal, the primary lockup's parts (`branding/render3d/shapes.json`)
   inside it, and the last shot frames it exactly as the end card frames the
   logo (84 % of the width, centred; `scene.LOGO_FILL`), so the dissolve is a
-  cross-fade in place. `--final` then adds the 90s finish and reduces the
-  whole film to one palette, so colours never flicker between frames.
+  cross-fade in place. The logo holds still (a slow push rounds a small
+  logo's width and height apart, and it stretches), then fades to black over
+  `FADE_OUT`. `--final` then adds the 90s finish and reduces the whole film
+  to one palette, so colours never flicker between frames.
 
 The cut is authored in 15 fps story frames and every motion is baked at 15;
 Blender's time stretching renders it at 24 (`scene.retime`). Camera cuts stay

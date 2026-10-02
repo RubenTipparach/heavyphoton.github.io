@@ -184,13 +184,17 @@ class Track:
         self.segs = []      # (f0, f1, clip, t0, rate, loop, blend)
         self.root = {}      # frame -> (x, y, yaw degrees)
         self.layers = []    # fn(frame) -> {bone: world Quaternion applied on top}
+        self.legs = None    # fn(frame, A, wrot, pelvis) -> (wrot, pelvis): re-planted feet (gait.py)
 
     def play(self, f0, f1, clip, t0=0.0, rate=1.0, loop=True, blend=4):
         self.segs.append((f0, f1, clip, t0, rate, loop, blend))
 
     def _seg_pose(self, seg, f):
+        """t0 is where in the clip the segment starts, or a function of the
+        frame that gives the clip time outright (a varying cadence)."""
         f0, f1, clip, t0, rate, loop, _ = seg
-        return self.lib.pose(clip, t0 + (f - f0) / self.fps * rate, loop)
+        t = t0(f) if callable(t0) else t0 + (f - f0) / self.fps * rate
+        return self.lib.pose(clip, t, loop)
 
     def pose(self, f):
         cur = [s for s in self.segs if s[0] <= f <= s[1]]
@@ -229,6 +233,15 @@ class Track:
 def solve(body, lib, track, f, fix=None):
     """(A, M) for one frame: the armature object and its bones in armature space.
     fix: optional (world 3x3, bone names) turned on top, about each chain's root."""
+    A, wrot, pelvis = pose_world(body, lib, track, f, fix)
+    if track.legs is not None:
+        wrot, pelvis = track.legs(f, A, wrot, pelvis)
+    return A, body.solve_world(A, wrot, pelvis)
+
+
+def pose_world(body, lib, track, f, fix=None):
+    """The clip's pose on the track's path, before any re-planting: the
+    armature object, each bone's world rotation, and the pelvis position."""
     from retarget import TURN as _T  # same constant, kept explicit
     x, y, yaw = track.root[f]
     rot, hips = track.pose(f)
@@ -251,7 +264,7 @@ def solve(body, lib, track, f, fix=None):
         wrot[b] = w
     scale = body.leg / lib.leg
     pelvis = Vector((x, y, 0)) + Y @ (body.pelvis_char + hips * scale)
-    return A, body.solve_world(A, wrot, pelvis)
+    return A, wrot, pelvis
 
 
 def prepare(body):

@@ -29,6 +29,7 @@ from mathutils import Matrix, Quaternion, Vector
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
+import gait  # noqa: E402
 import paths  # noqa: E402
 import ragdoll  # noqa: E402
 import surfaces  # noqa: E402
@@ -608,8 +609,11 @@ GRIP_SIDE = -0.05    # and this far to the prisoner's left
 WALK_FROM = -10.7    # the suit starts just inside the corridor
 SHOOT_LEAD = 1       # Pistol_Shoot starts this many frames before the bolt
 LEAVE = 276          # the suit starts to walk away
-TURN_R = 0.5         # metres: the radius of the arc he walks to turn round, to his left
-TURN_EASE = 0.5      # seconds to come up to walking speed from standing
+TURN_R = 0.25        # metres: the radius of the arc he walks to turn round, to his left
+TURN_STRIDE = 0.24   # his steps on the turn, as a share of the walk's stride (gait.py): ~20 cm
+TURN_CADENCE = 1.5   # and how much quicker he steps them than the walk does
+TURN_EASE = 0.5      # seconds to come up to walking from standing
+STRIDE_BACK = 1.2    # seconds, after the turn, for his steps to lengthen to the full stride
 DOOR = (0.0, -10.4)  # where he heads once he has turned
 
 
@@ -729,30 +733,41 @@ def arms(body):
 
 
 def walk_away(track, f0, start, v, fps, end):
-    """Turn round by walking it: a left-hand U-turn on an arc of TURN_R, at the
-    walk clip's own ground speed so the feet stay planted, easing up to speed
-    from standing, then on toward the door. A spin on the spot (what this
-    replaced) skates the feet. Returns the frames the arc runs over."""
+    """Turn round by walking it, in short quick steps: a left-hand U-turn on an
+    arc of TURN_R at TURN_STRIDE of the walk's stride and TURN_CADENCE of its
+    cadence, easing up from standing, then on toward the door as the steps
+    lengthen and slow to the walk's own. gait.py plants the feet along it; a
+    spin on the spot, or full strides round a tight arc, skate them. Returns
+    the frames the arc runs over, the stride share frame by frame, and the
+    walk clip's time frame by frame."""
     cx, cy = start[0] - TURN_R, start[1]
     arc = math.pi * TURN_R
-
-    def dist(t):   # metres walked after t seconds, accelerating over TURN_EASE
-        return v * t * t / (2 * TURN_EASE) if t < TURN_EASE else v * (t - TURN_EASE / 2)
-
-    f = f0
-    while dist((f - f0) / fps) < arc:
-        phi = dist((f - f0) / fps) / TURN_R
-        track.root[f] = (cx + TURN_R * math.cos(phi), cy + TURN_R * math.sin(phi), math.degrees(phi))
-        f += 1
+    blend = round(TURN_EASE * fps)   # the clip's own blend from idle to walking
     out = (cx - TURN_R, cy)
     d = Vector((DOOR[0] - out[0], DOOR[1] - out[1])).normalized()
     heading = math.degrees(math.atan2(-d.x, d.y)) % 360.0   # yaw that faces the door
-    s0 = dist((f - f0) / fps) - arc
-    for g in range(f, end + 1):
-        s = s0 + v * (g - f) / fps
-        u = min(1.0, (g - f) / 8.0)
-        track.root[g] = (out[0] + d.x * s, out[1] + d.y * s, 180.0 + (heading - 180.0) * u * u * (3 - 2 * u))
-    return f0, f
+    stride, clock, walked, a1, last, tau = {}, {}, 0.0, None, (0.0, 0.6 * TURN_CADENCE), 0.0
+    for f in range(f0, end + 1):
+        up = gait.smooth((f - f0) / blend)
+        back = 0.0 if a1 is None else gait.smooth((f - a1) / (STRIDE_BACK * fps))
+        s = TURN_STRIDE + (1.0 - TURN_STRIDE) * back
+        c = (TURN_CADENCE + (1.0 - TURN_CADENCE) * back) * (0.6 + 0.4 * up)   # the first step is slower
+        speed = up * s * c * v
+        if f > f0:
+            walked += 0.5 * (speed + last[0]) / fps
+            tau += 0.5 * (c + last[1]) / fps
+        last = (speed, c)
+        stride[f] = 1.0 - up * (1.0 - s)
+        clock[f] = tau
+        if walked < arc:
+            phi = walked / TURN_R
+            track.root[f] = (cx + TURN_R * math.cos(phi), cy + TURN_R * math.sin(phi), math.degrees(phi))
+            continue
+        if a1 is None:
+            a1 = f
+        e, u = walked - arc, gait.smooth((f - a1) / 8.0)
+        track.root[f] = (out[0] + d.x * e, out[1] + d.y * e, 180.0 + (heading - 180.0) * u)
+    return f0, a1 if a1 is not None else end, stride, clock
 
 
 def look_back(f):
@@ -820,7 +835,6 @@ def cast(gun, muzzle):
     ts.play(FIRE - SHOOT_LEAD, FIRE - SHOOT_LEAD + n_shoot, "Pistol_Shoot", loop=False, blend=2)
     ts.play(FIRE - SHOOT_LEAD + n_shoot, 262, "Pistol_Idle_Loop", blend=4)
     ts.play(262, LEAVE, "Idle_Loop", blend=12)
-    ts.play(LEAVE, END, "Walk_Formal_Loop", blend=round(TURN_EASE * FPS))
     ts.hold(0, END, 0.0, 0.0, 0.0)
 
     def grip(A, M_):
@@ -862,9 +876,10 @@ def cast(gun, muzzle):
     ts.hold(0, walk0, x, WALK_FROM, 0.0)
     ts.move(walk0, WALK_STOP, (x, WALK_FROM), (x, stop), 0.0)
     ts.hold(WALK_STOP, LEAVE, x, stop, 0.0)
-    a0, a1 = walk_away(ts, LEAVE, (x, stop), v, FPS, END)
-    print("TURN a %.1f m arc over frames %d to %d (%.2f s), then for the door" % (
-        math.pi * TURN_R, a0, a1, (a1 - a0) / FPS))
+    a0, a1, stride, clock = walk_away(ts, LEAVE, (x, stop), v, FPS, END)
+    ts.play(LEAVE, END, "Walk_Formal_Loop", t0=lambda f: clock[f], blend=round(TURN_EASE * FPS))
+    print("TURN a %.2f m arc over frames %d to %d (%.2f s), %d %% stride at %.1fx cadence, then for the door" % (
+        math.pi * TURN_R, a0, a1, (a1 - a0) / FPS, 100 * TURN_STRIDE, TURN_CADENCE))
 
     def lead(f):
         """His head turns into the turn before his body does, and comes back."""
@@ -875,6 +890,10 @@ def cast(gun, muzzle):
         q = lambda deg: Quaternion((0, 0, 1), math.radians(deg * w))
         return {"neck_01": q(12), "head": q(28)}
     ts.layers.append(lead)
+    ts.legs = gait.Gait(fg, lib, ts, range(LEAVE, END + 1), lambda f: stride[f])
+    for f, side, length, turned in ts.legs.report():
+        print("STEP %s comes down at frame %d (%.2f s): %.2f m from where it stood, turned %+.0f deg" % (
+            side, f, f / FPS, length, turned))
 
     def weight(f):
         if f <= WALK_STOP or f >= 274:
@@ -935,6 +954,8 @@ def cast(gun, muzzle):
     for f in frames:
         A, M_ = clips.solve(fg, lib, ts, f, fix=fix_at(f))
         fg.key(F(f), A, M_, prev)
+    for f, side, miss in ts.legs.short:
+        print("GAIT frame %d: the %s leg falls %.1f cm short of its foot" % (f, side, 100 * miss))
     lib.remove()
     return pr, fg, stamps, a, head, stop
 
