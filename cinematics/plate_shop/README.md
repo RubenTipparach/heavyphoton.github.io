@@ -79,14 +79,26 @@ needs. `paths.py` finds both repositories.
   still in the shooting stance, feet 0.64 m apart, so the left foot comes
   back in beside the right as he comes round (0.20 m apart) and the right
   steps off toward the door. The ball of each planted foot stays put while
-  the heel peels up; a foot in the air rises, then travels eased round the
-  outside of the other; two-bone IK bends each knee toward its own toes.
-  The walk clip's clock is bent so its own right foot comes down on that
-  second step, with the hips where the clip has them over it, and from
-  there (`TURN_END`, over `HAND_OVER` frames) the legs go back to the clip:
-  the walk out is the clip as authored, all forward kinematics. The build
-  prints each step (`STEP`) and any frame a leg cannot reach its foot
-  (`GAIT`); `audio/mix.py` cues the footsteps on the `STEP` frames.
+  the heel peels up, and the foot pivots on it as the hips turn, all the
+  way once it points `HIP_TURN` from them, so no thigh twists in its
+  socket; a foot in the air rises, then travels eased round the outside of
+  the other; two-bone IK bends each knee toward its toes, taking the foot's
+  heading from its level side-to-side axis (at toe off the toes point back
+  past the vertical). His feet are planted from the shot's white-out
+  (`PLANT_FROM`), which hides the switch from the clip. The walk clip's
+  clock is bent so its own right foot comes down on that second step, with
+  the hips where the clip has them over it, and from there (`TURN_END`,
+  over `HAND_OVER` frames, each leg bone's swing and twist blended on their
+  own) the legs go back to the clip: the walk out is the clip as authored,
+  all forward kinematics. The build prints each step (`STEP`) and any frame
+  a leg cannot reach its foot (`GAIT`); `audio/mix.py` cues the footsteps
+  on the `STEP` frames.
+- **check_legs.py** measures every rendered frame of a body's legs, the
+  in-betweens of the 15 fps keys included: each hip's turn, each knee's and
+  foot's twist, which way each knee folds, and any of them jumping, and
+  flags what leaves a natural range
+  (`blender -b out/scene.blend -P check_legs.py`; it exits non-zero on a
+  flag). On the suit's turn and walk out it flags none of 103 frames.
 - **ragdoll.py** turns the prisoner into a Bullet ragdoll on the shot: eleven
   boxes with jointed limits, kicked for one substep, simulated among the set's
   colliders and baked back onto his bones.

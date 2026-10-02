@@ -12,7 +12,9 @@ made for:
            length against the clip's own (FULL_STEP)
   plant    the ball of a foot on the ground stays where it came down while
            the body turns over it, the heel peeling up round it, and the foot
-           pivots part of the way round with the body (PIVOT). Off the ground
+           pivots part of the way round with the body (PIVOT), and all the
+           way once it points HIP_TURN from the hips, a hip's natural reach
+           (past it the thigh twists in its socket). Off the ground
            it rises, then travels, eased, from where it lifted to where it
            comes down, round the outside of the other foot (CLEAR), turning
            to face its landing
@@ -24,12 +26,13 @@ The arms keep the clip's swing, cut down toward idle with the stride.
 """
 import math
 
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 import clips
 
 CONTACT = 0.02       # m above its stance height that the ball of a foot still counts as down
-PIVOT = 0.45         # how far a planted foot turns with the body, on its ball
+PIVOT = 0.7          # how far a planted foot turns with the body, on its ball
+HIP_TURN = 35.0      # degrees a foot may point away from the hips; past that a planted one pivots
 FULL_STEP = 1.6      # m a foot travels in one of the walk clip's swings (its stride)
 LIFT_MIN = 0.35      # a step lifts and tips the foot by its length's share of FULL_STEP, at least this
 CLEAR = 0.16         # m a swinging foot keeps from the planted one, on its own side
@@ -37,7 +40,15 @@ RISE = (-0.03, 0.06) # m the pelvis may drop or rise for the stance leg's reach
 ARMS = ("clavicle_", "upperarm_", "lowerarm_", "hand_")
 FINGERS = ("index_", "middle_", "ring_", "pinky_", "thumb_")
 SIDES = ("l", "r")
-DOWN, FWD = Vector((0, 0, -1)), Vector((0, 1, 0))
+DOWN, FWD, RIGHT = Vector((0, 0, -1)), Vector((0, 1, 0)), Vector((1, 0, 0))
+
+
+def heading(rot, down):
+    """Which way a foot faces, in degrees: square to its side-to-side axis,
+    which stays level however far the foot is tipped. The way its toes point
+    does not: at toe off they can point back past the vertical."""
+    side = rot @ (down.inverted() @ RIGHT)
+    return math.degrees(math.atan2(side.y, side.x)) if side.x or side.y else 0.0
 
 
 def smooth(u):
@@ -103,6 +114,24 @@ def ball_local(body, lib, clip, t, side):
     tr.hold(0, 1, 0.0, 0.0, 0.0)
     A, wrot, pelvis = clips.pose_world(body, lib, tr, 0)
     return body.world(A, body.solve_world(A, wrot, pelvis), "ball_" + side)
+
+
+def twist_blend(clip_rot, down, d_ik, front_ik, w):
+    """A leg bone w of the way from the clip's pose to the IK's, as where it
+    points and how it is turned about that, each blended on its own: a plain
+    blend of the two rotations mixes swing and twist, and on its way can
+    twist the bone past both. Returns the direction and the knee's side."""
+    rest = down.inverted()
+    d_fk = (clip_rot @ (rest @ DOWN)).normalized()
+    f_fk = clip_rot @ (rest @ FWD)
+    swing = Quaternion().slerp(d_fk.rotation_difference(d_ik), w)
+    d = swing @ d_fk
+    f_a = swing @ f_fk
+    f_b = d_ik.rotation_difference(d) @ (front_ik - d_ik * front_ik.dot(d_ik))
+    f_a -= d * f_a.dot(d)
+    f_b -= d * f_b.dot(d)
+    ang = math.atan2(d.dot(f_a.cross(f_b)), f_a.dot(f_b))
+    return d, Quaternion(d, ang * w) @ f_a
 
 
 class Gait:
@@ -251,15 +280,20 @@ class Gait:
                     Fy[k] = psi[k] + oy * u
         self.ball = ball
 
-        # the feet: lifted and tipped by their step, turned to their yaw, and
-        # the ankles that put each ball there
+        # the feet: lifted and tipped by their step, turned to their yaw (never
+        # past HIP_TURN from the hips), and the ankles that put each ball there
         self.foot, self.toes, self.ankle = ({s: [None] * n for s in SIDES} for _ in range(3))
         for k, r in enumerate(fk):
             for s in SIDES:
                 h = lift[s][k]
                 ball[s][k].z = floor[s] + (r[s]["bl"].z - floor[s]) * h
-                R = yaw(self.fyaw[s][k] - r["psi"])
-                self.foot[s][k] = R @ blend(r[s]["rest"][0], r[s]["clip"][0], h)
+                foot = blend(r[s]["rest"][0], r[s]["clip"][0], h)
+                toe = heading(foot, body.wdown_ual["foot_" + s]) - r["psi"]   # the clip's own turn-out
+                toe = (toe + 180.0) % 360.0 - 180.0
+                turn = max(-HIP_TURN, min(HIP_TURN, self.fyaw[s][k] - r["psi"] + toe)) - toe
+                self.fyaw[s][k] = r["psi"] + turn
+                R = yaw(turn)
+                self.foot[s][k] = R @ foot
                 self.toes[s][k] = R @ blend(r[s]["rest"][1], r[s]["clip"][1], h)
                 self.ankle[s][k] = ball[s][k] - self.foot[s][k] @ body.rel["ball_" + s].translation
 
@@ -338,8 +372,7 @@ class Gait:
             if dist < d.length - 1e-3:
                 self.short.append((f, s, d.length - dist))
             u = d.normalized()
-            toes = self.foot[s][k] @ body.rel[ba].translation   # ankle to ball: the way the foot points
-            toes.z = 0.0
+            toes = yaw(heading(self.foot[s][k], body.wdown_ual[fo])) @ FWD   # the knee goes over the toes
             bend = toes - u * toes.dot(u)
             if bend.length < 1e-4:
                 bend = yaw(psi) @ FWD
@@ -349,11 +382,15 @@ class Gait:
             a = math.acos(max(-1.0, min(1.0, c)))
             K = H + l1 * (math.cos(a) * u + math.sin(a) * bend)
             T = H + u * dist
-            wrot[th] = aim((K - H).normalized(), bend) @ body.wdown_ual[th]
-            wrot[ca] = aim((T - K).normalized(), bend) @ body.wdown_ual[ca]
+            for b, dr in ((th, (K - H).normalized()), (ca, (T - K).normalized())):
+                if w < 1.0:   # back toward the clip: its swing and its twist, each by w
+                    dr, front = twist_blend(clip[b], body.wdown_ual[b], dr, bend, w)
+                else:
+                    front = bend
+                wrot[b] = aim(dr, front) @ body.wdown_ual[b]
             wrot[fo] = self.foot[s][k]
             wrot[ba] = self.toes[s][k]
             if w < 1.0:
-                for b in (th, ca, fo, ba):
+                for b in (fo, ba):
                     wrot[b] = blend(clip[b], wrot[b], w)
         return wrot, pelvis

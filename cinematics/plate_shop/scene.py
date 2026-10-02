@@ -618,7 +618,8 @@ LEAVE = 276          # his feet start to step
 TURN_END = 293       # the second step is down: he faces the door
 LEAD_CHEST = 2       # frames his chest turns ahead of his hips
 LEAD_HEAD = 4        # and his head
-HAND_OVER = 5        # frames after TURN_END for his legs to go back to the walk clip, all FK
+HAND_OVER = 7        # frames after TURN_END for his legs to go back to the walk clip, all FK
+PLANT_FROM = 249     # his feet are planted from the shot's white-out, which hides the switch
 # the two steps: where the ball of each foot comes down, in metres from where
 # his pelvis stood (x to his right, y ahead of him), and the foot's heading
 # (degrees, + to his left)
@@ -1076,7 +1077,7 @@ def cast(gun, muzzle):
              for f in range(TURN_FROM - LEAD_HEAD, TURN_END + 1)]
     print("LEAD chest at most %.0f deg ahead of the hips, head %.0f" % (
         max(abs(c) for c, _ in twist), max(abs(h) for _, h in twist)))
-    ts.legs = gait.Gait(fg, lib, ts, range(TURN_FROM, TURN_END + HAND_OVER + 1), lambda f: stride[f], plan,
+    ts.legs = gait.Gait(fg, lib, ts, range(PLANT_FROM, TURN_END + HAND_OVER + 1), lambda f: stride.get(f, 1.0), plan,
                         ik=lambda f: 1.0 - gait.smooth((f - TURN_END) / float(HAND_OVER)), stance=stance)
     for f, side, length, turned in ts.legs.report():
         if f <= TURN_END:
