@@ -8,6 +8,8 @@ lockup, and the plate dissolves into the 3D logo, which holds for 3 seconds.
 
 The finished film is 640 x 480, letterboxed, 256 colours, 24 fps, with a
 vignette, film grain and motion blur, and a soundtrack from OpenGameArt.
+It is [`film/plate_shop.mp4`](film/plate_shop.mp4), with its storyboard in
+[`film/storyboard.png`](film/storyboard.png).
 
 ## How it is built
 

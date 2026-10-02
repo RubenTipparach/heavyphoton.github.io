@@ -1,5 +1,6 @@
 #!/bin/sh
 # The film from the finished frames (finish.py), at the rate timing.json gives,
+# CRF 22 tuned for grain: it keeps the dither and grain at about 22 MB for the cut,
 # with the soundtrack (audio/soundtrack.wav) when there is one.
 set -e
 D=${1:-out}
@@ -8,10 +9,10 @@ FPS=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['fps'])" "
 WAV="$HERE/audio/soundtrack.wav"
 if [ -f "$WAV" ]; then
   ffmpeg -y -loglevel error -framerate "$FPS" -start_number 1 -i "$D/final/f_%04d.png" -i "$WAV" \
-    -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "$D/plate_shop.mp4"
+    -c:v libx264 -preset slow -tune grain -crf 22 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest "$D/plate_shop.mp4"
 else
   ffmpeg -y -loglevel error -framerate "$FPS" -start_number 1 -i "$D/final/f_%04d.png" \
-    -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p "$D/plate_shop.mp4"
+    -c:v libx264 -preset slow -tune grain -crf 22 -pix_fmt yuv420p "$D/plate_shop.mp4"
 fi
 ffprobe -v error -show_entries format=duration:stream=codec_type,width,height,nb_frames -of compact "$D/plate_shop.mp4"
 # Small renders also get a 4x nearest-neighbour copy, so the pixels stay crisp in a player.

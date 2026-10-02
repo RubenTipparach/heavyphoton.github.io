@@ -69,7 +69,7 @@ for i, (name, a, b, k, act) in enumerate(SHOTS):
     im = im.crop((0, (RH - PH) // 2, RW, (RH - PH) // 2 + PH)).resize((TW, TH), SCALE)
     sheet.paste(im, (x, y))
     d.text((x, y + TH + 6), name, font=font_b, fill='#F2F0E9')
-    d.text((x + TW, y + TH + 8), '%s - %s  (%d f)' % (tc(a), tc(b), b - a), font=font, fill='#8B93A3', anchor='ra')
+    d.text((x + TW, y + TH + 8), '%s - %s  (%d f)' % (tc(a), tc(b), round((b - a) * K)), font=font, fill='#8B93A3', anchor='ra')
     d.multiline_text((x, y + TH + 30), act, font=font, fill='#B9C0CC', spacing=3)
 sheet.save(os.path.join(OUT, 'storyboard.png'))
 print(os.path.join(OUT, 'storyboard.png'), sheet.size)
