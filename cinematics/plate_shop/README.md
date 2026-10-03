@@ -36,8 +36,8 @@ python3 storyboard.py out
 ```
 
 `--lo` instead of `--final` builds a 192 x 108 quick look (24 samples); with
-neither it is 768 x 432. A final render is 590 frames at about 17 s each on
-a 4-core CPU with no GPU, so a little under 3 hours.
+neither it is 768 x 432. A final render is 590 frames at about 20 s each on
+a 4-core CPU with no GPU, so a little over 3 hours.
 
 It needs Blender 4.5 LTS, Python 3 with Pillow and numpy, ffmpeg, and a
 checkout of [fps-game-demo](https://github.com/RubenTipparach/fps-game-demo)
