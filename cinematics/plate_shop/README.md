@@ -71,34 +71,33 @@ needs. `paths.py` finds both repositories.
   two-handed (`Pistol_Idle_Loop`, `Pistol_Shoot`) and walks out. His arms are
   raised about the shoulders until the gun sits at the prisoner's eye line,
   and the gun is gripped so its barrel runs at his head on the frame it fires.
-- **gait.py** turns the suit round to leave. The library has no turn clip,
-  so the walk is re-planted for the turn only. He turns to his right the
-  way people do: his head comes round first, then his chest (`LEAD_HEAD`,
-  `LEAD_CHEST`, twisted up the spine and carried out along the arms), then
-  his hips, and his feet follow in two steps. He is still in the shooting
-  stance, feet 0.64 m apart, so the left foot comes back in beside the right
-  as he comes round (`TURN_STEP`, 0.20 m apart), and the right steps off
-  toward the door a full stride, to where the walk clip has it with the left
-  foot there; his hips ride over his feet as he turns (`HIPS_BACK`,
-  `HIPS_LEFT`). The ball of each planted foot stays put while
-  the heel peels up, and the foot pivots on it as the hips turn, all the
-  way once it points `HIP_TURN` from them, so no thigh twists in its
-  socket; a foot in the air rises, then travels eased round the outside of
-  the other; two-bone IK bends each knee toward its toes, taking the foot's
-  heading from its level side-to-side axis (at toe off the toes point back
-  past the vertical). His feet are planted from the shot's white-out
-  (`PLANT_FROM`), which hides the switch from the clip. The walk clip's
-  clock is bent so its own right foot comes down on that second step, with
-  the hips where the clip has them over it, and from there (`TURN_END`,
+- **gait.py** turns the suit round to leave. The library has no turn clip, so
+  the walk is re-planted for the turn only. He turns to his right the way
+  people do: his head comes round first, then his chest (`LEAD_HEAD`,
+  `LEAD_CHEST`, twisted up the spine and carried out along the arms), then his
+  hips, and his feet follow in two steps. He is still in the shooting stance,
+  feet 0.64 m apart, so the left foot comes back in beside the right as he
+  comes round (`TURN_STEP`, 0.20 m apart), and the right steps off toward the
+  door a full stride, to where the walk clip has it with the left foot there;
+  his hips ride over his feet as he turns (`HIPS_BACK`, `HIPS_LEFT`). The ball
+  of each planted foot stays put while the heel peels up, and the foot pivots
+  on it as the hips turn, all the way once it points `HIP_TURN` from them, so
+  no thigh twists in its socket; a foot in the air rises, then travels eased
+  round the outside of the other; two-bone IK bends each knee toward its toes,
+  taking the foot's heading from its level side-to-side axis (at toe off the
+  toes point back past the vertical). His feet are planted from the shot's
+  white-out (`PLANT_FROM`), which hides the switch from the clip. The walk
+  clip's clock is bent so its own right foot comes down on that second step,
+  with the hips where the clip has them over it, and from there (`TURN_END`,
   over `HAND_OVER` frames, each leg bone's swing and twist blended on their
-  own) the legs go back to the clip: he walks out exactly as he walked in: the same clip, sped up
-  the same 1.24x the walk in is to fit S4, untouched, all forward
-  kinematics. Only while the legs are re-planted does no knee fold past
-  `KNEE_EASY` (the formal walk flicks its heel up behind with the thigh
+  own) the legs go back to the clip: he walks out exactly as he walked in: the
+  same clip, sped up the same 1.24x the walk in is to fit S4, untouched, all
+  forward kinematics. Only while the legs are re-planted does no knee fold
+  past `KNEE_EASY` (the formal walk flicks its heel up behind with the thigh
   still hanging, which out of the turn read as a leg folding back), and the
-  easing fades out with the re-planting. The build prints each step (`STEP`) and any frame
-  a leg cannot reach its foot (`GAIT`); `audio/mix.py` cues the footsteps
-  on the `STEP` frames.
+  easing fades out with the re-planting. The build prints each step (`STEP`)
+  and any frame a leg cannot reach its foot (`GAIT`); `audio/mix.py` cues the
+  footsteps on the `STEP` frames.
 - **check_legs.py** measures every rendered frame of a body's legs, the
   in-betweens of the 15 fps keys included: each hip's turn, each knee's and
   foot's twist, which way each knee folds, whether the legs scissor (a knee
