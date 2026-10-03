@@ -18,8 +18,8 @@ bone they turn on so a bent or tipped leg reads true:
 and flagged when it leaves those ranges, when a knee folds the wrong way,
 or when any of them jumps more than 10 degrees in a frame. And the legs
 must not scissor: each knee and ankle stays on its own side of the body
-(CROSS), and neither thigh swings in across the middle further than the
-walk ever takes it (ADDUCT). Prints every
+(CROSS), and neither thigh swings in across the middle further than
+closing the feet together takes it (ADDUCT). Prints every
 flagged frame and each leg's range, and exits non-zero if any is flagged.
 """
 import math
@@ -36,7 +36,8 @@ KNEE = 20.0
 FOOT = 30.0
 JUMP = 10.0
 CROSS = 0.05    # m each knee and ankle keeps to its own side of the other
-ADDUCT = -10.0  # degrees a thigh may swing in across the body (the walk: -5)
+ADDUCT = -12.0  # degrees a thigh may swing in across the body (the walk: -5; feet
+                # closed together bring it in about 10)
 
 scn = bpy.context.scene
 arm = bpy.data.objects[name]

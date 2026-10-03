@@ -23,10 +23,11 @@ made for:
            the legs allow so the knees bend no more than the clip's do
 
 The arms keep the clip's swing, cut down toward idle with the stride. Where
-the legs are the clip's own (ik 0), they stay forward kinematics. Either
-way no knee folds past KNEE_EASY: the formal walk kicks its heel up behind
-with the thigh still hanging, which from the side reads as a leg folding
-back, so the clip's knees are eased before anything is taken from them.
+the legs are the clip's own (ik 0), they are its forward kinematics,
+untouched. Where they are re-planted, no knee folds past KNEE_EASY: the
+formal walk kicks its heel up behind with the thigh still hanging, which out
+of a turn, from the side, reads as a leg folding back. The easing fades
+with the re-planting, so the clip takes over without a pop.
 """
 import math
 
@@ -41,8 +42,8 @@ FULL_STEP = 1.6      # m a foot travels in one of the walk clip's swings (its st
 LIFT_MIN = 0.35      # a step lifts and tips the foot by its length's share of FULL_STEP, at least this
 CLEAR = 0.16         # m a swinging foot keeps from the planted one, on its own side
 RISE = (-0.03, 0.06) # m the pelvis may drop or rise for the stance leg's reach
-KNEE_EASY = (50.0, 0.4)   # past this many degrees a swinging knee bends this share as far:
-                          # the formal walk's 88 deg heel flick comes out at 65
+KNEE_EASY = (50.0, 0.4)   # past this many degrees a re-planted swinging knee bends this share
+                          # as far: the formal walk's 88 deg heel flick comes out at 65
 ARMS = ("clavicle_", "upperarm_", "lowerarm_", "hand_")
 FINGERS = ("index_", "middle_", "ring_", "pinky_", "thumb_")
 SIDES = ("l", "r")
@@ -344,9 +345,10 @@ class Gait:
             last[s] = (p, y)
         return out
 
-    def ease_knees(self, wrot):
-        """The clip's own legs, each knee folded no further than KNEE_EASY:
-        the shin and the foot below it turned back up about the knee."""
+    def ease_knees(self, wrot, amount=1.0):
+        """The clip's own legs, each knee folded no further than KNEE_EASY
+        (by `amount` of the way): the shin and the foot below it turned back
+        up about the knee."""
         body = self.body
         wrot = dict(wrot)
         for s in SIDES:
@@ -356,7 +358,7 @@ class Gait:
             fold = math.degrees(d_th.angle(d_ca))
             if fold <= KNEE_EASY[0]:
                 continue
-            back = (fold - KNEE_EASY[0]) * (1.0 - KNEE_EASY[1])
+            back = (fold - KNEE_EASY[0]) * (1.0 - KNEE_EASY[1]) * amount
             R = Matrix.Rotation(-math.radians(back), 3, d_th.cross(d_ca).normalized())
             for b in (ca, "foot_" + s, "ball_" + s):
                 if b in wrot:
@@ -366,11 +368,9 @@ class Gait:
     def __call__(self, f, A, wrot, pelvis):
         k = self.idx.get(f)
         w = self.ik(f)
-        if k is None:
+        if k is None or w <= 0.0:
             return wrot, pelvis
-        wrot = self.ease_knees(wrot)
-        if w <= 0.0:
-            return wrot, pelvis
+        wrot = self.ease_knees(wrot, w)
         body = self.body
         psi = self.track.root[f][2]
         clip = wrot

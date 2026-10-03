@@ -630,7 +630,7 @@ TURN_STEP = (0.257, -0.072, -95.0)
 TURN_PHASE = 0.65    # seconds into the walk clip at LEAVE: the left foot is the one about to lift
 TURN_MID = 286       # the hips are over his feet, the closing step down
 HIPS_BACK = 0.10     # m behind the middle of his feet that his hips ride then
-HIPS_LEFT = 0.05     # and to his left, so the right thigh never swings in across him
+HIPS_LEFT = 0.065    # and to his left, so neither thigh swings in across him
 TURN_STRIDE = 0.5    # the turn swings the arms like half a walk, opening up by TURN_END
 TURN_EASE = 0.5      # seconds to come up to walking from standing
 WALK = "Walk_Formal_Loop"
@@ -862,13 +862,14 @@ def arms(body):
     return keep
 
 
-def walk_away(track, body, lib, start, pelvis0, v, fps, end):
+def walk_away(track, body, lib, start, pelvis0, v, fps, end, pace=1.0):
     """Turn round to the right and walk to the door. The hips come round from
     TURN_FROM to TURN_END, over his feet at TURN_MID, while his left foot
     closes in (TURN_STEP) and his right steps off (gait.py plants them). The walk clip's clock is bent so that its right
     foot comes down on TURN_END, and the hips end where the clip has them over
-    that foot: from there on he is the walk clip as authored, at its own
-    speed and cadence, all forward kinematics. Returns the hips' yaw curve,
+    that foot: from there on he walks exactly as he walked in, the clip as
+    authored at the walk in's pace (`pace`, the clip sped up to fit S4), all
+    forward kinematics. Returns the hips' yaw curve,
     the stride share and the clip's clock frame by frame, the turn's steps in
     the world, and the frames his feet come down on the walk."""
     x0, y0 = start
@@ -907,7 +908,7 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
     mid = (l1 + Vector((r0.x, r0.y))) / 2 + Ym @ Vector((-HIPS_LEFT, -HIPS_BACK)) \
         - Ym @ Vector((pelvis0.x - x0, pelvis0.y - y0))
     keys = [(LEAVE, Vector((x0, y0))), (TURN_MID, mid), (TURN_END, end_xy)]
-    tang = [Vector((0.0, 0.0)), (keys[2][1] - keys[0][1]) / float(TURN_END - LEAVE), d * (v / fps)]
+    tang = [Vector((0.0, 0.0)), (keys[2][1] - keys[0][1]) / float(TURN_END - LEAVE), d * (v * pace / fps)]
     for i in range(2):
         (fa, pa), (fb, pb) = keys[i], keys[i + 1]
         for f in range(fa, fb + 1):
@@ -916,7 +917,7 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
     for f in range(TURN_FROM, LEAVE):
         track.root[f] = (x0, y0, hips_yaw(f))
     for f in range(TURN_END, end + 1):
-        p = end_xy + d * (v * (f - TURN_END) / fps)
+        p = end_xy + d * (v * pace * (f - TURN_END) / fps)
         track.root[f] = (p.x, p.y, heading)
 
     # the clip's clock: slow off the mark, bent to land the right foot on
@@ -929,12 +930,12 @@ def walk_away(track, body, lib, start, pelvis0, v, fps, end):
         if f < LEAVE:
             continue
         if f <= TURN_END:
-            clock[f] = hermite(LEAVE, TURN_END, t0, t1, 0.6 / fps, 1.0 / fps, f)
+            clock[f] = hermite(LEAVE, TURN_END, t0, t1, 0.6 / fps, pace / fps, f)
         else:
-            clock[f] = t1 + (f - TURN_END) / fps
-    falls = sorted((TURN_END + round((t - t1 + k * cycle) * fps), side)
-                   for side, (t, _) in touch.items() for k in range(4)
-                   if TURN_END < TURN_END + round((t - t1 + k * cycle) * fps) <= end)
+            clock[f] = t1 + (f - TURN_END) * pace / fps
+    falls = sorted((TURN_END + round((t - t1 + k * cycle) * fps / pace), side)
+                   for side, (t, _) in touch.items() for k in range(5)
+                   if TURN_END < TURN_END + round((t - t1 + k * cycle) * fps / pace) <= end)
 
     def stance(f, side):
         """A foot is down while the clip has it down, and while he is still
@@ -1077,7 +1078,8 @@ def cast(gun, muzzle):
     ts.move(walk0, WALK_STOP, (x, WALK_FROM), (x, stop), 0.0)
     ts.hold(WALK_STOP, LEAVE, x, stop, 0.0)
     pelvis0 = clips.pose_world(fg, lib, ts, LEAVE)[2]
-    hips_yaw, stride, clock, plan, falls, stance = walk_away(ts, fg, lib, (x, stop), pelvis0, v, FPS, END)
+    hips_yaw, stride, clock, plan, falls, stance = walk_away(ts, fg, lib, (x, stop), pelvis0, v, FPS, END,
+                                                                pace=rate)
     ts.play(LEAVE, END, WALK, t0=lambda f: clock[f], blend=round(TURN_EASE * FPS))
     print("TURN to the right, hips from frame %d to %d, chest %d and head %d frames ahead; heading %.1f" % (
         TURN_FROM, TURN_END, LEAD_CHEST, LEAD_HEAD, hips_yaw(END)))
