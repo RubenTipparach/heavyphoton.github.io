@@ -91,11 +91,12 @@ needs. `paths.py` finds both repositories.
   clock is bent so its own right foot comes down on that second step, with
   the hips where the clip has them over it, and from there (`TURN_END`,
   over `HAND_OVER` frames, each leg bone's swing and twist blended on their
-  own) the legs go back to the clip: the walk out is the clip as authored,
-  all forward kinematics, except that no knee folds past `KNEE_EASY` (the
-  formal walk flicks its heel up behind with the thigh still hanging, 88
-  degrees, which from the side reads as a leg folding back; it now bends 65
-  at most). The build prints each step (`STEP`) and any frame
+  own) the legs go back to the clip: he walks out exactly as he walked in: the same clip, sped up
+  the same 1.24x the walk in is to fit S4, untouched, all forward
+  kinematics. Only while the legs are re-planted does no knee fold past
+  `KNEE_EASY` (the formal walk flicks its heel up behind with the thigh
+  still hanging, which out of the turn read as a leg folding back), and the
+  easing fades out with the re-planting. The build prints each step (`STEP`) and any frame
   a leg cannot reach its foot (`GAIT`); `audio/mix.py` cues the footsteps
   on the `STEP` frames.
 - **check_legs.py** measures every rendered frame of a body's legs, the
