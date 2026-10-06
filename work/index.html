@@ -1044,7 +1044,17 @@
     <!-- Black boot screen; main.ts swaps in body.ready once the scene renders -->
     <div id="preloader">
       <div class="preloader-mark">
-        <img class="preloader-logo" src="./branding/heavy-photon-branded.svg" alt="Heavy Photon" width="1565" height="356" />
+        <!-- The 3D render of the primary lockup (branding/render3d). The
+             browser picks the smallest cut still sharp at its pixel density;
+             branding/render3d/export_web.py writes them. -->
+        <img class="preloader-logo"
+             src="./branding/heavy-photon-3d-840.webp"
+             srcset="./branding/heavy-photon-3d-480.webp 480w,
+                     ./branding/heavy-photon-3d-840.webp 840w,
+                     ./branding/heavy-photon-3d-1260.webp 1260w,
+                     ./branding/heavy-photon-3d-1680.webp 1680w"
+             sizes="min(420px, 62vw)"
+             alt="Heavy Photon" width="1680" height="469" />
       </div>
       <div class="preloader-bar"><span></span></div>
     </div>

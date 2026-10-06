@@ -8,7 +8,8 @@ volumetric haze, smoke and a glowing plasma beam.
 light, square-on through a 45 degree lens, inside a bevelled gunmetal frame
 with a cyan pinline. The crop is the frame, and everything outside it is
 transparent. The 4K render is `final/heavy-photon-3d-4k.png` (3840 x 1071).
-A 1724 px wide cut of it is the boot splash in godot-sandbox.
+It is the boot splash in godot-sandbox (on a 2560 x 1440 transparent canvas,
+scaled to fit the window) and the logo on heavyphoton.com's boot screen.
 
 `previews/` holds the first approval round: five lighting styles and five
 finishes from a three-quarter camera, before the frame. The scene has moved
@@ -34,7 +35,15 @@ python3 materials.py
 python3 mm_export.py textures materials/*.ptex
 python3 render_previews.py
 python3 make_sheets.py
+python3 export_web.py       # final render -> work/public/branding/*.webp
 ```
+
+`export_web.py` cuts the 4K render to 480, 840, 1260 and 1680 px WebP for
+the site, alpha kept. The boot screen shows the logo at `min(420px, 62vw)`
+and lists them in a `srcset`, so each browser takes the smallest cut that is
+still at least one file pixel per device pixel: 480 on a 1x laptop, 840 on
+a 2x laptop or a 3x phone. Re-run it and `npm run build` in `work/` whenever
+the final render changes.
 
 The approved render:
 
@@ -74,8 +83,9 @@ outside the frame transparent. There is no floor.
 The beam is the SVG's nozzle and slab, carried on in under the frame's right
 side (or, with no frame, past the edge, the way the flat logo bleeds off its
 canvas): a clear skin with a lit rim, filled with turbulent plasma that is
-white-hot on the axis and falls off to cyan and blue at the walls. Three hidden area lights inside it do its
-lighting, which is far less noisy than leaving it to the emissive volume.
+white-hot on the axis and falls off to cyan and blue at the walls. Three
+hidden area lights inside it do its lighting, which is far less noisy than
+leaving it to the emissive volume.
 
 ## Materials
 

@@ -1,0 +1,407 @@
+{
+  "project": "Prison plate shop cinematic, 27.6 s soundtrack (soundtrack.wav)",
+  "source_site": "https://opengameart.org",
+  "built_by": "mix.py",
+  "processing_note": "All sounds were cut, pitched, looped, filtered, faded and mixed; the reverbs are synthetic impulse responses generated in mix.py. No sound in the mix comes from anywhere other than the assets listed here.",
+  "cues": [
+    {
+      "cue": "Room tone / low factory hum (0.0 to 24.5)",
+      "asset_title": "The Shop",
+      "author": "LEGIT Audio",
+      "asset_page": "https://opengameart.org/content/the-shop",
+      "file_url": "https://opengameart.org/sites/default/files/legit_audio_-_the_shop_free_sfx_wav.zip",
+      "files_used": [
+        "TheShopCollection_convenience_store_drinks_fridge_drone.wav"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/the-shop/",
+      "notes": "Looped, high-passed at 35 Hz and low-passed at 5 kHz."
+    },
+    {
+      "cue": "Room tone / low factory hum (0.0 to 24.5)",
+      "asset_title": "Droning Sound Effects",
+      "author": "bretbernhoft",
+      "asset_page": "https://opengameart.org/content/droning-sound-effects",
+      "file_url": "https://opengameart.org/sites/default/files/drone63.wav",
+      "files_used": [
+        "drone63.wav"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/droning-sound-effects/",
+      "notes": "A 24.5 s slice from 20 s in, low-passed at 4 kHz. Layered under the fridge drone as factory air."
+    },
+    {
+      "cue": "Press machine hum, flywheel turning (0.0 to 24.5)",
+      "asset_title": "JC Sounds - Mechanical Pack Vol 1",
+      "author": "JC Sounds",
+      "asset_page": "https://opengameart.org/content/jc-sounds-mechanical-pack-vol-1",
+      "file_url": "https://opengameart.org/sites/default/files/mechanical_pack_vol_1.7z",
+      "files_used": [
+        "Mechanical Pack Vol 1/Loops/Loop_Mechanical Pack Vol 1_Large Wooden Device Turning.wav"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/jc-sounds-mechanical-pack-vol-1/",
+      "notes": "Slowed to 0.85x, low-passed at 2.5 kHz, looped."
+    },
+    {
+      "cue": "Conveyor belt rattle (0.0 to 24.5)",
+      "asset_title": "JC Sounds - Mechanical Pack Vol 1",
+      "author": "JC Sounds",
+      "asset_page": "https://opengameart.org/content/jc-sounds-mechanical-pack-vol-1",
+      "file_url": "https://opengameart.org/sites/default/files/mechanical_pack_vol_1.7z",
+      "files_used": [
+        "Mechanical Pack Vol 1/Loops/Loop_Mechanical Pack Vol 1_Conveyor Belt Machine Running.wav"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/jc-sounds-mechanical-pack-vol-1/",
+      "notes": "Looped, very quiet, leaning right."
+    },
+    {
+      "cue": "Press stamps (2.60, 5.40, 8.20, 11.00, 13.80)",
+      "asset_title": "JC Sounds - Mechanical Pack Vol 1",
+      "author": "JC Sounds",
+      "asset_page": "https://opengameart.org/content/jc-sounds-mechanical-pack-vol-1",
+      "file_url": "https://opengameart.org/sites/default/files/mechanical_pack_vol_1.7z",
+      "files_used": [
+        "Mechanical Pack Vol 1/Singles/Single_Mechanical Pack Vol 1_Large Mechanical Press Hit and Pressure Release_01.wav",
+        "Mechanical Pack Vol 1/Singles/Single_Mechanical Pack Vol 1_Large Mechanical Press Hit and Pressure Release_02.wav",
+        "Mechanical Pack Vol 1/Singles/Single_Mechanical Pack Vol 1_Large Mechanical Press Hit and Pressure Release_03.wav",
+        "Mechanical Pack Vol 1/Singles/Single_Mechanical Pack Vol 1_Large Mechanical Press Hit and Pressure Release_04.wav",
+        "Mechanical Pack Vol 1/Singles/Single_Mechanical Pack Vol 1_Large Mechanical Press Hit and Pressure Release_05.wav"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/jc-sounds-mechanical-pack-vol-1/",
+      "notes": "One take per stamp: ram descent, slam, hydraulic pressure release. The 5.40 stamp is 4 dB louder."
+    },
+    {
+      "cue": "Press stamps (metal clang layer)",
+      "asset_title": "Impact",
+      "author": "qubodup",
+      "asset_page": "https://opengameart.org/content/impact",
+      "file_url": "https://opengameart.org/sites/default/files/qubodupImpact.7z",
+      "files_used": [
+        "qubodupImpact/qubodupImpactMetal.flac"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/impact/",
+      "notes": "Pitched down to 0.8x, 8 dB under each slam."
+    },
+    {
+      "cue": "Steel door opening (6.67 to 7.5): latch",
+      "asset_title": "100 CC0 metal and wood SFX",
+      "author": "rubberduck",
+      "asset_page": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+      "file_url": "https://opengameart.org/sites/default/files/100-CC0-wood-metal-SFX.zip",
+      "files_used": [
+        "lock_open_01.ogg"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/100-cc0-metal-and-wood-sfx/",
+      "notes": "Only the latch clunk."
+    },
+    {
+      "cue": "Steel door opening (6.67 to 7.5): creak and grind",
+      "asset_title": "Iron Door",
+      "author": "themightyglider",
+      "asset_page": "https://opengameart.org/content/iron-door",
+      "file_url": "https://opengameart.org/sites/default/files/iron_door_0.ogg",
+      "files_used": [
+        "iron_door_0.ogg"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/iron-door/",
+      "notes": "The asset page says it is derived from https://freesound.org/people/forseti1121/sounds/319324/"
+    },
+    {
+      "cue": "Steel door opening (6.67 to 7.5): weight",
+      "asset_title": "Door Open, Door Close Set",
+      "author": "qubodup",
+      "asset_page": "https://opengameart.org/content/door-open-door-close-set",
+      "file_url": "https://opengameart.org/sites/default/files/qubodup-DoorSet.7z",
+      "files_used": [
+        "qubodup-DoorSet/flac/qubodup-DoorOpen07.flac"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/door-open-door-close-set/",
+      "notes": "Pitched down to 0.8x, under the creak."
+    },
+    {
+      "cue": "Footsteps in and out, hard shoes on concrete (heel)",
+      "asset_title": "Fantozzi's Footsteps (Grass/Sand & Stone)",
+      "author": "qubodup",
+      "asset_page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone",
+      "file_url": "https://opengameart.org/sites/default/files/Fantozzi-footsteps.7z",
+      "files_used": [
+        "Fantozzi-footsteps/flac/Fantozzi-StoneL1.flac",
+        "Fantozzi-footsteps/flac/Fantozzi-StoneL2.flac",
+        "Fantozzi-footsteps/flac/Fantozzi-StoneL3.flac",
+        "Fantozzi-footsteps/flac/Fantozzi-StoneR1.flac",
+        "Fantozzi-footsteps/flac/Fantozzi-StoneR2.flac",
+        "Fantozzi-footsteps/flac/Fantozzi-StoneR3.flac"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/fantozzis-footsteps-grasssand-stone/",
+      "notes": "Six takes, shuffled so no take repeats back to back, with small pitch and level variation. Original recordings by Fantozzi on freesound.org, CC0."
+    },
+    {
+      "cue": "Footsteps in and out (low body layer)",
+      "asset_title": "Footsteps on different surfaces",
+      "author": "congusbongus",
+      "asset_page": "https://opengameart.org/content/footsteps-on-different-surfaces",
+      "file_url": "https://opengameart.org/sites/default/files/footsteps_0.zip",
+      "files_used": [
+        "footsteps/boots/0.ogg",
+        "footsteps/boots/1.ogg",
+        "footsteps/boots/2.ogg",
+        "footsteps/boots/3.ogg",
+        "footsteps/boots/4.ogg",
+        "footsteps/boots/5.ogg",
+        "footsteps/boots/6.ogg",
+        "footsteps/boots/7.ogg",
+        "footsteps/boots/8.ogg"
+      ],
+      "license": "CC-BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 3.0"
+      ],
+      "local_path": "sources/footsteps-on-different-surfaces/",
+      "notes": "9 dB under the heel. The pack's license.txt says these are derived from footstep-concrete.wav by swuing (https://www.freesound.org/people/swuing/sounds/38873/, CC-BY 3.0)."
+    },
+    {
+      "cue": "Ray gun charge whine (14.13 to 16.53)",
+      "asset_title": "JC Sounds - Sci-Fi Pack Vol 1",
+      "author": "JC Sounds",
+      "asset_page": "https://opengameart.org/content/jc-sounds-sci-fi-pack-vol-1",
+      "file_url": "https://opengameart.org/sites/default/files/scifi_pack_vol_1.7z",
+      "files_used": [
+        "SciFi Pack Vol 1/Single_SciFi Pack Vol 1_Energy Build Up_Med_var 1.wav",
+        "SciFi Pack Vol 1/Single_SciFi Pack Vol 1_Energy BuildUp_Short_var 2_04.wav"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/jc-sounds-sci-fi-pack-vol-1/",
+      "notes": "Varispeed glide so the pitch rises about an octave, level ramped from -34 to -7 dB re the shot, cut at 16.53."
+    },
+    {
+      "cue": "Ray gun charge and shot (charge tail plus boom)",
+      "asset_title": "Doomsday Laser Cannon Sound Effect",
+      "author": "TAD",
+      "asset_page": "https://opengameart.org/content/doomsday-laser-cannon-sound-effect",
+      "file_url": "https://opengameart.org/sites/default/files/doomsday_laser_cannon_short.wav",
+      "files_used": [
+        "doomsday_laser_cannon_short.wav"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/doomsday-laser-cannon-sound-effect/",
+      "notes": "Its own boom lined up on 16.53."
+    },
+    {
+      "cue": "The shot (16.53): plasma zap and low boom",
+      "asset_title": "JC Sounds - Sci-Fi Pack Vol 1",
+      "author": "JC Sounds",
+      "asset_page": "https://opengameart.org/content/jc-sounds-sci-fi-pack-vol-1",
+      "file_url": "https://opengameart.org/sites/default/files/scifi_pack_vol_1.7z",
+      "files_used": [
+        "SciFi Pack Vol 1/Single_SciFi Pack Vol 1_Energy Shot_v2_02.wav",
+        "SciFi Pack Vol 1/Single_SciFi Pack Vol 1_Energy Shot Charged_v1_01.wav",
+        "SciFi Pack Vol 1/Single_SciFi Pack Vol 1_Heavy Plasma Shot_01.wav"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/jc-sounds-sci-fi-pack-vol-1/",
+      "notes": "Zap plus charged shot on top, Heavy Plasma Shot as the low boom underneath. Loudest moment of the mix."
+    },
+    {
+      "cue": "Body falls onto metal table (16.70 to 17.10): thud",
+      "asset_title": "Body Hitting Ground",
+      "author": "dklon",
+      "asset_page": "https://opengameart.org/content/body-hitting-ground",
+      "file_url": "https://opengameart.org/sites/default/files/body_hits.wav",
+      "files_used": [
+        "body_hits.wav"
+      ],
+      "license": "CC-BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 3.0"
+      ],
+      "local_path": "sources/body-hitting-ground/",
+      "notes": "The second hit in the file."
+    },
+    {
+      "cue": "Body falls onto metal table: table resonance and small clink",
+      "asset_title": "Metal Impact Sounds",
+      "author": "BMacZero",
+      "asset_page": "https://opengameart.org/content/metal-impact-sounds",
+      "file_url": [
+        "https://opengameart.org/sites/default/files/clink3.wav",
+        "https://opengameart.org/sites/default/files/thud3.wav"
+      ],
+      "files_used": [
+        "thud3.wav",
+        "clink3.wav"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/metal-impact-sounds/",
+      "notes": "thud3 pitched down to 0.75x."
+    },
+    {
+      "cue": "Body falls onto metal table: metal clatter",
+      "asset_title": "75 CC0 breaking / falling / hit sfx",
+      "author": "rubberduck",
+      "asset_page": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+      "file_url": "https://opengameart.org/sites/default/files/sfx_breaking_and_falling.zip",
+      "files_used": [
+        "bfh1_metal_falling_02.ogg"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/75-cc0-breaking-falling-hit-sfx/",
+      "notes": ""
+    },
+    {
+      "cue": "Tinnitus ring (16.6 to 19.0)",
+      "asset_title": "Beep Sound",
+      "author": "Test User",
+      "asset_page": "https://opengameart.org/content/beep-sound",
+      "file_url": "https://opengameart.org/sites/default/files/beep.ogg",
+      "files_used": [
+        "beep.ogg"
+      ],
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenses_listed_on_page": [
+        "CC0"
+      ],
+      "local_path": "sources/beep-sound/",
+      "notes": "A steady stretch of the beep looped on whole cycles and pitched up 4x to about 4.6 kHz, very quiet."
+    },
+    {
+      "cue": "Rising whoosh into the logo (23.73 to 24.50)",
+      "asset_title": "Free Cinematic Sound Effects",
+      "author": "Gregor Quendel",
+      "asset_page": "https://opengameart.org/content/free-cinematic-sound-effects",
+      "file_url": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_cinematic_sound_effects_-_mp3.zip",
+      "files_used": [
+        "Gregor Quendel - Designed Fire - Short - Swoosh Burst Sizzling 01.mp3"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/free-cinematic-sound-effects/",
+      "notes": "The build-up to its peak, ending on 24.50."
+    },
+    {
+      "cue": "Reverse swell (23.73 to 24.50) and dark synth sting tail (24.50 to 27.6)",
+      "asset_title": "Free Cinematic Sound Effects",
+      "author": "Gregor Quendel",
+      "asset_page": "https://opengameart.org/content/free-cinematic-sound-effects",
+      "file_url": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_cinematic_sound_effects_-_mp3.zip",
+      "files_used": [
+        "Gregor Quendel - Designed Atmospheres - Harmonic - 008 - IV.mp3"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/free-cinematic-sound-effects/",
+      "notes": "A slice played reversed for the swell, and forward with a sharp attack and decay as the sting."
+    },
+    {
+      "cue": "Logo deep impact (24.50, tail to 27.6)",
+      "asset_title": "Free Cinematic Sound Effects",
+      "author": "Gregor Quendel",
+      "asset_page": "https://opengameart.org/content/free-cinematic-sound-effects",
+      "file_url": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_cinematic_sound_effects_-_mp3.zip",
+      "files_used": [
+        "Gregor Quendel - Designed Sci-Fi - Noids_Korvax_01.mp3",
+        "Gregor Quendel - Designed Mecha - Elements - Impact 01.mp3"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/free-cinematic-sound-effects/",
+      "notes": "Layered sub and mid impacts into a long hall reverb."
+    },
+    {
+      "cue": "Dark ambient drone under the whole piece (very low)",
+      "asset_title": "Free Cinematic Sound Effects",
+      "author": "Gregor Quendel",
+      "asset_page": "https://opengameart.org/content/free-cinematic-sound-effects",
+      "file_url": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_cinematic_sound_effects_-_mp3.zip",
+      "files_used": [
+        "Gregor Quendel - Designed Atmospheres - Harmonic - 018.mp3"
+      ],
+      "license": "CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "licenses_listed_on_page": [
+        "CC-BY 4.0"
+      ],
+      "local_path": "sources/free-cinematic-sound-effects/",
+      "notes": "Swells 6 dB into the logo, then fades with the tail."
+    }
+  ]
+}
