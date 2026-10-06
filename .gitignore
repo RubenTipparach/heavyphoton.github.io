@@ -1,5 +1,6 @@
 work/node_modules/
-.claude/
+.claude/*
+!.claude/skills/
 .history/
 work/.vite/deps/
 __pycache__/
