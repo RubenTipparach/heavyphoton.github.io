@@ -1,7 +1,8 @@
 #!/bin/sh
 # The film from the finished frames (finish.py), at the rate timing.json gives,
-# CRF 22 tuned for grain: it keeps the dither and grain at about 22 MB for the cut,
-# with the soundtrack (audio/soundtrack.wav) when there is one.
+# CRF 22 tuned for grain, which keeps the 256-colour dither (about 5 MB for the
+# cut without film grain, 22 MB with it), with the soundtrack
+# (audio/soundtrack.wav) when there is one.
 set -e
 D=${1:-out}
 HERE=$(cd "$(dirname "$0")" && pwd)
