@@ -103,10 +103,24 @@ under a forward knee). Start the planting under a cut or a white-out
 - `check_legs.py` on every output frame from the planting to the end: hip
   turn -40 to +45, knee twist within 20, foot twist within 30, no knee folding
   back, no knee or ankle on the other's side, no thigh swung in past 12, no
-  jump over 10 deg a frame. The approved turn: 0 of 193 flagged.
+  jump over 10 deg a frame. The approved turn: 0 of 192 flagged (output
+  frames 398 to 589, the film's last).
 - `scripts/foot_plot.py` from `scripts/motion_report.py --json`: footprints
   from above; a planted foot is one bright mark, a turn reads as feet
   stepping round the hips.
 - `scripts/follow_sheet.py` from the shot camera's side, every output frame,
   enlarged: the twist check passed while the leg still read as broken
   (folding, not twisting). Look as well as measure.
+
+## Not solved yet: a visible stop out of a walk
+
+The plate shop's suit stops from his walk in with a 10 frame clip blend
+(walk into the pistol idle) while his legs are out of shot, so a stop the
+camera sees was never solved. A blend from a walk into a standing clip
+slides the feet, because neither clip's feet are planted across the blend.
+The likely way, untested: keep the gait's planting on through the stop
+(`ik` 1, no hand-over), author the last one or two steps in the plan so the
+feet land at the stance the idle wants (`gait.ball_local` on the idle clip
+gives where its feet are), ease the stride and cadence down over them, and
+hand back to the idle clip's legs only once both feet are down, the way the
+turn hands back to the walk. Check it the same way before showing it.

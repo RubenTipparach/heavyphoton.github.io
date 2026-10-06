@@ -103,9 +103,9 @@ needs. `paths.py` finds both repositories.
   foot's twist, which way each knee folds, whether the legs scissor (a knee
   or ankle on the other's side, a thigh swung in across the body), and any
   of them jumping, and flags what leaves a natural range
-  (`blender -b out/scene.blend -P check_legs.py -- suit 398 590`; it exits
+  (`blender -b out/scene.blend -P check_legs.py -- suit 398 589`; it exits
   non-zero on a flag). From the shot's white-out to the end it flags none
-  of the suit's 193 frames.
+  of the suit's 192 frames.
 - **ragdoll.py** turns the prisoner into a Bullet ragdoll on the shot: eleven
   boxes with jointed limits, kicked for one substep, simulated among the set's
   colliders and baked back onto his bones.

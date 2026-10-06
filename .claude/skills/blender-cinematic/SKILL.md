@@ -29,10 +29,10 @@ They matter more than any technique below.
   not. Starting one unasked was stopped three times ("Stop render I never
   approved"). After an approval, render; after any later change to the
   animation, the approval is spent.
-- **Send what you render.** Every review goes to the owner as files
-  (`SendUserFile`: the mp4, plus contact sheets or a before and after), with
-  a one-line caption of what changed. Do not describe a render you have not
-  sent.
+- **Send what you render.** Every review goes to the owner as files (the
+  mp4, plus contact sheets or a before and after) with a one-line caption of
+  what changed: `SendUserFile` where the session has it, otherwise the paths.
+  Do not describe a render you have not sent.
 - **When a note says something looks wrong, look and measure before
   changing anything.** Render the moment large, from the shot's own side
   (`scripts/follow_sheet.py`), on every output frame, and measure it
@@ -52,7 +52,8 @@ They matter more than any technique below.
   chest, then hips, and the feet follow in a couple of steps (not many small
   ones); a walk is the clip's own forward kinematics; once a walk cycle has
   been seen and liked, reuse it (same clip, same pace) instead of re-timing
-  a new one.
+  a new one. A visible stop out of a walk has not been solved yet (see the
+  end of `references/gait.md`).
 - **Writing rules:** never use an em dash or an en dash anywhere (code,
   comments, docs, commits, PR text, chat). Commit and push each coherent
   change with a message that says why; keep the film's README current in the
@@ -60,19 +61,23 @@ They matter more than any technique below.
 
 ## The pipeline
 
+Commands run from the film's folder (`cinematics/<name>/`), with
+`BLENDER=/opt/tools/blender-4.5.14-linux-x64/blender` (it is not on PATH)
+and this skill's helpers at `.claude/skills/blender-cinematic/scripts/` from
+the repository root.
+
 | Stage | Script | Writes | Run |
 | --- | --- | --- | --- |
-| bodies | `build_cine.py` + `cine_bodies.json` + `cine_faces.json` | `bodies/*.glb` | `blender -b --factory-startup --python build_cine.py` |
-| scene | `scene.py` (+ `clips.py`, `gait.py`, `ragdoll.py`, `retarget.py`, `surfaces.py`) | `OUT/scene.blend`, `timing.json`, `s9_plate.json` | `blender -b --factory-startup -P scene.py -- --out OUT --lo` (or `--final`) |
-| render | Blender | `OUT/frames/f_NNNN.png` | `blender -b OUT/scene.blend -a` (or `-s A -e B -a`) |
+| bodies | `build_cine.py` + `cine_bodies.json` + `cine_faces.json` | `bodies/*.glb` | `$BLENDER -b --factory-startup --python build_cine.py` |
+| scene | `scene.py` (+ `clips.py`, `gait.py`, `ragdoll.py`, `retarget.py`, `surfaces.py`) | `OUT/scene.blend`, `timing.json`, `s9_plate.json` | `$BLENDER -b --factory-startup -P scene.py -- --out OUT --lo` (or `--final`) |
+| render | Blender | `OUT/frames/f_NNNN.png` | `$BLENDER -b OUT/scene.blend -a` (or `-s A -e B -a`) |
 | finish | `finish.py` | `OUT/final/` | `python3 finish.py OUT --final` |
 | encode | `make_videos.sh` | `OUT/plate_shop.mp4` | `sh make_videos.sh OUT` |
 | storyboard | `storyboard.py` | `OUT/storyboard.png` | `python3 storyboard.py OUT` |
 | sound | `audio/mix.py` (sources from `audio/fetch_sources.py`) | `audio/soundtrack.wav` | `python3 audio/mix.py` |
 | checks | `check_legs.py`, this skill's `scripts/` | reports, sheets | see below |
 
-Blender 4.5 LTS is at `/opt/tools/blender-4.5.14-linux-x64/blender`. Render
-with Cycles on the CPU: Workbench and EEVEE crash headless here (no EGL). The
+Blender 4.5 LTS: render with Cycles on the CPU: Workbench and EEVEE crash headless here (no EGL). The
 scene needs a checkout of fps-game-demo beside this repository (bodies,
 animation library, textures); `paths.py` finds it, or set `FPS_GAME_DEMO`.
 Keep scratch builds (`OUT`) in the session scratchpad, never in the repo.
@@ -82,8 +87,22 @@ Keep scratch builds (`OUT`) in the session scratchpad, never in the repo.
 1. **Copy the plate shop's layout** into `cinematics/<name>/`: `scene.py`,
    `clips.py`, `retarget.py`, `gait.py`, `ragdoll.py`, `surfaces.py`,
    `finish.py`, `storyboard.py`, `make_videos.sh`, `paths.py`,
-   `check_legs.py`, `build_cine.py`, `audio/`. Strip the plate shop's set,
-   props and beats out of `scene.py`; keep the machinery.
+   `check_legs.py`, `build_cine.py`, and `audio/` without `sources/` and
+   without `soundtrack.wav` (`make_videos.sh` lays whatever `soundtrack.wav`
+   it finds on every preview, so a copied one scores the new film with the
+   old). In `scene.py`, keep the machinery: the geometry and keying helpers
+   (`mat`, `box`, `cyl`, `ball`, `key`, `key_hide`, `camera`, `retime`,
+   `grading`), the body materials (`skin_detail`, `in_shadow`,
+   `tailored_wool`), `cast()`'s shape (import, lowpoly, prepare, a Track per
+   body, solve and key every frame), and `walk_away` and `turn_lead` with
+   their constants as knobs to re-derive for the new stance and exit. Replace
+   the content: the set and props (`room`, `press`, `shop_props`,
+   `conveyor`, the plates, `build_gun`, `photon`, `sparks`), the beats and
+   the numbers. Two pieces assume the plate shop's ending: `finish.py` always
+   reads `OUT/s9_plate.json` (where the last plate lands on screen, written by
+   `plate_on_screen`) to dissolve it into the logo card in place, and
+   `make_videos.sh` names its output `plate_shop.mp4`. A film that ends
+   differently changes both.
 2. **Cast.** Add rows to the bodies JSON (sex, age, height, muscle, skin,
    clothes and tints) and face targets to the faces JSON, pushed past
    average so each reads at a glance. Build them.
@@ -155,7 +174,7 @@ picture, and normalises to a true-peak ceiling.
 Run these on the built scene before sending a review, and always after a note
 about motion:
 
-- `blender -b OUT/scene.blend -P check_legs.py -- ARMATURE FIRST LAST`:
+- `$BLENDER -b OUT/scene.blend -P check_legs.py -- ARMATURE FIRST LAST`:
   every output frame's hip turn, knee and foot twist, knee direction,
   scissoring, and jumps against natural ranges; exits non-zero on a flag.
 - `scripts/motion_report.py`: planted-foot slide, knee bend and the heel

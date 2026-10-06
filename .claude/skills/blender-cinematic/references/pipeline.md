@@ -174,7 +174,10 @@ frames as rendered up to the dissolve; the dissolve (the plate cross-fades
 into the logo card in place, through a cyan bloom); the hold (the logo card
 still, at exactly the size it dissolved into: resizing a small logo frame by
 frame rounds width and height apart and it visibly stretches); the fade out
-(`FADE_OUT` 1 s to black). `--final` adds the vignette (grain is available
+(`FADE_OUT` 1 s to black). It always reads `OUT/s9_plate.json`, the plate's
+place on screen written by `plate_on_screen`: a film that ends without a
+plate matched to the card needs that step changed (a cut or a plain
+cross-fade to the card). `--final` adds the vignette (grain is available
 but off), letterboxes to 640 x 480, and reduces the whole film to one
 256-colour palette built from 48 frames sampled across it (median cut), with
 Floyd-Steinberg dither.
@@ -194,9 +197,10 @@ footfalls get quieter and duller as a character walks away.
 
 ## 12. Encode and storyboard
 
-`sh make_videos.sh OUT` encodes `OUT/final/` with `audio/soundtrack.wav`
-(libx264, preset slow, CRF 22, yuv420p, AAC 160k, `-shortest`; a 4x nearest
-copy for low-res renders). `python3 storyboard.py OUT` tiles one frame per
+`sh make_videos.sh OUT` encodes `OUT/final/` with `audio/soundtrack.wav` if
+there is one (libx264, preset slow, `-tune grain`, which keeps the
+256-colour dither, CRF 22, yuv420p, AAC 160k, `-shortest`; a 4x nearest copy
+for low-res renders) into `OUT/plate_shop.mp4`: rename it for a new film. `python3 storyboard.py OUT` tiles one frame per
 shot with its timecode, frame count and caption (shots in story frames, in
 `SHOTS`). The film and storyboard are committed to `film/`; the README says
 the length, the look and the credits.
