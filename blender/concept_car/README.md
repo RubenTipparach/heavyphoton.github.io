@@ -40,4 +40,6 @@ samples), or look at it in the viewport.
   renders a timelapse of it:
   `blender -b --factory-startup -P build_inception.py -- OUT`.
   `--no-render` only builds and saves the `.blend`.
-- `hud.py` draws the step overlay onto those frames and encodes the video.
+- `hud.py` draws the step overlay (step, operation, live modifier stack)
+  onto those frames and encodes the video. `concept_car_timelapse.mp4` is
+  the result.

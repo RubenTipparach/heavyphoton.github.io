@@ -16,6 +16,8 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 run, out = sys.argv[1], sys.argv[2]
+TITLE = sys.argv[3] if len(sys.argv) > 3 else "Modeling a car in Blender"
+SUBTITLE = sys.argv[4] if len(sys.argv) > 4 else "a timelapse, built step by step by Claude"
 FONT = "/usr/share/fonts/truetype/dejavu/"
 sans = lambda s: ImageFont.truetype(FONT + "DejaVuSans.ttf", s)
 bold = lambda s: ImageFont.truetype(FONT + "DejaVuSans-Bold.ttf", s)
@@ -60,6 +62,15 @@ def hud(im, fr, k, total):
         d.text((W - 4 - sw, 30 + 22 * i), s, font=fs, fill=TEXT)
     tag, ft = "Blender 4.5 · Cycles", sans(13)
     d.text((W - 20 - d.textlength(tag, font=ft), 20 + 22 * len(stats) + 26), tag, font=ft, fill=DIM)
+    # Modifier stack of the object being worked on, bottom left.
+    if fr.get("stack"):
+        lines = ["%s  modifiers" % fr.get("active", "")] + ["%d  %s" % (i + 1, m) for i, m in enumerate(fr["stack"])]
+        fm = mono(14)
+        mw = max(d.textlength(t, font=fm) for t in lines) + 32
+        y0 = H - 30 - 21 * len(lines) - 16
+        panel(d, (20, y0, 20 + mw, H - 30))
+        for i, t in enumerate(lines):
+            d.text((36, y0 + 10 + 21 * i), t, font=fm, fill=ORANGE if i == 0 else TEXT)
     # Progress, bottom.
     d.rectangle((0, H - 6, W, H), fill=(30, 30, 30, 220))
     d.rectangle((0, H - 6, int(W * (k + 1) / total), H), fill=ORANGE + (255,))
@@ -71,7 +82,7 @@ def title_card(im, alpha):
     d = ImageDraw.Draw(ov)
     W, H = im.size
     a = int(255 * alpha)
-    t1, t2 = "Modeling a car in Blender", "a timelapse, built step by step by Claude"
+    t1, t2 = TITLE, SUBTITLE
     f1, f2 = bold(46), sans(24)
     d.text(((W - d.textlength(t1, font=f1)) / 2, H / 2 - 50), t1, font=f1, fill=TEXT + (a,))
     d.text(((W - d.textlength(t2, font=f2)) / 2, H / 2 + 14), t2, font=f2, fill=ORANGE + (a,))
