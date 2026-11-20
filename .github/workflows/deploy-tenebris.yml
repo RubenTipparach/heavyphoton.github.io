@@ -1,0 +1,94 @@
+# Publish TENEBRIS to heavyphoton.com/tenebris/ automatically.
+#
+# Builds the JS client from RubenTipparach/tenebris main with the same
+# ./build.sh deploy the manual path uses, writes it into docs/tenebris/
+# and commits it here; GitHub Pages then serves it.
+#
+# Runs when:
+# - tenebris CI pings it after a push to main (repository_dispatch,
+#   needs the SITE_DISPATCH_TOKEN secret in the tenebris repo),
+# - hourly as a fallback - it only rebuilds when tenebris main has moved
+#   past the commit recorded in docs/tenebris/.tenebris-commit,
+# - by hand from the Actions tab (always rebuilds).
+name: Deploy TENEBRIS
+
+on:
+  repository_dispatch:
+    types: [tenebris-updated]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-tenebris
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Find the tenebris commit to deploy
+        id: target
+        run: |
+          set -e
+          sha=$(git ls-remote https://github.com/RubenTipparach/tenebris refs/heads/main | cut -f1)
+          deployed=$(cat docs/tenebris/.tenebris-commit 2>/dev/null || true)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          if [ "$sha" = "$deployed" ] && [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "tenebris $sha is already deployed"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploying tenebris $sha (was: ${deployed:-none})"
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout tenebris
+        if: steps.target.outputs.build == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: RubenTipparach/tenebris
+          ref: ${{ steps.target.outputs.sha }}
+          path: .tenebris-src
+
+      - name: Setup Node.js
+        if: steps.target.outputs.build == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: .tenebris-src/package-lock.json
+
+      - name: Build and copy into docs/tenebris
+        if: steps.target.outputs.build == 'true'
+        working-directory: .tenebris-src
+        env:
+          HEAVY_PHOTON_PATH: ${{ github.workspace }}
+        run: |
+          set -e
+          npm ci
+          ./build.sh deploy
+          echo "${{ steps.target.outputs.sha }}" > "$HEAVY_PHOTON_PATH/docs/tenebris/.tenebris-commit"
+          grep -q 'src="/tenebris/assets/index-' "$HEAVY_PHOTON_PATH/docs/tenebris/index.html"
+
+      - name: Commit and push
+        if: steps.target.outputs.build == 'true'
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/tenebris
+          if git diff --cached --quiet; then
+            echo "docs/tenebris unchanged"
+            exit 0
+          fi
+          sha="${{ steps.target.outputs.sha }}"
+          git commit -m "Deploy TENEBRIS ${sha:0:7}" -m "Built from RubenTipparach/tenebris@${sha}"
+          git push origin HEAD:main
